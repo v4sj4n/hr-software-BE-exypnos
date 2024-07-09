@@ -14,8 +14,17 @@ export class UserService {
     return users;
   }
 
+  async findOne(id: string): Promise<User | null> {
+    const user = await this.userModel.findById(id);
+    console.log(user);
+    return user;
+  }
+
   async createUser(user: User): Promise<User> {
-    const res = this.userModel.create(user);
+    const res = await this.userModel.create(user);
     return res;
+  }
+  async deleteUser(id: string): Promise<void> {
+    await this.userModel.findByIdAndDelete(id);
   }
 }
