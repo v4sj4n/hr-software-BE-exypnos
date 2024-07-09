@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseService } from './database/database.service';
-import { DatabaseModule } from './database/database.module';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
+    UserModule,
+  ],
   controllers: [AppController],
-  providers: [AppService, DatabaseService],
+  providers: [AppService],
 })
 export class AppModule {}
