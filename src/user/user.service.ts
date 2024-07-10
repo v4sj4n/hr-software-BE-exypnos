@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '../schemas/user.schema';
 import mongoose from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -48,8 +48,11 @@ export class UserService {
         }
       });
 
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      const salt = await bcrypt.genSalt(10);
+
+      const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
       createUserDto.password = hashedPassword;
+
       const res = await this.userModel.create(createUserDto);
       return res;
     } catch (err) {
