@@ -30,7 +30,7 @@ export class UserController {
   @Post('/sign-in')
   async signIn(
     @Body() signInUserDto: SignInUserDto,
-  ): Promise<{ message: string; data: User }> {
+  ): Promise<{ message: string; data: { access_token: string } }> {
     return await this.userService.findUser(signInUserDto);
   }
   @Get(':id')

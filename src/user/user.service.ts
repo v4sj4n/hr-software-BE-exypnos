@@ -6,12 +6,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
+    private jwtService: JwtService,
   ) {}
   async findAll(): Promise<User[]> {
     try {
@@ -114,7 +116,14 @@ export class UserService {
         throw new ConflictException('Invalid credentials');
       }
 
-      return { message: 'Authenticated Succesfully', data: user };
+      const payload = { sub: user.id, email: user.email };
+
+      return {
+        message: 'Authenticated Succesfully',
+        data: {
+          access_token: await this.jwtService.signAsync(payload),
+        },
+      };
     } catch (err) {
       throw new ConflictException(err);
     }
