@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { SignInUserDto } from './dto/signin-user.dto';
 
 @Injectable()
 export class UserService {
@@ -91,6 +92,29 @@ export class UserService {
   async deleteUser(id: string): Promise<void> {
     try {
       await this.userModel.findByIdAndDelete(id);
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async findUser(signInUserDto: SignInUserDto) {
+    try {
+      const user = await this.userModel.findOne({ email: signInUserDto.email });
+
+      if (!user) {
+        throw new ConflictException('User not found');
+      }
+
+      const isMatch = await bcrypt.compare(
+        signInUserDto.password,
+        user.password,
+      );
+
+      if (!isMatch) {
+        throw new ConflictException('Invalid credentials');
+      }
+
+      return { message: 'Authenticated Succesfully', data: user };
     } catch (err) {
       throw new ConflictException(err);
     }

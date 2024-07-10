@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as muv from 'mongoose-unique-validator';
 
 export enum Role {
-  CEO_HR = 'admin',
-  PM = 'pm',
+  ADMIN = 'admin',
+  HR = 'hr',
   DEV = 'dev',
 }
 
