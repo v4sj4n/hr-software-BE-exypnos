@@ -32,6 +32,13 @@ export class UserService {
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     try {
+      Object.keys(createUserDto).forEach((element) => {
+        if (
+          !['firstName', 'lastName', 'email', 'role', 'phone'].includes(element)
+        ) {
+          throw new ConflictException('Invalid field');
+        }
+      });
       const res = await this.userModel.create(createUserDto);
       return res;
     } catch (err) {
@@ -48,7 +55,6 @@ export class UserService {
           throw new ConflictException('Invalid field');
         }
       });
-      console.log(Object.keys(updateUserDto));
       const updatedUser = await this.userModel.findByIdAndUpdate(
         id,
         updateUserDto,

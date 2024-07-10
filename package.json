@@ -1,10 +1,10 @@
 {
   "name": "hr-exypnos",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "HR EXYPNOS is a web application for making it easier to manage human resources for all kinds of businesses.",
+  "author": "EXYPNOS",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
