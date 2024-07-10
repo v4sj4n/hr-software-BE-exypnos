@@ -4,6 +4,7 @@ import { User } from './schemas/user.schema';
 import mongoose from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -34,14 +35,25 @@ export class UserService {
     try {
       Object.keys(createUserDto).forEach((element) => {
         if (
-          !['firstName', 'lastName', 'email', 'role', 'phone'].includes(element)
+          ![
+            'firstName',
+            'lastName',
+            'email',
+            'password',
+            'role',
+            'phone',
+          ].includes(element)
         ) {
           throw new ConflictException('Invalid field');
         }
       });
+
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      createUserDto.password = hashedPassword;
       const res = await this.userModel.create(createUserDto);
       return res;
     } catch (err) {
+      console.log(err);
       throw new ConflictException(err);
     }
   }
@@ -50,7 +62,14 @@ export class UserService {
     try {
       Object.keys(updateUserDto).forEach((element) => {
         if (
-          !['firstName', 'lastName', 'email', 'role', 'phone'].includes(element)
+          ![
+            'firstName',
+            'lastName',
+            'password',
+            'email',
+            'role',
+            'phone',
+          ].includes(element)
         ) {
           throw new ConflictException('Invalid field');
         }
