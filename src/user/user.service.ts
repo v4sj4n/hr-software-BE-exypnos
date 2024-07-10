@@ -5,12 +5,15 @@ import mongoose from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { SignInUserDto } from './dto/signin-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
+    private jwtService: JwtService,
   ) {}
   async findAll(): Promise<User[]> {
     try {
@@ -91,6 +94,36 @@ export class UserService {
   async deleteUser(id: string): Promise<void> {
     try {
       await this.userModel.findByIdAndDelete(id);
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async findUser(signInUserDto: SignInUserDto) {
+    try {
+      const user = await this.userModel.findOne({ email: signInUserDto.email });
+
+      if (!user) {
+        throw new ConflictException('User not found');
+      }
+
+      const isMatch = await bcrypt.compare(
+        signInUserDto.password,
+        user.password,
+      );
+
+      if (!isMatch) {
+        throw new ConflictException('Invalid credentials');
+      }
+
+      const payload = { sub: user.id, email: user.email };
+
+      return {
+        message: 'Authenticated Succesfully',
+        data: {
+          access_token: await this.jwtService.signAsync(payload),
+        },
+      };
     } catch (err) {
       throw new ConflictException(err);
     }
