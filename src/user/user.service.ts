@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import mongoose from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -11,21 +12,59 @@ export class UserService {
     private userModel: mongoose.Model<User>,
   ) {}
   async findAll(): Promise<User[]> {
-    const users = await this.userModel.find();
-    return users;
+    try {
+      const users = await this.userModel.find();
+      return users;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
   }
 
   async findOne(id: string): Promise<User | null> {
-    const user = await this.userModel.findById(id);
-    console.log(user);
-    return user;
+    try {
+      const user = await this.userModel.findById(id);
+
+      return user;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const res = await this.userModel.create(createUserDto);
-    return res;
+    try {
+      const res = await this.userModel.create(createUserDto);
+      return res;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
   }
+
+  async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
+    try {
+      Object.keys(updateUserDto).forEach((element) => {
+        if (
+          !['firstName', 'lastName', 'email', 'role', 'phone'].includes(element)
+        ) {
+          throw new ConflictException('Invalid field');
+        }
+      });
+      console.log(Object.keys(updateUserDto));
+      const updatedUser = await this.userModel.findByIdAndUpdate(
+        id,
+        updateUserDto,
+        { new: true },
+      );
+      return updatedUser;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
   async deleteUser(id: string): Promise<void> {
-    await this.userModel.findByIdAndDelete(id);
+    try {
+      await this.userModel.findByIdAndDelete(id);
+    } catch (err) {
+      throw new ConflictException(err);
+    }
   }
 }

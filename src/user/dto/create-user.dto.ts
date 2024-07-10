@@ -10,9 +10,14 @@ import { Role } from '../schemas/user.schema';
 
 export class CreateUserDto {
   @IsString()
-  @MinLength(3)
+  @MinLength(2)
   @MaxLength(30)
-  name: string;
+  firstName: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(30)
+  lastName: string;
 
   @IsString()
   @IsEmail()

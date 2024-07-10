@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: '*',
-    methods: ['GET', 'POST', 'DELETE', 'PATCH'], //opsionale te shtoj PUT
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
     // credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe());
