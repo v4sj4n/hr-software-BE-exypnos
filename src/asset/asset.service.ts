@@ -74,10 +74,11 @@ export class AssetService {
         }
       }
     }
-
-    const updatedAsset = await this.assetModel
-      .findByIdAndUpdate(id, updateAssetDto, { new: true })
-      .exec();
+    const updatedAsset = await this.assetModel.findByIdAndUpdate(
+      id,
+      updateAssetDto,
+      { new: true },
+    );
     if (!updatedAsset) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
