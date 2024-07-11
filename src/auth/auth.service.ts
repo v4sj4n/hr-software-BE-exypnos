@@ -39,6 +39,12 @@ export class AuthService {
   ): Promise<{ message: string; data: { access_token: string; user: IUser } }> {
     try {
       const user = await this.userModel.findOne({ email: signInUserDto.email });
+      const userObject = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+      };
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -62,13 +68,22 @@ export class AuthService {
         message: 'Authenticated Succesfully',
         data: {
           access_token: await this.jwtService.signAsync(payload),
-          user: {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            phone: user.phone,
-          },
+          user: userObject,
         },
+      };
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async getUser(email: string): Promise<IUser> {
+    try {
+      const user = await this.userModel.findOne({ email });
+      return {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
       };
     } catch (err) {
       throw new ConflictException(err);
