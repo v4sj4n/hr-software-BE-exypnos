@@ -12,6 +12,13 @@ import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 
+type IUser = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -29,7 +36,7 @@ export class AuthService {
   }
   async signIn(
     signInUserDto: SignInUserDto,
-  ): Promise<{ message: string; data: { access_token: string } }> {
+  ): Promise<{ message: string; data: { access_token: string; user: IUser } }> {
     try {
       const user = await this.userModel.findOne({ email: signInUserDto.email });
 
@@ -57,6 +64,12 @@ export class AuthService {
         message: 'Authenticated Succesfully',
         data: {
           access_token: await this.jwtService.signAsync(payload),
+          user: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+          },
         },
       };
     } catch (err) {
