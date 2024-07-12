@@ -3,7 +3,8 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/schemas/user.schema';
 import { SignInUserDto } from './dto/signin-user.dto';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from 'src/decorator/public.decorator';
+import { UpdatePasswordDto } from './dto/updatePasswordDto';
 
 @Controller('auth')
 export class AuthController {
@@ -26,5 +27,16 @@ export class AuthController {
   @Get('getuser')
   async getProfile(@Request() req) {
     return await this.authService.getUser(req.user.email);
+  }
+
+  @Post('updatepassword')
+  async updatePassword(
+    @Body() updatePasswordDto: UpdatePasswordDto,
+    @Request() req,
+  ) {
+    return await this.authService.updatePassword(
+      updatePasswordDto,
+      req.user.email,
+    );
   }
 }

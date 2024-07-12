@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Role } from 'src/enum/role.enum';
+import { UpdatePasswordDto } from './dto/updatePasswordDto';
 
 type IUser = {
   firstName: string;
@@ -90,6 +91,26 @@ export class AuthService {
         phone: user.phone,
         role: user.role,
       };
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto, email: string) {
+    try {
+      const user = await this.userModel.findOne({ email });
+
+      const isMatch = await bcrypt.compare(
+        updatePasswordDto.oldPassword,
+        user.password,
+      );
+      if (!isMatch) {
+        throw new UnauthorizedException('Invalid old password');
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(updatePasswordDto.newPassword, salt);
+      user.save();
+      return 'Password updated succesfully';
     } catch (err) {
       throw new ConflictException(err);
     }

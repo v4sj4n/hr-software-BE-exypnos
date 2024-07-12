@@ -1,22 +1,21 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  Param,
-  Patch,
+  Delete,
   Put,
+  Patch,
+  Body,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '../schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/decorator/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @Roles(Role.ADMIN)
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
@@ -36,6 +35,7 @@ export class UserController {
     return await this.userService.updateUser(updateUserDto, id);
   }
 
+  @Roles(Role.ADMIN)
   @Delete(':id')
   async deleteUser(@Param('id') id: string): Promise<void> {
     await this.userService.deleteUser(id);
