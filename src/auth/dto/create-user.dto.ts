@@ -6,7 +6,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from '../../schemas/user.schema';
+import { Role } from 'src/enum/role.enum';
 
 export class CreateUserDto {
   @IsString()

@@ -11,12 +11,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import { Role } from 'src/enum/role.enum';
 
 type IUser = {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  role: Role;
 };
 
 @Injectable()
@@ -42,6 +44,7 @@ export class AuthService {
       const userObject = {
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         email: user.email,
         phone: user.phone,
       };
@@ -84,6 +87,7 @@ export class AuthService {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone,
+        role: user.role,
       };
     } catch (err) {
       throw new ConflictException(err);

@@ -1,11 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as muv from 'mongoose-unique-validator';
-
-export enum Role {
-  ADMIN = 'admin',
-  HR = 'hr',
-  DEV = 'dev',
-}
+import { Role } from 'src/enum/role.enum';
 
 @Schema({
   timestamps: true,
