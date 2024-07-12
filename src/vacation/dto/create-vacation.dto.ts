@@ -19,5 +19,9 @@ export class CreateVacationDto {
   endDate?: Date;
 
   @IsString()
-  userId?: string;
+  @IsOptional()
+  status?: string;
+
+  @IsString()
+  userId: string;
 }

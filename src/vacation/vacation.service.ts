@@ -24,10 +24,11 @@ export class VacationService {
         createVacationDto.userId !== null &&
         createVacationDto.userId.length === 24
       ) {
+        console.log(createVacationDto.userId);
         const userExists = await this.userModel.findById(
           createVacationDto.userId,
         );
-        console.log(createVacationDto);
+        console.log(userExists);
         if (!userExists) {
           throw new NotFoundException(
             `User with id ${createVacationDto.userId} not found`,
@@ -89,3 +90,5 @@ export class VacationService {
     return await this.vacationModel.findByIdAndDelete(id);
   }
 }
+
+//funksione ndimese per te bere CRUD operations mbi databazen

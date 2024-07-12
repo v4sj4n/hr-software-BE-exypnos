@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Asset } from '../schemas/asset.schema';
+import { Asset, AssetStatus } from '../schemas/asset.schema';
 import { User } from '../schemas/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
@@ -19,21 +19,8 @@ export class AssetService {
 
   async create(createAssetDto: CreateAssetDto): Promise<Asset> {
     try {
-      if (
-        createAssetDto.userId &&
-        createAssetDto.userId !== '0' &&
-        createAssetDto.userId.length === 24
-      ) {
-        const userExists = await this.userModel.findById(createAssetDto.userId);
-        if (!userExists) {
-          throw new NotFoundException(
-            `User with id ${createAssetDto.userId} not found`,
-          );
-        }
-      } else {
-        createAssetDto.userId = '000000000000000000000000';
-      }
-
+      this.checkCreateUserId(createAssetDto);
+      this.checkCreateAssetStatus(createAssetDto);
       const createdAsset = new this.assetModel(createAssetDto);
       return await createdAsset.save();
     } catch (error) {
@@ -49,7 +36,7 @@ export class AssetService {
   }
 
   async findOne(id: string): Promise<Asset> {
-    const asset = await this.assetModel.findById(id).exec();
+    const asset = await this.assetModel.findById(id);
     if (!asset) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
@@ -57,23 +44,8 @@ export class AssetService {
   }
 
   async update(id: string, updateAssetDto: UpdateAssetDto): Promise<Asset> {
-    if (updateAssetDto.userId) {
-      if (updateAssetDto.userId === '0') {
-        updateAssetDto.userId = '000000000000000000000000';
-      } else {
-        if (updateAssetDto.userId.length !== 24) {
-          throw new NotFoundException(
-            `Invalid userId ${updateAssetDto.userId}`,
-          );
-        }
-        const userExists = await this.userModel.findById(updateAssetDto.userId);
-        if (!userExists) {
-          throw new NotFoundException(
-            `User with id ${updateAssetDto.userId} not found`,
-          );
-        }
-      }
-    }
+    this.checkUpdateUserId(updateAssetDto);
+    this.checkUpdateAssetStatus(updateAssetDto);
     const updatedAsset = await this.assetModel.findByIdAndUpdate(
       id,
       updateAssetDto,
@@ -92,5 +64,85 @@ export class AssetService {
     }
     await this.assetModel.deleteOne({ _id: id }).exec();
     return deletedAsset;
+  }
+
+  // Check if the user exists in the database
+
+  checkCreateUserId(createAssetDto: CreateAssetDto) {
+    if (
+      createAssetDto.userId &&
+      createAssetDto.userId !== null &&
+      createAssetDto.userId.length === 24
+    ) {
+      const userExists = this.userModel.findById(createAssetDto.userId);
+      if (!userExists) {
+        throw new NotFoundException(
+          `User with id ${createAssetDto.userId} not found`,
+        );
+      }
+    } else {
+      createAssetDto.userId = null;
+    }
+  }
+
+  checkCreateAssetStatus(createAssetDto: CreateAssetDto) {
+    if (
+      !createAssetDto.userId &&
+      createAssetDto.status === AssetStatus.ASSIGNED
+    ) {
+      throw new ConflictException(
+        `Asset with status ${createAssetDto.status} must have a user`,
+      );
+    }
+    if (
+      createAssetDto.userId &&
+      (createAssetDto.status === AssetStatus.AVAILABLE ||
+        createAssetDto.status === AssetStatus.IN_REPAIR ||
+        createAssetDto.status === AssetStatus.RETURNED ||
+        createAssetDto.status === AssetStatus.BROKEN)
+    ) {
+      throw new ConflictException(
+        `Asset with status ${createAssetDto.status} cannot have a user`,
+      );
+    }
+  }
+
+  checkUpdateUserId(updateAssetDto: UpdateAssetDto) {
+    if (
+      updateAssetDto.userId &&
+      updateAssetDto.userId !== null &&
+      updateAssetDto.userId.length === 24
+    ) {
+      const userExists = this.userModel.findById(updateAssetDto.userId);
+      if (!userExists) {
+        throw new NotFoundException(
+          `User with id ${updateAssetDto.userId} not found`,
+        );
+      }
+    } else {
+      updateAssetDto.userId = null;
+    }
+  }
+
+  checkUpdateAssetStatus(updateAssetDto: UpdateAssetDto) {
+    if (
+      !updateAssetDto.userId &&
+      updateAssetDto.status === AssetStatus.ASSIGNED
+    ) {
+      throw new ConflictException(
+        `Asset with status ${updateAssetDto.status} must have a user`,
+      );
+    }
+    if (
+      updateAssetDto.userId &&
+      (updateAssetDto.status === AssetStatus.AVAILABLE ||
+        updateAssetDto.status === AssetStatus.IN_REPAIR ||
+        updateAssetDto.status === AssetStatus.RETURNED ||
+        updateAssetDto.status === AssetStatus.BROKEN)
+    ) {
+      throw new ConflictException(
+        `Asset with status ${updateAssetDto.status} cannot have a user`,
+      );
+    }
   }
 }

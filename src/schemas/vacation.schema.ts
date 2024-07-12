@@ -7,6 +7,11 @@ export enum VacationType {
   PERSONAL = 'personal',
   MATERNITY = 'maternity',
 }
+export enum VacationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+}
 @Schema()
 export class Vacation {
   @Prop({ required: true, enum: VacationType })
@@ -21,11 +26,16 @@ export class Vacation {
   @Prop({ default: null })
   endDate: Date;
 
+  @Prop({ default: 'pending' })
+  status: string;
+
   @Prop({
+    type: Types.ObjectId,
     required: true,
-    ref: 'User',
+    ref: 'user',
   })
   userId: string;
 }
 
 export const VacationSchema = SchemaFactory.createForClass(Vacation);
+
