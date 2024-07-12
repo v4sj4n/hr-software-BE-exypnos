@@ -10,10 +10,13 @@ import {
 import { UserService } from './user.service';
 import { User } from '../schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+  @Roles(Role.ADMIN)
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
