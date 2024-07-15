@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as muv from 'mongoose-unique-validator';
 import { Role } from 'src/enum/role.enum';
-
 @Schema({
   timestamps: true,
 })
@@ -11,7 +10,7 @@ export class User {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ unique: true })
+  @Prop({ required: true, unique: true, type: String })
   email: string;
 
   @Prop({ required: true })
@@ -24,4 +23,6 @@ export class User {
   phone: string;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User).plugin(muv);
+const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.plugin(muv);
+export { UserSchema };

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from 'src/schemas/user.schema';
+import { User } from 'src/schema/user.schema';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { Public } from 'src/decorator/public.decorator';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';

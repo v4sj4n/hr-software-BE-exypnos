@@ -6,13 +6,15 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import mongoose from 'mongoose';
-import { User } from '../schemas/user.schema';
+import { User } from '../schema/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Role } from 'src/enum/role.enum';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { generateRandomPassword } from 'src/util/generateRandomPassword';
 
 type IUser = {
   firstName: string;
@@ -27,13 +29,32 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: mongoose.Model<User>,
     private jwtService: JwtService,
+    private readonly mailService: MailerService,
   ) {}
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     try {
+      const password = generateRandomPassword();
       const salt = await bcrypt.genSalt(10);
-      createUserDto.password = await bcrypt.hash(createUserDto.password, salt);
-      return this.userModel.create(createUserDto);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const user = await this.userModel.create({
+        ...createUserDto,
+        password: hashedPassword,
+      });
+      await this.mailService.sendMail({
+        from: process.env.MAIL_USERNAME,
+        to: createUserDto.email,
+        subject: 'Mireseerdhe ne Codevider',
+        template: './../template/welcome',
+        context: {
+          name: createUserDto.firstName + ' ' + createUserDto.lastName,
+          email: createUserDto.email,
+          password,
+        },
+      });
+      return user;
     } catch (err) {
+      console.log(err);
       throw new ConflictException(err);
     }
   }
@@ -77,6 +98,7 @@ export class AuthService {
         },
       };
     } catch (err) {
+      console.log(err);
       throw new ConflictException(err);
     }
   }
