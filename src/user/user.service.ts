@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../schema/user.schema';
+import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -31,20 +31,6 @@ export class UserService {
 
   async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
     try {
-      Object.keys(updateUserDto).forEach((element) => {
-        if (
-          ![
-            'firstName',
-            'lastName',
-            'password',
-            'email',
-            'role',
-            'phone',
-          ].includes(element)
-        ) {
-          throw new ConflictException('Invalid field');
-        }
-      });
       const updatedUser = await this.userModel.findByIdAndUpdate(
         id,
         updateUserDto,

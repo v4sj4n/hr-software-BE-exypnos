@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { AssetType } from '../../schema/asset.schema';
+import { AssetType } from '../../common/schema/asset.schema';
 
 export class CreateAssetDto {
   @IsEnum(AssetType)

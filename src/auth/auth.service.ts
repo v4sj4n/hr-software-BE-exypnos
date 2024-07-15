@@ -6,15 +6,15 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import mongoose from 'mongoose';
-import { User } from '../schema/user.schema';
+import { User } from '../common/schema/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Role } from 'src/enum/role.enum';
+import { Role } from 'src/common/enum/role.enum';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { generateRandomPassword } from 'src/util/generateRandomPassword';
+import { generateRandomPassword } from 'src/common/util/generateRandomPassword';
 
 type IUser = {
   firstName: string;
@@ -45,7 +45,7 @@ export class AuthService {
         from: process.env.MAIL_USERNAME,
         to: createUserDto.email,
         subject: 'Mireseerdhe ne Codevider',
-        template: './../template/welcome',
+        template: 'welcome',
         context: {
           name: createUserDto.firstName + ' ' + createUserDto.lastName,
           email: createUserDto.email,

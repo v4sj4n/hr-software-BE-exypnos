@@ -1,11 +1,12 @@
 import {
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from 'src/enum/role.enum';
+import { Role } from 'src/common/enum/role.enum';
 
 export class CreateUserDto {
   @IsString()
@@ -30,4 +31,7 @@ export class CreateUserDto {
   @IsString()
   @IsEnum(Role)
   role: Role;
+
+  @IsOptional()
+  imageUrl?: string;
 }

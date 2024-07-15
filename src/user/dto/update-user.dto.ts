@@ -6,7 +6,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from 'src/enum/role.enum';
+import { Role } from 'src/common/enum/role.enum';
 
 export class UpdateUserDto {
   @IsString()
@@ -36,4 +36,7 @@ export class UpdateUserDto {
   @IsEnum(Role)
   @IsOptional()
   role: Role;
+
+  @IsOptional()
+  imageUrl?: string;
 }

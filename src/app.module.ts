@@ -32,7 +32,7 @@ import { join } from 'path';
           from: `"No Reply" <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(__dirname, 'template'),
+          dir: join(__dirname, './common/template'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

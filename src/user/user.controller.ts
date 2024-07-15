@@ -8,10 +8,10 @@ import {
   Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from '../schema/user.schema';
+import { User } from '../common/schema/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from 'src/decorator/roles.decorator';
-import { Role } from 'src/enum/role.enum';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
 
 @Controller('user')
 export class UserController {
