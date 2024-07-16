@@ -1,6 +1,6 @@
 
 import { IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
-import { AssetStatus, AssetType } from '../../schemas/asset.schema';
+import { AssetStatus, AssetType } from '../../common/enum/asset.enum';
 
 export class UpdateAssetDto {
 

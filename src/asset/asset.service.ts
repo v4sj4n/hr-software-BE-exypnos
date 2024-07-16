@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Asset, AssetStatus } from '../schemas/asset.schema';
-import { User } from '../schemas/user.schema';
+import { Asset} from '../common/schema/asset.schema';
+import { AssetStatus } from '../common/enum/asset.enum';
+import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 

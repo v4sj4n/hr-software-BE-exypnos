@@ -1,17 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { VacationType } from '../enum/vacation.enum';
 
-export enum VacationType {
-  VACATION = 'vacation',
-  SICK = 'sick',
-  PERSONAL = 'personal',
-  MATERNITY = 'maternity',
-}
-export enum VacationStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-}
+
 @Schema()
 export class Vacation {
   @Prop({ required: true, enum: VacationType })

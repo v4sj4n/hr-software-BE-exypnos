@@ -1,6 +1,6 @@
 import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { VacationType } from '../../schemas/vacation.schema';
 import { Type } from 'class-transformer';
+import { VacationType } from 'src/common/enum/vacation.enum';
 
 export class CreateVacationDto {
   @IsEnum(VacationType)

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { VacationService } from './vacation.service';
 import { VacationController } from './vacation.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Vacation, VacationSchema } from 'src/schemas/vacation.schema';
-import { User, UserSchema } from 'src/schemas/user.schema';
+import { Vacation, VacationSchema } from 'src/common/schema/vacation.schema';
+import { User, UserSchema } from 'src/common/schema/user.schema';
 
 @Module({
   imports: [
@@ -13,6 +13,6 @@ import { User, UserSchema } from 'src/schemas/user.schema';
     ]),
   ],
   providers: [VacationService],
-  controllers: [VacationController]
+  controllers: [VacationController],
 })
 export class VacationModule {}

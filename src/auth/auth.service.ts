@@ -63,6 +63,7 @@ export class AuthService {
   ): Promise<{ message: string; data: { access_token: string; user: IUser } }> {
     try {
       const user = await this.userModel.findOne({ email: signInUserDto.email });
+      console.log(user);
       const userObject = {
         firstName: user.firstName,
         lastName: user.lastName,

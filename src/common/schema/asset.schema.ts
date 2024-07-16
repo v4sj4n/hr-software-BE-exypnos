@@ -1,17 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import * as muv from 'mongoose-unique-validator';
+import { AssetStatus, AssetType } from '../enum/asset.enum';
 
-
-export enum AssetType {
-  LAPTOP = 'laptop',
-  MONITOR = 'monitor',
-}
-export enum AssetStatus {
-  AVAILABLE = 'available',
-  ASSIGNED = 'assigned',
-  BROKEN = 'broken'
-}
 //SKU = Stock Keeping Unit is a unique code that identifies each asset
 // Get Date is the date when the asset was received
 // Return Date is the date when the asset was returned
@@ -41,5 +32,3 @@ export class Asset extends Document {
 }
 
 export const AssetSchema = SchemaFactory.createForClass(Asset).plugin(muv);
-
-

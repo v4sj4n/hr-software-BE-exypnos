@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
-import { AssetStatus, AssetType } from '../../schemas/asset.schema';
+import { AssetType, AssetStatus } from '../../common/enum/asset.enum';
 import { Types } from 'mongoose';
 
 export class CreateAssetDto {
