@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AssetModule } from './asset/asset.module';
 import { AuthModule } from './auth/auth.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -17,8 +16,9 @@ import { AuthModule } from './auth/auth.module';
     UserModule,
     AssetModule,
     AuthModule,
+    EventsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

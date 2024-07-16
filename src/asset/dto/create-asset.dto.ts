@@ -1,14 +1,9 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { AssetType } from '../../schemas/asset.schema';
+import { IsString } from 'class-validator';
 
 export class CreateAssetDto {
-  @IsEnum(AssetType)
-  type: AssetType;
+  @IsString()
+  name: string;
 
   @IsString()
-  serialNumber: string;
-
-  @IsString()
-  @IsOptional()
-  userId?: string;
+  description: string;
 }
