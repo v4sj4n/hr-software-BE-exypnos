@@ -19,27 +19,17 @@ export class VacationService {
 
   async create(createVacationDto: CreateVacationDto) {
     try {
-      if (
-        createVacationDto.userId &&
-        createVacationDto.userId !== null &&
-        createVacationDto.userId.length === 24
-      ) {
-        console.log(createVacationDto.userId);
-        const userExists = await this.userModel.findById(
-          createVacationDto.userId,
-        );
-        console.log(userExists);
-        if (!userExists) {
-          throw new NotFoundException(
-            `User with id ${createVacationDto.userId} not found`,
-          );
-        } else {
-          const createdVacation = new this.vacationModel(createVacationDto);
-          return await createdVacation.save();
-        }
-      }
+      await this.checkCreateUserId(createVacationDto);
+      await this.checkCreateDate(createVacationDto);
+
+      const createdVacation = new this.vacationModel(createVacationDto);
+
+      return await createdVacation.save();
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
         throw error;
       }
       throw new ConflictException(error.message);
@@ -59,22 +49,7 @@ export class VacationService {
   }
 
   async update(id: string, updateVacationDto: UpdateVacationDto) {
-    if (updateVacationDto.userId) {
-      if (
-        updateVacationDto.userId &&
-        updateVacationDto.userId !== null &&
-        updateVacationDto.userId.length === 24
-      ) {
-        const userExists = await this.userModel.findById(
-          updateVacationDto.userId,
-        );
-        if (!userExists) {
-          throw new NotFoundException(
-            `User with id ${updateVacationDto.userId} not found`,
-          );
-        }
-      }
-    }
+    await this.checkUpdateDate(updateVacationDto, id);
     const updatedVacation = await this.vacationModel.findByIdAndUpdate(
       id,
       updateVacationDto,
@@ -89,6 +64,130 @@ export class VacationService {
   async remove(id: string) {
     return await this.vacationModel.findByIdAndDelete(id);
   }
-}
+  //funksione ndimese per te bere CRUD operations mbi databazen
+  async checkCreateUserId(createVacationDto: CreateVacationDto) {
+    if (
+      createVacationDto.userId &&
+      createVacationDto.userId !== null &&
+      createVacationDto.userId.length === 24
+    ) {
+      const userExists = this.userModel.findById(createVacationDto.userId);
+      if (!userExists) {
+        throw new NotFoundException(
+          `User with id ${createVacationDto.userId} not found`,
+        );
+      }
+    } else {
+      createVacationDto.userId = null;
+    }
+  }
 
-//funksione ndimese per te bere CRUD operations mbi databazen
+  async checkCreateDate(createVacationDto: CreateVacationDto) {
+    const startDate = new Date(createVacationDto.startDate);
+    const endDate = new Date(createVacationDto.endDate);
+
+    const formatDate = (date: Date): string => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}:${month}:${year}`;
+    };
+
+    if (formatDate(startDate) <= formatDate(new Date())) {
+      throw new ConflictException(
+        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
+      );
+    }
+
+    if (formatDate(endDate) < formatDate(startDate)) {
+      throw new ConflictException(
+        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
+      );
+    }
+
+    const conflictingVacation = await this.vacationModel.aggregate([
+      {
+        $match: {
+          userId: createVacationDto.userId,
+          endDate: { $gt: new Date() },
+        },
+      },
+      {
+        $sort: { endDate: -1 },
+      },
+    ]);
+
+    for (const vacation of conflictingVacation) {
+      const vacationStart = formatDate(new Date(vacation.startDate));
+      const vacationEnd = formatDate(new Date(vacation.endDate));
+      const newVacationStart = formatDate(startDate);
+      const newVacationEnd = formatDate(endDate);
+
+      if (
+        (newVacationStart >= vacationStart &&
+          newVacationStart <= vacationEnd) ||
+        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
+        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
+      ) {
+        throw new ConflictException(
+          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
+        );
+      }
+    }
+  }
+
+  async checkUpdateDate(updateVacationDto: UpdateVacationDto, id: string) {
+    const existingVacation = await this.vacationModel.findById(id);
+    if (!existingVacation) {
+      throw new NotFoundException(`Vacation with id ${id} not found`);
+    }
+    const startDate = new Date(updateVacationDto.startDate);
+    const endDate = new Date(updateVacationDto.endDate);
+    const formatDate = (date: Date): string => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}:${month}:${year}`;
+    };
+    if (formatDate(startDate) <= formatDate(new Date())) {
+      throw new ConflictException(
+        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
+      );
+    }
+    if (formatDate(endDate) < formatDate(startDate)) {
+      throw new ConflictException(
+        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
+      );
+    }
+    const conflictingVacation = await this.vacationModel.aggregate([
+      {
+        $match: {
+          userId: existingVacation.userId,
+          endDate: { $gt: new Date() },
+        },
+      },
+      {
+        $sort: { endDate: -1 },
+      },
+    ]);
+
+    for (const vacation of conflictingVacation) {
+      const vacationStart = formatDate(new Date(vacation.startDate));
+      const vacationEnd = formatDate(new Date(vacation.endDate));
+      const newVacationStart = formatDate(startDate);
+      const newVacationEnd = formatDate(endDate);
+      console.log(vacationStart, vacationEnd, newVacationStart, newVacationEnd);
+
+      if (
+        (newVacationStart >= vacationStart &&
+          newVacationStart <= vacationEnd) ||
+        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
+        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
+      ) {
+        throw new ConflictException(
+          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
+        );
+      }
+    }
+  }
+}

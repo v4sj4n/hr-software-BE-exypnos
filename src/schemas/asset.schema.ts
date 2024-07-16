@@ -10,12 +10,7 @@ export enum AssetType {
 export enum AssetStatus {
   AVAILABLE = 'available',
   ASSIGNED = 'assigned',
-  BROKEN = 'broken',
-  RETURNED = 'returned',
-  LOST = 'lost',
-  STOLEN = 'stolen',
-  IN_REPAIR = 'in-repair',
-  IN_MAINTENANCE = 'in-maintenance',
+  BROKEN = 'broken'
 }
 //SKU = Stock Keeping Unit is a unique code that identifies each asset
 // Get Date is the date when the asset was received
@@ -42,7 +37,7 @@ export class Asset extends Document {
     ref: 'User',
     default: null,
   })
-  userId: string;
+  userId: Types.ObjectId;
 }
 
 export const AssetSchema = SchemaFactory.createForClass(Asset).plugin(muv);

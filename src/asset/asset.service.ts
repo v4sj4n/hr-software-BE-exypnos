@@ -69,11 +69,7 @@ export class AssetService {
   // Check if the user exists in the database
 
   checkCreateUserId(createAssetDto: CreateAssetDto) {
-    if (
-      createAssetDto.userId &&
-      createAssetDto.userId !== null &&
-      createAssetDto.userId.length === 24
-    ) {
+    if (createAssetDto.userId && createAssetDto.userId !== null) {
       const userExists = this.userModel.findById(createAssetDto.userId);
       if (!userExists) {
         throw new NotFoundException(
@@ -97,8 +93,6 @@ export class AssetService {
     if (
       createAssetDto.userId &&
       (createAssetDto.status === AssetStatus.AVAILABLE ||
-        createAssetDto.status === AssetStatus.IN_REPAIR ||
-        createAssetDto.status === AssetStatus.RETURNED ||
         createAssetDto.status === AssetStatus.BROKEN)
     ) {
       throw new ConflictException(
@@ -136,8 +130,6 @@ export class AssetService {
     if (
       updateAssetDto.userId &&
       (updateAssetDto.status === AssetStatus.AVAILABLE ||
-        updateAssetDto.status === AssetStatus.IN_REPAIR ||
-        updateAssetDto.status === AssetStatus.RETURNED ||
         updateAssetDto.status === AssetStatus.BROKEN)
     ) {
       throw new ConflictException(

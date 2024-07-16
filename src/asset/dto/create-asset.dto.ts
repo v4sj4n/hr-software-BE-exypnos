@@ -1,5 +1,6 @@
 import { IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
 import { AssetStatus, AssetType } from '../../schemas/asset.schema';
+import { Types } from 'mongoose';
 
 export class CreateAssetDto {
   @IsEnum(AssetType)
@@ -21,5 +22,5 @@ export class CreateAssetDto {
 
   @IsString()
   @IsOptional()
-  userId?: string;
+  userId?: Types.ObjectId;
 }

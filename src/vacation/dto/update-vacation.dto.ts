@@ -1,4 +1,29 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateVacationDto } from './create-vacation.dto';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { VacationType } from 'src/schemas/vacation.schema';
+import { Type } from 'class-transformer';
 
-export class UpdateVacationDto extends PartialType(CreateVacationDto) {}
+export class UpdateVacationDto {
+  @IsEnum(VacationType)
+  @IsOptional()
+  type: VacationType;
+
+  @IsString()
+  @IsOptional()
+  description: string;
+
+  @Type(() => Date)
+  @IsOptional()
+  startDate: Date;
+
+  @Type(() => Date)
+  @IsOptional()
+  endDate?: Date;
+
+  @IsString()
+  @IsOptional()
+  status?: string;
+
+  @IsString()
+  @IsOptional()
+  userId: string;
+}

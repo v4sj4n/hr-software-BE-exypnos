@@ -23,7 +23,7 @@ export class Vacation {
   @Prop({ default: Date.now })
   startDate: Date;
 
-  @Prop({ default: null })
+  @Prop({ default: new Date(new Date().setDate(new Date().getDate() + 1)) })
   endDate: Date;
 
   @Prop({ default: 'pending' })
@@ -34,8 +34,7 @@ export class Vacation {
     required: true,
     ref: 'user',
   })
-  userId: string;
+  userId: Types.ObjectId;
 }
 
 export const VacationSchema = SchemaFactory.createForClass(Vacation);
-

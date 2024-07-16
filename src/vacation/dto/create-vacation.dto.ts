@@ -1,6 +1,6 @@
 import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { VacationType } from '../../schemas/vacation.schema';
-import { IsDate } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateVacationDto {
   @IsEnum(VacationType)
@@ -10,11 +10,11 @@ export class CreateVacationDto {
   @IsOptional()
   description: string;
 
-  @IsDate()
+  @Type(() => Date)
   @IsOptional()
   startDate: Date;
 
-  @IsDate()
+  @Type(() => Date)
   @IsOptional()
   endDate?: Date;
 
