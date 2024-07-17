@@ -9,6 +9,9 @@ import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { VacationModule } from './vacation/vacation.module';
+import { PollModule } from './poll.events/poll.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -44,6 +47,10 @@ import { join } from 'path';
     UserModule,
     AssetModule,
     AuthModule,
+    VacationModule,
+    EventsModule,
+    PollModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
