@@ -11,36 +11,45 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Role } from 'src/common/enum/role.enum';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { generateRandomPassword } from 'src/common/util/generateRandomPassword';
+import { Auth } from 'src/common/schema/auth.schema';
 
-type IUser = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: Role;
-};
+type IUser = User & { email: string };
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: mongoose.Model<User>,
+    @InjectModel(Auth.name) private authModel: mongoose.Model<Auth>,
     private jwtService: JwtService,
     private readonly mailService: MailerService,
   ) {}
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     try {
+      const { email, ...userProperties } = createUserDto;
+
       const password = generateRandomPassword();
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      const user = await this.userModel.create({
-        ...createUserDto,
+      const existingAuth = await this.authModel.findOne({ email });
+      if (existingAuth) {
+        throw new ConflictException('Email already exists');
+      }
+
+      const userAuth = await this.authModel.create({
+        email,
         password: hashedPassword,
       });
+
+      console.log(password);
+      const user = await this.userModel.create({
+        ...userProperties,
+        userId: userAuth._id,
+      });
+
       await this.mailService.sendMail({
         from: process.env.MAIL_USERNAME,
         to: createUserDto.email,
@@ -54,21 +63,20 @@ export class AuthService {
       });
       return user;
     } catch (err) {
+      console.log(err);
       throw new ConflictException(err);
     }
   }
-  async signIn(
-    signInUserDto: SignInUserDto,
-  ): Promise<{ message: string; data: { access_token: string; user: IUser } }> {
+  async signIn(signInUserDto: SignInUserDto): Promise<{
+    message: string;
+    data: { access_token: string; user: IUser };
+  }> {
     try {
-      const user = await this.userModel.findOne({ email: signInUserDto.email });
-      const userObject = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        email: user.email,
-        phone: user.phone,
-      };
+      const userAuth = await this.authModel.findOne({
+        email: signInUserDto.email,
+      });
+      const user = await this.userModel.findOne({ userId: userAuth._id });
+      console.log(user);
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -76,7 +84,7 @@ export class AuthService {
 
       const isMatch = await bcrypt.compare(
         signInUserDto.password,
-        user.password,
+        userAuth.password,
       );
 
       if (!isMatch) {
@@ -85,7 +93,7 @@ export class AuthService {
 
       const payload = {
         sub: user.id,
-        email: user.email,
+        email: userAuth.email,
         role: user.role,
       };
 
@@ -93,23 +101,30 @@ export class AuthService {
         message: 'Authenticated Succesfully',
         data: {
           access_token: await this.jwtService.signAsync(payload),
-          user: userObject,
+
+          user: {
+            ...user.toObject(),
+            email: signInUserDto.email,
+          },
         },
       };
     } catch (err) {
+      console.log(err);
       throw new ConflictException(err);
     }
   }
 
   async getUser(email: string): Promise<IUser> {
     try {
-      const user = await this.userModel.findOne({ email });
+      const userAuth = await this.authModel.findOne({
+        email,
+      });
+      const user = await this.userModel.findOne({
+        userId: userAuth._id,
+      });
       return {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
+        ...user,
+        email,
       };
     } catch (err) {
       throw new ConflictException(err);
@@ -118,7 +133,7 @@ export class AuthService {
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto, email: string) {
     try {
-      const user = await this.userModel.findOne({ email });
+      const user = await this.authModel.findOne({ email });
 
       const isMatch = await bcrypt.compare(
         updatePasswordDto.oldPassword,

@@ -12,7 +12,8 @@ export class UserService {
   ) {}
   async findAll(): Promise<User[]> {
     try {
-      const users = await this.userModel.find();
+      const users = await this.userModel.find().populate('userId');
+      console.log(users);
       return users;
     } catch (err) {
       throw new ConflictException(err);
@@ -21,7 +22,7 @@ export class UserService {
 
   async findOne(id: string): Promise<User | null> {
     try {
-      const user = await this.userModel.findById(id);
+      const user = await this.userModel.findById(id).populate('userId');
 
       return user;
     } catch (err) {
