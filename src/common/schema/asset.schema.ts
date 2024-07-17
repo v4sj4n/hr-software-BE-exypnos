@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import * as muv from 'mongoose-unique-validator';
 import { AssetStatus, AssetType } from '../enum/asset.enum';
+import { User } from './user.schema';
 
 //SKU = Stock Keeping Unit is a unique code that identifies each asset
 // Get Date is the date when the asset was received
@@ -25,7 +26,7 @@ export class Asset extends Document {
 
   @Prop({
     type: Types.ObjectId,
-    ref: 'User',
+    ref: User.name,
     default: null,
   })
   userId: Types.ObjectId;

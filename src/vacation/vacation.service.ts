@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
@@ -18,22 +18,13 @@ export class VacationService {
   ) {}
 
   async create(createVacationDto: CreateVacationDto) {
-    try {
-      await this.checkCreateUserId(createVacationDto);
-      await this.checkCreateDate(createVacationDto);
-
-      const createdVacation = new this.vacationModel(createVacationDto);
-
-      return await createdVacation.save();
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ConflictException
-      ) {
-        throw error;
-      }
-      throw new ConflictException(error.message);
-    }
+    await this.checkUserId(createVacationDto.userId);
+    await this.checkDatesforCreate(createVacationDto);
+    const createdVacation = new this.vacationModel(createVacationDto);
+    createdVacation.userId = new mongoose.Types.ObjectId(
+      createVacationDto.userId,
+    );
+    return await createdVacation.save();
   }
 
   async findAll() {
@@ -49,10 +40,16 @@ export class VacationService {
   }
 
   async update(id: string, updateVacationDto: UpdateVacationDto) {
-    await this.checkUpdateDate(updateVacationDto, id);
+    if (updateVacationDto.userId) {
+      await this.checkUserId(updateVacationDto.userId);
+    }
+    await this.checkDatesforUpdate(updateVacationDto, id);
     const updatedVacation = await this.vacationModel.findByIdAndUpdate(
       id,
-      updateVacationDto,
+      {
+        ...updateVacationDto,
+        userId: new mongoose.Types.ObjectId(updateVacationDto.userId),
+      },
       { new: true },
     );
     if (!updatedVacation) {
@@ -62,81 +59,20 @@ export class VacationService {
   }
 
   async remove(id: string) {
-    return await this.vacationModel.findByIdAndDelete(id);
-  }
-  //funksione ndimese per te bere CRUD operations mbi databazen
-  async checkCreateUserId(createVacationDto: CreateVacationDto) {
-    if (
-      createVacationDto.userId &&
-      createVacationDto.userId !== null &&
-      createVacationDto.userId.length === 24
-    ) {
-      const userExists = this.userModel.findById(createVacationDto.userId);
-      if (!userExists) {
-        throw new NotFoundException(
-          `User with id ${createVacationDto.userId} not found`,
-        );
-      }
-    } else {
-      createVacationDto.userId = null;
+    const deletedVacation = await this.vacationModel.findByIdAndDelete(id);
+    if (!deletedVacation) {
+      throw new NotFoundException(`Vacation with id ${id} not found`);
     }
+    return deletedVacation;
   }
 
-  async checkCreateDate(createVacationDto: CreateVacationDto) {
-    const startDate = new Date(createVacationDto.startDate);
-    const endDate = new Date(createVacationDto.endDate);
-
-    const formatDate = (date: Date): string => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}:${month}:${year}`;
-    };
-
-    if (formatDate(startDate) <= formatDate(new Date())) {
-      throw new ConflictException(
-        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
-      );
-    }
-
-    if (formatDate(endDate) < formatDate(startDate)) {
-      throw new ConflictException(
-        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
-      );
-    }
-
-    const conflictingVacation = await this.vacationModel.aggregate([
-      {
-        $match: {
-          userId: createVacationDto.userId,
-          endDate: { $gt: new Date() },
-        },
-      },
-      {
-        $sort: { endDate: -1 },
-      },
-    ]);
-
-    for (const vacation of conflictingVacation) {
-      const vacationStart = formatDate(new Date(vacation.startDate));
-      const vacationEnd = formatDate(new Date(vacation.endDate));
-      const newVacationStart = formatDate(startDate);
-      const newVacationEnd = formatDate(endDate);
-
-      if (
-        (newVacationStart >= vacationStart &&
-          newVacationStart <= vacationEnd) ||
-        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
-        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
-      ) {
-        throw new ConflictException(
-          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
-        );
-      }
+  private async checkUserId(userId: Types.ObjectId) {
+    const userExists = await this.userModel.findById(userId);
+    if (!userExists) {
+      throw new NotFoundException(`User with id ${userId} not found`);
     }
   }
-
-  async checkUpdateDate(updateVacationDto: UpdateVacationDto, id: string) {
+  async checkDatesforUpdate(updateVacationDto: UpdateVacationDto, id: string) {
     const existingVacation = await this.vacationModel.findById(id);
     if (!existingVacation) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
@@ -177,6 +113,56 @@ export class VacationService {
       const newVacationStart = formatDate(startDate);
       const newVacationEnd = formatDate(endDate);
       console.log(vacationStart, vacationEnd, newVacationStart, newVacationEnd);
+
+      if (
+        (newVacationStart >= vacationStart &&
+          newVacationStart <= vacationEnd) ||
+        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
+        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
+      ) {
+        throw new ConflictException(
+          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
+        );
+      }
+    }
+  }
+  private async checkDatesforCreate(
+    vacationData: CreateVacationDto | UpdateVacationDto,
+  ) {
+    const startDate = new Date(vacationData.startDate);
+    const endDate = new Date(vacationData.endDate);
+    const today = new Date();
+    const formatDate = (date: Date): string => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}:${month}:${year}`;
+    };
+
+    if (formatDate(startDate) <= formatDate(today)) {
+      throw new ConflictException(
+        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
+      );
+    }
+    if (formatDate(endDate) < formatDate(startDate)) {
+      throw new ConflictException(
+        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
+      );
+    }
+
+    const conflictingVacation = await this.vacationModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(vacationData.userId),
+        },
+      },
+    ]);
+
+    for (const vacation of conflictingVacation) {
+      const vacationStart = formatDate(new Date(vacation.startDate));
+      const vacationEnd = formatDate(new Date(vacation.endDate));
+      const newVacationStart = formatDate(startDate);
+      const newVacationEnd = formatDate(endDate);
 
       if (
         (newVacationStart >= vacationStart &&
