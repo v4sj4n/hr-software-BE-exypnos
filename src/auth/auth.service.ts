@@ -54,7 +54,6 @@ export class AuthService {
       });
       return user;
     } catch (err) {
-      console.log(err);
       throw new ConflictException(err);
     }
   }
@@ -63,7 +62,6 @@ export class AuthService {
   ): Promise<{ message: string; data: { access_token: string; user: IUser } }> {
     try {
       const user = await this.userModel.findOne({ email: signInUserDto.email });
-      console.log(user);
       const userObject = {
         firstName: user.firstName,
         lastName: user.lastName,
@@ -99,7 +97,6 @@ export class AuthService {
         },
       };
     } catch (err) {
-      console.log(err);
       throw new ConflictException(err);
     }
   }

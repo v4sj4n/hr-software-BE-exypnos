@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { VacationType } from '../enum/vacation.enum';
-
+import { User } from './user.schema';
 
 @Schema()
 export class Vacation {
@@ -11,10 +11,10 @@ export class Vacation {
   @Prop({ required: false })
   description: string;
 
-  @Prop({ default: Date.now })
+  @Prop({ required: true })
   startDate: Date;
 
-  @Prop({ default: new Date(new Date().setDate(new Date().getDate() + 1)) })
+  @Prop({ required: true })
   endDate: Date;
 
   @Prop({ default: 'pending' })
@@ -23,9 +23,10 @@ export class Vacation {
   @Prop({
     type: Types.ObjectId,
     required: true,
-    ref: 'user',
+    ref: User.name,
   })
   userId: Types.ObjectId;
 }
 
 export const VacationSchema = SchemaFactory.createForClass(Vacation);
+

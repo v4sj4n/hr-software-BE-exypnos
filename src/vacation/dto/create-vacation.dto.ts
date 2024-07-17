@@ -1,6 +1,7 @@
 import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { VacationType } from 'src/common/enum/vacation.enum';
+import { Types } from 'mongoose';
 
 export class CreateVacationDto {
   @IsEnum(VacationType)
@@ -11,11 +12,9 @@ export class CreateVacationDto {
   description: string;
 
   @Type(() => Date)
-  @IsOptional()
   startDate: Date;
 
   @Type(() => Date)
-  @IsOptional()
   endDate?: Date;
 
   @IsString()
@@ -23,5 +22,5 @@ export class CreateVacationDto {
   status?: string;
 
   @IsString()
-  userId: string;
+  userId: Types.ObjectId;
 }
