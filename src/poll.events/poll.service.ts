@@ -32,4 +32,54 @@ export class PollService {
     await event.save();
     return event;
   }
+
+  async updateVote(eventId: string, voteDto: VoteDto): Promise<Event> {
+    const event = await this.eventModel.findById(eventId).exec();
+    if (!event) {
+      throw new NotFoundException(`Event with id ${eventId} not found`);
+    }
+
+    // Find the option the user has already voted for
+    const currentOption = event.poll.options.find(o => o.voters.includes(voteDto.userId));
+    if (!currentOption) {
+      throw new NotFoundException(`User has not voted yet`);
+    }
+
+    // Find the new option to vote for
+    const newOption = event.poll.options.find(o => o.option === voteDto.option);
+    if (!newOption) {
+      throw new NotFoundException(`Option ${voteDto.option} not found`);
+    }
+
+    // Remove the user's vote from the current option
+    currentOption.votes--;
+    currentOption.voters = currentOption.voters.filter(id => id !== voteDto.userId);
+
+    // Add the user's vote to the new option
+    newOption.votes++;
+    newOption.voters.push(voteDto.userId);
+
+    await event.save();
+    return event;
+  }
+
+  async deleteVote(eventId: string, voteDto: VoteDto): Promise<Event> {
+    const event = await this.eventModel.findById(eventId).exec();
+    if (!event) {
+      throw new NotFoundException(`Event with id ${eventId} not found`);
+    }
+
+    // Find the option the user has voted for
+    const option = event.poll.options.find(o => o.voters.includes(voteDto.userId));
+    if (!option) {
+      throw new NotFoundException(`User has not voted for any option`);
+    }
+
+    // Remove the user's vote
+    option.votes--;
+    option.voters = option.voters.filter(id => id !== voteDto.userId);
+
+    await event.save();
+    return event;
+  }
 }
