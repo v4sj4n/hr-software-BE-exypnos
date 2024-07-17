@@ -10,7 +10,7 @@ export class User {
   firstName: string;
   @Prop({ required: true })
   lastName: string;
-  @Prop({ required: true, enum: Role })
+  @Prop({ default: 'dev', enum: Role })
   role: Role;
   @Prop({ required: true })
   phone: string;
@@ -26,7 +26,7 @@ export class User {
   @Prop({ default: null })
   pob: string | null;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, ref: 'Auth' })
   userId: Types.ObjectId;
 }
 
