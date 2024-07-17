@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PollService } from './poll.service';
 import { CreatePollDto } from './dto/create-poll.dto';
-import { Poll } from '../common/schema/poll.schema'
+import { Poll } from '../common/schema/poll.schema';
 
 @Controller('polls')
 export class PollController {
@@ -23,7 +31,10 @@ export class PollController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() createPollDto: CreatePollDto): Promise<Poll> {
+  update(
+    @Param('id') id: string,
+    @Body() createPollDto: CreatePollDto,
+  ): Promise<Poll> {
     return this.pollService.update(id, createPollDto);
   }
 

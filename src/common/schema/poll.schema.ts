@@ -14,5 +14,3 @@ export class Poll {
 }
 
 export const PollSchema = SchemaFactory.createForClass(Poll);
-
-

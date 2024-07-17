@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import * as muv from 'mongoose-unique-validator';
 import { Role } from 'src/common/enum/role.enum';
 @Schema({
@@ -9,21 +10,24 @@ export class User {
   firstName: string;
   @Prop({ required: true })
   lastName: string;
-
-  @Prop({ required: true, unique: true, type: String })
-  email: string;
-
-  @Prop({ required: true })
-  password: string;
-
   @Prop({ required: true, enum: Role })
   role: Role;
-
   @Prop({ required: true })
   phone: string;
+  @Prop({ default: null })
+  imageUrl: string | null;
 
-  @Prop()
-  imageUrl: string;
+  @Prop({ default: null })
+  gender: string | null;
+
+  @Prop({ default: null })
+  dob: string | null;
+
+  @Prop({ default: null })
+  pob: string | null;
+
+  @Prop({ required: true, unique: true })
+  userId: Types.ObjectId;
 }
 
 const UserSchema = SchemaFactory.createForClass(User);

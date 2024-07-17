@@ -30,7 +30,9 @@ export class EventsService {
   }
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
-    const updatedEvent = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true }).exec();
+    const updatedEvent = await this.eventModel
+      .findByIdAndUpdate(id, updateEventDto, { new: true })
+      .exec();
     if (!updatedEvent) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
@@ -50,7 +52,7 @@ export class EventsService {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
 
-    const option = event.poll.options.find(o => o.option === voteDto.option);
+    const option = event.poll.options.find((o) => o.option === voteDto.option);
     if (!option) {
       throw new NotFoundException(`Option ${voteDto.option} not found`);
     }

@@ -33,5 +33,18 @@ export class CreateUserDto {
   role: Role;
 
   @IsOptional()
+  @IsString()
   imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  dob?: string;
+
+  @IsOptional()
+  @IsString()
+  pob?: string;
 }

@@ -1,14 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Poll, PollDocument } from '../common/schema/poll.schema'
+import { Poll, PollDocument } from '../common/schema/poll.schema';
 import { CreatePollDto } from './dto/create-poll.dto';
 
 @Injectable()
 export class PollService {
-  constructor(
-    @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
-  ) {}
+  constructor(@InjectModel(Poll.name) private pollModel: Model<PollDocument>) {}
 
   async create(createPollDto: CreatePollDto): Promise<Poll> {
     const createdPoll = new this.pollModel(createPollDto);
@@ -28,7 +26,9 @@ export class PollService {
   }
 
   async update(id: string, createPollDto: CreatePollDto): Promise<Poll> {
-    const updatedPoll = await this.pollModel.findByIdAndUpdate(id, createPollDto, { new: true }).exec();
+    const updatedPoll = await this.pollModel
+      .findByIdAndUpdate(id, createPollDto, { new: true })
+      .exec();
     if (!updatedPoll) {
       throw new NotFoundException(`Poll with id ${id} not found`);
     }

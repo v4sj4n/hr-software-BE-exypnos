@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { RolesGuard } from 'src/common/guard/role.guard';
+import { AuthSchema } from 'src/common/schema/auth.schema';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RolesGuard } from 'src/common/guard/role.guard';
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: 'Auth', schema: AuthSchema }]),
   ],
   controllers: [AuthController],
   providers: [
