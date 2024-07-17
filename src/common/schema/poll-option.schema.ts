@@ -10,6 +10,9 @@ export class PollOption {
 
   @Prop({ default: 0 })
   votes: number;
+
+  @Prop({ type: [String], default: [] })
+  voters: string[];
 }
 
 export const PollOptionSchema = SchemaFactory.createForClass(PollOption);

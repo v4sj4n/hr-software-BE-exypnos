@@ -1,44 +1,35 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Poll, PollDocument } from '../common/schema/poll.schema'
-import { CreatePollDto } from './dto/create-poll.dto';
+import { Event, EventDocument } from '../common/schema/event.schema';
+import { VoteDto } from './dto/vote.dto';
 
 @Injectable()
 export class PollService {
   constructor(
-    @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
   ) {}
 
-  async create(createPollDto: CreatePollDto): Promise<Poll> {
-    const createdPoll = new this.pollModel(createPollDto);
-    return createdPoll.save();
-  }
-
-  async findAll(): Promise<Poll[]> {
-    return this.pollModel.find().exec();
-  }
-
-  async findOne(id: string): Promise<Poll> {
-    const poll = await this.pollModel.findById(id).exec();
-    if (!poll) {
-      throw new NotFoundException(`Poll with id ${id} not found`);
+  async vote(eventId: string, voteDto: VoteDto): Promise<Event> {
+    const event = await this.eventModel.findById(eventId).exec();
+    if (!event) {
+      throw new NotFoundException(`Event with id ${eventId} not found`);
     }
-    return poll;
-  }
 
-  async update(id: string, createPollDto: CreatePollDto): Promise<Poll> {
-    const updatedPoll = await this.pollModel.findByIdAndUpdate(id, createPollDto, { new: true }).exec();
-    if (!updatedPoll) {
-      throw new NotFoundException(`Poll with id ${id} not found`);
+    const option = event.poll.options.find(o => o.option === voteDto.option);
+    if (!option) {
+      throw new NotFoundException(`Option ${voteDto.option} not found`);
     }
-    return updatedPoll;
-  }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.pollModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException(`Poll with id ${id} not found`);
+    // Check if the user has already voted for this option
+    if (option.voters.includes(voteDto.userId)) {
+      throw new BadRequestException('User has already voted for this option');
     }
+
+    option.votes++;
+    option.voters.push(voteDto.userId);
+
+    await event.save();
+    return event;
   }
 }
