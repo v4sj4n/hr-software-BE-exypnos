@@ -4,19 +4,20 @@ import { Types } from 'mongoose';
 
 export class UpdateAssetDto {
   @IsEnum(AssetType)
+  @IsOptional()
   type: AssetType;
 
   @IsString()
+  @IsOptional()
   serialNumber: string;
 
   @IsEnum(AssetStatus)
+  @IsOptional()
   status: AssetStatus;
 
-  @IsDate()
   @IsOptional()
   receivedDate?: Date;
 
-  @IsDate()
   @IsOptional()
   returnDate?: Date;
 

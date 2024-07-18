@@ -72,29 +72,57 @@ export class VacationService {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
   }
-  async checkDatesforUpdate(updateVacationDto: UpdateVacationDto, id: string) {
+
+  private formatDate(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  private compareDates(date1: string, date2: string): number {
+    const [year1, month1, day1] = date1.split('-').map(Number);
+    const [year2, month2, day2] = date2.split('-').map(Number);
+
+    if (year1 !== year2) return year1 - year2;
+    if (month1 !== month2) return month1 - month2;
+    return day1 - day2;
+  }
+
+  private isDateRangeOverlapping(
+    start1: string,
+    end1: string,
+    start2: string,
+    end2: string,
+  ): boolean {
+    return (
+      this.compareDates(start1, end2) <= 0 &&
+      this.compareDates(start2, end1) <= 0
+    );
+  }
+
+  private async checkDatesforUpdate(
+    updateVacationDto: UpdateVacationDto,
+    id: string,
+  ) {
     const existingVacation = await this.vacationModel.findById(id);
     if (!existingVacation) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
-    const startDate = new Date(updateVacationDto.startDate);
-    const endDate = new Date(updateVacationDto.endDate);
-    const formatDate = (date: Date): string => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}:${month}:${year}`;
-    };
-    if (formatDate(startDate) <= formatDate(new Date())) {
+
+    const startDate = this.formatDate(new Date(updateVacationDto.startDate));
+    const endDate = this.formatDate(new Date(updateVacationDto.endDate));
+    const today = this.formatDate(new Date());
+
+    if (this.compareDates(startDate, today) <= 0) {
       throw new ConflictException(
-        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
+        `Start date ${startDate} must be greater than today ${today}`,
       );
     }
-    if (formatDate(endDate) < formatDate(startDate)) {
+
+    if (this.compareDates(endDate, startDate) < 0) {
       throw new ConflictException(
-        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
+        `End date ${endDate} must be greater than start date ${startDate}`,
       );
     }
+
     const conflictingVacation = await this.vacationModel.aggregate([
       {
         $match: {
@@ -108,45 +136,41 @@ export class VacationService {
     ]);
 
     for (const vacation of conflictingVacation) {
-      const vacationStart = formatDate(new Date(vacation.startDate));
-      const vacationEnd = formatDate(new Date(vacation.endDate));
-      const newVacationStart = formatDate(startDate);
-      const newVacationEnd = formatDate(endDate);
-      console.log(vacationStart, vacationEnd, newVacationStart, newVacationEnd);
+      const vacationStart = this.formatDate(new Date(vacation.startDate));
+      const vacationEnd = this.formatDate(new Date(vacation.endDate));
 
       if (
-        (newVacationStart >= vacationStart &&
-          newVacationStart <= vacationEnd) ||
-        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
-        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
+        vacation._id.toString() !== id &&
+        this.isDateRangeOverlapping(
+          startDate,
+          endDate,
+          vacationStart,
+          vacationEnd,
+        )
       ) {
         throw new ConflictException(
-          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
+          `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
         );
       }
     }
   }
+
   private async checkDatesforCreate(
     vacationData: CreateVacationDto | UpdateVacationDto,
   ) {
-    const startDate = new Date(vacationData.startDate);
-    const endDate = new Date(vacationData.endDate);
-    const today = new Date();
-    const formatDate = (date: Date): string => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}:${month}:${year}`;
-    };
+    const startDate = this.formatDate(new Date(vacationData.startDate));
+    const endDate = this.formatDate(new Date(vacationData.endDate));
+    const today = this.formatDate(new Date());
 
-    if (formatDate(startDate) <= formatDate(today)) {
+    if (this.compareDates(startDate, today) <= 0) {
       throw new ConflictException(
-        `Start date ${formatDate(startDate)} must be greater than today ${formatDate(new Date())}`,
+        `Start date ${startDate} must be greater than today ${today}`,
       );
     }
-    if (formatDate(endDate) < formatDate(startDate)) {
+
+    if (this.compareDates(endDate, startDate) < 0) {
       throw new ConflictException(
-        `End date ${formatDate(endDate)} must be greater than start date ${formatDate(startDate)}`,
+        `End date ${endDate} must be greater than start date ${startDate}`,
       );
     }
 
@@ -159,19 +183,19 @@ export class VacationService {
     ]);
 
     for (const vacation of conflictingVacation) {
-      const vacationStart = formatDate(new Date(vacation.startDate));
-      const vacationEnd = formatDate(new Date(vacation.endDate));
-      const newVacationStart = formatDate(startDate);
-      const newVacationEnd = formatDate(endDate);
+      const vacationStart = this.formatDate(new Date(vacation.startDate));
+      const vacationEnd = this.formatDate(new Date(vacation.endDate));
 
       if (
-        (newVacationStart >= vacationStart &&
-          newVacationStart <= vacationEnd) ||
-        (newVacationEnd >= vacationStart && newVacationEnd <= vacationEnd) ||
-        (newVacationStart <= vacationStart && newVacationEnd >= vacationEnd)
+        this.isDateRangeOverlapping(
+          startDate,
+          endDate,
+          vacationStart,
+          vacationEnd,
+        )
       ) {
         throw new ConflictException(
-          `New vacation conflicts with an existing vacation from ${newVacationStart} to ${newVacationEnd}`,
+          `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
         );
       }
     }

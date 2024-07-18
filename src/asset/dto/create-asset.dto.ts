@@ -12,11 +12,9 @@ export class CreateAssetDto {
   @IsEnum(AssetStatus)
   status: AssetStatus;
 
-  @IsDate()
   @IsOptional()
   receivedDate?: Date;
 
-  @IsDate()
   @IsOptional()
   returnDate?: Date;
 

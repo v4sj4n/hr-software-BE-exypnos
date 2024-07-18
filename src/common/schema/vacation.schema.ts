@@ -3,7 +3,9 @@ import { Types } from 'mongoose';
 import { VacationType } from '../enum/vacation.enum';
 import { User } from './user.schema';
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Vacation {
   @Prop({ required: true, enum: VacationType })
   type: VacationType;
@@ -29,4 +31,3 @@ export class Vacation {
 }
 
 export const VacationSchema = SchemaFactory.createForClass(Vacation);
-
