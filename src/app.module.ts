@@ -47,9 +47,9 @@ import { VacationModule } from './vacation/vacation.module';
     UserModule,
     AssetModule,
     AuthModule,
-    EventsModule,
-    PollModule,
     VacationModule,
+    EventsModule,
+    PollModule
   ],
   controllers: [AppController],
   providers: [AppService],

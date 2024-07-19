@@ -2,9 +2,10 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Asset } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
@@ -19,17 +20,12 @@ export class AssetService {
   ) {}
 
   async create(createAssetDto: CreateAssetDto): Promise<Asset> {
-    try {
-      this.checkCreateUserId(createAssetDto);
-      this.checkCreateAssetStatus(createAssetDto);
-      const createdAsset = new this.assetModel(createAssetDto);
-      return await createdAsset.save();
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new ConflictException(error.message);
-    }
+    await this.validateAssetData(createAssetDto);
+    const createdAsset = new this.assetModel(createAssetDto);
+    createdAsset.userId = createAssetDto.userId
+      ? new mongoose.Types.ObjectId(createAssetDto.userId)
+      : null;
+    return await createdAsset.save();
   }
 
   async findAll(): Promise<Asset[]> {
@@ -45,11 +41,15 @@ export class AssetService {
   }
 
   async update(id: string, updateAssetDto: UpdateAssetDto): Promise<Asset> {
-    this.checkUpdateUserId(updateAssetDto);
-    this.checkUpdateAssetStatus(updateAssetDto);
+    await this.validateAssetData(updateAssetDto);
     const updatedAsset = await this.assetModel.findByIdAndUpdate(
       id,
-      updateAssetDto,
+      {
+        ...updateAssetDto,
+        userId: updateAssetDto.userId
+          ? new mongoose.Types.ObjectId(updateAssetDto.userId)
+          : null,
+      },
       { new: true },
     );
     if (!updatedAsset) {
@@ -59,82 +59,37 @@ export class AssetService {
   }
 
   async remove(id: string): Promise<Asset> {
-    const deletedAsset = await this.assetModel.findOne({ _id: id }).exec();
+    const deletedAsset = await this.assetModel.findByIdAndDelete(id).exec();
     if (!deletedAsset) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
-    await this.assetModel.deleteOne({ _id: id }).exec();
     return deletedAsset;
   }
 
-  // Check if the user exists in the database
-
-  checkCreateUserId(createAssetDto: CreateAssetDto) {
-    if (createAssetDto.userId && createAssetDto.userId !== null) {
-      const userExists = this.userModel.findById(createAssetDto.userId);
+  private async validateAssetData(assetData: CreateAssetDto | UpdateAssetDto) {
+    if (assetData.userId) {
+      const userExists = await this.userModel.findById(assetData.userId);
       if (!userExists) {
         throw new NotFoundException(
-          `User with id ${createAssetDto.userId} not found`,
+          `User with id ${assetData.userId} not found`,
         );
       }
-    } else {
-      createAssetDto.userId = null;
     }
-  }
 
-  checkCreateAssetStatus(createAssetDto: CreateAssetDto) {
-    if (
-      !createAssetDto.userId &&
-      createAssetDto.status === AssetStatus.ASSIGNED
-    ) {
+    if (!assetData.userId && assetData.status === AssetStatus.ASSIGNED) {
       throw new ConflictException(
-        `Asset with status ${createAssetDto.status} must have a user`,
+        `Asset with status ${assetData.status} must have a user`,
       );
     }
-    if (
-      createAssetDto.userId &&
-      (createAssetDto.status === AssetStatus.AVAILABLE ||
-        createAssetDto.status === AssetStatus.BROKEN)
-    ) {
+
+    if (assetData.userId && assetData.status === AssetStatus.AVAILABLE) {
       throw new ConflictException(
-        `Asset with status ${createAssetDto.status} cannot have a user`,
+        `Asset with status ${assetData.status} cannot have a user`,
       );
     }
-  }
-
-  checkUpdateUserId(updateAssetDto: UpdateAssetDto) {
-    if (
-      updateAssetDto.userId &&
-      updateAssetDto.userId !== null &&
-      updateAssetDto.userId.length === 24
-    ) {
-      const userExists = this.userModel.findById(updateAssetDto.userId);
-      if (!userExists) {
-        throw new NotFoundException(
-          `User with id ${updateAssetDto.userId} not found`,
-        );
-      }
-    } else {
-      updateAssetDto.userId = null;
-    }
-  }
-
-  checkUpdateAssetStatus(updateAssetDto: UpdateAssetDto) {
-    if (
-      !updateAssetDto.userId &&
-      updateAssetDto.status === AssetStatus.ASSIGNED
-    ) {
+    if (assetData.status === AssetStatus.BROKEN) {
       throw new ConflictException(
-        `Asset with status ${updateAssetDto.status} must have a user`,
-      );
-    }
-    if (
-      updateAssetDto.userId &&
-      (updateAssetDto.status === AssetStatus.AVAILABLE ||
-        updateAssetDto.status === AssetStatus.BROKEN)
-    ) {
-      throw new ConflictException(
-        `Asset with status ${updateAssetDto.status} cannot have a user`,
+        `Asset with status ${assetData.status} cannot create`,
       );
     }
   }

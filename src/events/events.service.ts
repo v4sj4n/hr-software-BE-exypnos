@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { Event, EventDocument } from '../common/schema/event.schema';
-import { VoteDto } from '../poll.events/dto/vote.dto';
 
 @Injectable()
 export class EventsService {
@@ -13,8 +12,12 @@ export class EventsService {
   ) {}
 
   async create(createEventDto: CreateEventDto): Promise<Event> {
-    const createdEvent = new this.eventModel(createEventDto);
-    return createdEvent.save();
+    try {
+      const createdEvent = new this.eventModel(createEventDto);
+      return await createdEvent.save();
+    } catch (error) {
+      throw new InternalServerErrorException('Error creating event');
+    }
   }
 
   async findAll(): Promise<Event[]> {
@@ -30,9 +33,7 @@ export class EventsService {
   }
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
-    const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(id, updateEventDto, { new: true })
-      .exec();
+    const updatedEvent = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true }).exec();
     if (!updatedEvent) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
@@ -44,21 +45,5 @@ export class EventsService {
     if (!result) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
-  }
-
-  async vote(id: string, voteDto: VoteDto): Promise<Event> {
-    const event = await this.eventModel.findById(id).exec();
-    if (!event) {
-      throw new NotFoundException(`Event with id ${id} not found`);
-    }
-
-    const option = event.poll.options.find((o) => o.option === voteDto.option);
-    if (!option) {
-      throw new NotFoundException(`Option ${voteDto.option} not found`);
-    }
-
-    option.votes++;
-    await event.save();
-    return event;
   }
 }

@@ -1,45 +1,23 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { PollService } from './poll.service';
-import { CreatePollDto } from './dto/create-poll.dto';
-import { Poll } from '../common/schema/poll.schema';
+import { VoteDto } from './dto/vote.dto';
 
-@Controller('polls')
+@Controller('events')
 export class PollController {
   constructor(private readonly pollService: PollService) {}
 
-  @Post()
-  create(@Body() createPollDto: CreatePollDto): Promise<Poll> {
-    return this.pollService.create(createPollDto);
+  @Post(':eventId/vote')
+  vote(@Param('eventId') eventId: string, @Body() voteDto: VoteDto) {
+    return this.pollService.vote(eventId, voteDto);
   }
 
-  @Get()
-  findAll(): Promise<Poll[]> {
-    return this.pollService.findAll();
+  @Patch(':eventId/vote')
+  updateVote(@Param('eventId') eventId: string, @Body() voteDto: VoteDto) {
+    return this.pollService.updateVote(eventId, voteDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Poll> {
-    return this.pollService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() createPollDto: CreatePollDto,
-  ): Promise<Poll> {
-    return this.pollService.update(id, createPollDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.pollService.remove(id);
+  @Delete(':eventId/vote')
+  deleteVote(@Param('eventId') eventId: string, @Body() voteDto: VoteDto) {
+    return this.pollService.deleteVote(eventId, voteDto);
   }
 }
