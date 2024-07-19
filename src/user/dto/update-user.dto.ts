@@ -8,28 +8,28 @@ import {
 import { Role } from 'src/common/enum/role.enum';
 
 export class UpdateUserDto {
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(30)
   firstName: string;
 
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(30)
   lastName: string;
 
+  @IsOptional()
   @IsString()
   @MinLength(10)
   @MaxLength(15)
   phone: string;
 
+  @IsOptional()
   @IsString()
   @IsEnum(Role)
   role: Role;
-
-  @IsOptional()
-  @IsString()
-  imageUrl?: string;
 
   @IsOptional()
   @IsString()

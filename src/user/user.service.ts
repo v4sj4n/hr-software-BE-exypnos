@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class UserService {
@@ -12,8 +13,7 @@ export class UserService {
   ) {}
   async findAll(): Promise<User[]> {
     try {
-      const users = await this.userModel.find().populate('userId');
-      console.log(users);
+      const users = await this.userModel.find().populate('auth');
       return users;
     } catch (err) {
       throw new ConflictException(err);
@@ -22,7 +22,7 @@ export class UserService {
 
   async findOne(id: string): Promise<User | null> {
     try {
-      const user = await this.userModel.findById(id).populate('userId');
+      const user = await this.userModel.findById(id).populate('auth');
 
       return user;
     } catch (err) {
@@ -48,6 +48,41 @@ export class UserService {
       await this.userModel.findByIdAndDelete(id);
     } catch (err) {
       throw new ConflictException(err);
+    }
+  }
+
+  // uploader i imazhit
+  async uploadImage(file: Express.Multer.File, req: Request): Promise<string> {
+    try {
+      const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
+      const fileName = `${Date.now()}_${file.originalname}`;
+      const fileUpload = bucket.file(fileName);
+
+      const stream = fileUpload.createWriteStream({
+        metadata: {
+          contentType: file.mimetype,
+        },
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        stream.on('error', (error) => {
+          console.error('Error in stream:', error);
+          reject(new ConflictException('Failed to upload file'));
+        });
+
+        stream.on('finish', resolve);
+        stream.end(file.buffer);
+      });
+
+      await fileUpload.makePublic();
+      const publicUrl = fileUpload.publicUrl();
+      await this.userModel.findByIdAndUpdate(req['user'].sub, {
+        imageUrl: publicUrl,
+      });
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw new ConflictException('Failed to upload file');
     }
   }
 }

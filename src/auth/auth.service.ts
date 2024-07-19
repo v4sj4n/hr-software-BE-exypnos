@@ -47,7 +47,7 @@ export class AuthService {
       console.log(password);
       const user = await this.userModel.create({
         ...userProperties,
-        userId: userAuth._id,
+        auth: userAuth._id,
       });
 
       await this.mailService.sendMail({
@@ -63,7 +63,6 @@ export class AuthService {
       });
       return user;
     } catch (err) {
-      console.log(err);
       throw new ConflictException(err);
     }
   }
@@ -75,8 +74,7 @@ export class AuthService {
       const userAuth = await this.authModel.findOne({
         email: signInUserDto.email,
       });
-      const user = await this.userModel.findOne({ userId: userAuth._id });
-      console.log(user);
+      const user = await this.userModel.findOne({ auth: userAuth._id });
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -109,7 +107,6 @@ export class AuthService {
         },
       };
     } catch (err) {
-      console.log(err);
       throw new ConflictException(err);
     }
   }
@@ -120,7 +117,7 @@ export class AuthService {
         email,
       });
       const user = await this.userModel.findOne({
-        userId: userAuth._id,
+        auth: userAuth._id,
       });
       return {
         ...user,

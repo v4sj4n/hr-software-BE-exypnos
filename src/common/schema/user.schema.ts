@@ -10,11 +10,14 @@ export class User {
   firstName: string;
   @Prop({ required: true })
   lastName: string;
-  @Prop({ default: 'dev', enum: Role })
+  @Prop({ default: Role.DEV, enum: Role })
   role: Role;
   @Prop({ required: true })
   phone: string;
-  @Prop({ default: null })
+  @Prop({
+    default:
+      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/default.jpeg?alt=media',
+  })
   imageUrl: string | null;
 
   @Prop({ default: null })
@@ -27,7 +30,7 @@ export class User {
   pob: string | null;
 
   @Prop({ required: true, unique: true, ref: 'Auth' })
-  userId: Types.ObjectId;
+  auth: Types.ObjectId;
 }
 
 const UserSchema = SchemaFactory.createForClass(User);
