@@ -10,6 +10,7 @@ export class CreateAssetDto {
   serialNumber: string;
 
   @IsEnum(AssetStatus)
+  @IsOptional()
   status: AssetStatus;
 
   @IsOptional()
