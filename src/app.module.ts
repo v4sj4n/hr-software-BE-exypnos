@@ -12,6 +12,8 @@ import { join } from 'path';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
+import { NotificationModule } from './notification/notification.module';
+import { NoteModule } from './note/note.module';
 
 @Module({
   imports: [
@@ -49,7 +51,9 @@ import { VacationModule } from './vacation/vacation.module';
     AuthModule,
     VacationModule,
     EventsModule,
-    PollModule
+    PollModule,
+    NotificationModule,
+    NoteModule
   ],
   controllers: [AppController],
   providers: [AppService],
