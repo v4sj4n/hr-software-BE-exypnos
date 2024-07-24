@@ -58,6 +58,9 @@ export class Asset extends Document {
 
   @Prop({ type: [AssetHistory], default: [] })
   history: AssetHistory[];
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const AssetSchema = SchemaFactory.createForClass(Asset).plugin(muv);

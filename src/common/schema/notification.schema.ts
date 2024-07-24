@@ -13,11 +13,14 @@ export class Notification extends Document {
   @Prop({ required: true })
   type: NotificationType;
 
-  @Prop({ default: new Date() })
-  date: Date;
-
   @Prop({ required: true })
   typeId: Types.ObjectId;
+
+  @Prop({ required: true})
+  date: Date;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

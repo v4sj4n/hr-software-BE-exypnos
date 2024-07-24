@@ -28,6 +28,9 @@ export class Vacation {
     ref: User.name,
   })
   userId: Types.ObjectId;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const VacationSchema = SchemaFactory.createForClass(Vacation);

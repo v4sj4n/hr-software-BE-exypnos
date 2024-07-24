@@ -8,8 +8,6 @@ import {
   Patch,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from '../common/schema/notification.schema';
 
 @Controller('notification')
@@ -26,8 +24,5 @@ export class NotificationController {
     return this.notificationService.findOne(id);
   }
 
-  @Delete(':id')
-  delete(@Param('id') id: string): Promise<Notification> {
-    return this.notificationService.delete(id);
-  }
+
 }
