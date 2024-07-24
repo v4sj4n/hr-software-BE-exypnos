@@ -1,17 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './user/user.module';
-import { AssetModule } from './asset/asset.module';
-import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
+import { AssetModule } from './asset/asset.module';
+import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
+import { ApplicantsModule } from './applicants/applicants.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -32,26 +34,4 @@ import { VacationModule } from './vacation/vacation.module';
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('MAIL_FROM')}>`,
-        },
-        template: {
-          dir: join(__dirname, './common/template'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    UserModule,
-    AssetModule,
-    AuthModule,
-    VacationModule,
-    EventsModule,
-    PollModule
-  ],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
+          from: `"No Reply" <${config.get('MAIL_FROM'
