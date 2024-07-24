@@ -9,8 +9,14 @@ export class Note extends Document {
   @Prop({ required: true })
   description: string;
 
-  @Prop({ required: false,default: new Date() })
+  @Prop()
   date: Date;
+
+  @Prop({ default: false })
+  willBeReminded: boolean;  
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);

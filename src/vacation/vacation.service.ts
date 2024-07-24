@@ -9,6 +9,11 @@ import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
+import {
+  compareDates,
+  formatDate,
+  isDateRangeOverlapping,
+} from '../common/util/dateUtil';
 
 @Injectable()
 export class VacationService {
@@ -28,12 +33,12 @@ export class VacationService {
   }
 
   async findAll() {
-    return await this.vacationModel.find();
+    return await this.vacationModel.find({ isDeleted: false });
   }
 
   async findOne(id: string) {
     const vacation = await this.vacationModel.findById(id);
-    if (!vacation) {
+    if (!vacation || vacation.isDeleted) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
     return vacation;
@@ -59,11 +64,15 @@ export class VacationService {
   }
 
   async remove(id: string) {
-    const deletedVacation = await this.vacationModel.findByIdAndDelete(id);
-    if (!deletedVacation) {
+    const vacation = await this.vacationModel.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true },
+    );
+    if (!vacation) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
-    return deletedVacation;
+    return vacation;
   }
 
   private async checkUserId(userId: Types.ObjectId) {
@@ -72,32 +81,6 @@ export class VacationService {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
   }
-
-  private formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
-  }
-
-  private compareDates(date1: string, date2: string): number {
-    const [year1, month1, day1] = date1.split('-').map(Number);
-    const [year2, month2, day2] = date2.split('-').map(Number);
-
-    if (year1 !== year2) return year1 - year2;
-    if (month1 !== month2) return month1 - month2;
-    return day1 - day2;
-  }
-
-  private isDateRangeOverlapping(
-    start1: string,
-    end1: string,
-    start2: string,
-    end2: string,
-  ): boolean {
-    return (
-      this.compareDates(start1, end2) <= 0 &&
-      this.compareDates(start2, end1) <= 0
-    );
-  }
-
   private async checkDatesforUpdate(
     updateVacationDto: UpdateVacationDto,
     id: string,
@@ -107,17 +90,17 @@ export class VacationService {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
 
-    const startDate = this.formatDate(new Date(updateVacationDto.startDate));
-    const endDate = this.formatDate(new Date(updateVacationDto.endDate));
-    const today = this.formatDate(new Date());
+    const startDate = formatDate(new Date(updateVacationDto.startDate));
+    const endDate = formatDate(new Date(updateVacationDto.endDate));
+    const today = formatDate(new Date());
 
-    if (this.compareDates(startDate, today) <= 0) {
+    if (compareDates(startDate, today) <= 0) {
       throw new ConflictException(
         `Start date ${startDate} must be greater than today ${today}`,
       );
     }
 
-    if (this.compareDates(endDate, startDate) < 0) {
+    if (compareDates(endDate, startDate) < 0) {
       throw new ConflictException(
         `End date ${endDate} must be greater than start date ${startDate}`,
       );
@@ -136,17 +119,12 @@ export class VacationService {
     ]);
 
     for (const vacation of conflictingVacation) {
-      const vacationStart = this.formatDate(new Date(vacation.startDate));
-      const vacationEnd = this.formatDate(new Date(vacation.endDate));
+      const vacationStart = formatDate(new Date(vacation.startDate));
+      const vacationEnd = formatDate(new Date(vacation.endDate));
 
       if (
         vacation._id.toString() !== id &&
-        this.isDateRangeOverlapping(
-          startDate,
-          endDate,
-          vacationStart,
-          vacationEnd,
-        )
+        isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
       ) {
         throw new ConflictException(
           `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
@@ -154,21 +132,20 @@ export class VacationService {
       }
     }
   }
-
   private async checkDatesforCreate(
     vacationData: CreateVacationDto | UpdateVacationDto,
   ) {
-    const startDate = this.formatDate(new Date(vacationData.startDate));
-    const endDate = this.formatDate(new Date(vacationData.endDate));
-    const today = this.formatDate(new Date());
+    const startDate = formatDate(new Date(vacationData.startDate));
+    const endDate = formatDate(new Date(vacationData.endDate));
+    const today = formatDate(new Date());
 
-    if (this.compareDates(startDate, today) <= 0) {
+    if (compareDates(startDate, today) <= 0) {
       throw new ConflictException(
         `Start date ${startDate} must be greater than today ${today}`,
       );
     }
 
-    if (this.compareDates(endDate, startDate) < 0) {
+    if (compareDates(endDate, startDate) < 0) {
       throw new ConflictException(
         `End date ${endDate} must be greater than start date ${startDate}`,
       );
@@ -183,16 +160,11 @@ export class VacationService {
     ]);
 
     for (const vacation of conflictingVacation) {
-      const vacationStart = this.formatDate(new Date(vacation.startDate));
-      const vacationEnd = this.formatDate(new Date(vacation.endDate));
+      const vacationStart = formatDate(new Date(vacation.startDate));
+      const vacationEnd = formatDate(new Date(vacation.endDate));
 
       if (
-        this.isDateRangeOverlapping(
-          startDate,
-          endDate,
-          vacationStart,
-          vacationEnd,
-        )
+        isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
       ) {
         throw new ConflictException(
           `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,

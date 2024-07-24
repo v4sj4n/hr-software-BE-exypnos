@@ -44,12 +44,12 @@ export class AssetService {
   }
 
   async findAll(): Promise<Asset[]> {
-    return await this.assetModel.find().exec();
+    return await this.assetModel.find({ isDeleted: false });
   }
 
   async findOne(id: string): Promise<Asset> {
-    const asset = await this.assetModel.findById(id);
-    if (!asset) {
+    const asset = await this.assetModel.findById(id); 
+    if (!asset || asset.isDeleted) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
     return asset;
@@ -93,11 +93,15 @@ export class AssetService {
   }
 
   async remove(id: string): Promise<Asset> {
-    const deletedAsset = await this.assetModel.findByIdAndDelete(id).exec();
-    if (!deletedAsset) {
+    const asset = await this.assetModel.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true },
+    );
+    if (!asset) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
-    return deletedAsset;
+    return asset;
   }
 
   async getAssetHistory(id: string): Promise<AssetHistory[]> {
