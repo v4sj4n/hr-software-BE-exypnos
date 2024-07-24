@@ -6,8 +6,10 @@ import { Note, NoteSchema } from '../common/schema/note.schema';
 import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Note.name, schema: NoteSchema }]),
-NotificationModule],
+  imports: [
+    MongooseModule.forFeature([{ name: Note.name, schema: NoteSchema }]),
+    NotificationModule,
+  ],
   controllers: [NoteController],
   providers: [NoteService],
 })

@@ -33,11 +33,15 @@ export class VacationService {
   }
 
   async findAll() {
-    return await this.vacationModel.find({ isDeleted: false });
+    return await this.vacationModel
+      .find({ isDeleted: false })
+      .populate('userId', 'firstName lastName');
   }
 
   async findOne(id: string) {
-    const vacation = await this.vacationModel.findById(id);
+    const vacation = await this.vacationModel
+      .findById(id)
+      .populate('userId', 'firstName lastName');
     if (!vacation || vacation.isDeleted) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }

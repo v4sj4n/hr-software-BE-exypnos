@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -33,7 +37,9 @@ export class EventsService {
   }
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
-    const updatedEvent = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true }).exec();
+    const updatedEvent = await this.eventModel
+      .findByIdAndUpdate(id, updateEventDto, { new: true })
+      .exec();
     if (!updatedEvent) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }

@@ -1,9 +1,16 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { NoteService } from './note.service';
 import { Note } from '../common/schema/note.schema';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
-
 
 @Controller('note')
 export class NoteController {
@@ -25,7 +32,10 @@ export class NoteController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto): Promise<Note> {
+  update(
+    @Param('id') id: string,
+    @Body() updateNoteDto: UpdateNoteDto,
+  ): Promise<Note> {
     return this.noteService.update(id, updateNoteDto);
   }
 

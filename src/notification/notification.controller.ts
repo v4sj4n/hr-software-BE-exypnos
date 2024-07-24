@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Patch,
-} from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification } from '../common/schema/notification.schema';
 
@@ -23,6 +15,4 @@ export class NotificationController {
   findOne(@Param('id') id: string): Promise<Notification> {
     return this.notificationService.findOne(id);
   }
-
-
 }

@@ -53,7 +53,7 @@ export class NotificationService {
   ): Promise<Notification> {
     const updatedNotification = await this.notificationModel.findOneAndUpdate(
       { type, typeId },
-      { title, content, date, isDeleted},
+      { title, content, date, isDeleted },
       { new: true },
     );
 
@@ -65,8 +65,4 @@ export class NotificationService {
 
     return updatedNotification;
   }
-
-  
-
- 
 }

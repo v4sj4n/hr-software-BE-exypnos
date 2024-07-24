@@ -13,7 +13,7 @@ export class Note extends Document {
   date: Date;
 
   @Prop({ default: false })
-  willBeReminded: boolean;  
+  willBeReminded: boolean;
 
   @Prop({ default: false })
   isDeleted: boolean;

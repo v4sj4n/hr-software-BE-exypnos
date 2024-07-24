@@ -53,7 +53,7 @@ import { NoteModule } from './note/note.module';
     EventsModule,
     PollModule,
     NotificationModule,
-    NoteModule
+    NoteModule,
   ],
   controllers: [AppController],
   providers: [AppService],

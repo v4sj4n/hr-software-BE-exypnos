@@ -16,7 +16,7 @@ export class Notification extends Document {
   @Prop({ required: true })
   typeId: Types.ObjectId;
 
-  @Prop({ required: true})
+  @Prop({ required: true })
   date: Date;
 
   @Prop({ default: false })

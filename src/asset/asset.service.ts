@@ -2,7 +2,6 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
@@ -44,11 +43,15 @@ export class AssetService {
   }
 
   async findAll(): Promise<Asset[]> {
-    return await this.assetModel.find({ isDeleted: false });
+    return await this.assetModel
+      .find({ isDeleted: false })
+      .populate('userId', 'firstName lastName');
   }
 
   async findOne(id: string): Promise<Asset> {
-    const asset = await this.assetModel.findById(id); 
+    const asset = await this.assetModel
+      .findById(id)
+      .populate('userId', 'firstName lastName');
     if (!asset || asset.isDeleted) {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }

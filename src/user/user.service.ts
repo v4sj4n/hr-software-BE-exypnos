@@ -51,12 +51,11 @@ export class UserService {
     }
   }
 
-  // uploader i imazhit
   async uploadImage(file: Express.Multer.File, req: Request): Promise<string> {
     try {
       const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
       const fileName = `${Date.now()}_${file.originalname}`;
-      const fileUpload = bucket.file(fileName);
+      const fileUpload = bucket.file(`userImages/${fileName}`);
 
       const stream = fileUpload.createWriteStream({
         metadata: {

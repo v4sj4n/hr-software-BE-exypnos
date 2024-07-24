@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsEnum, IsDate, IsMongoId, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsDate,
+  IsMongoId,
+  IsOptional,
+} from 'class-validator';
 import { NotificationType } from '../../common/enum/notification.enum';
 import { Types } from 'mongoose';
 

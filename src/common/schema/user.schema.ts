@@ -16,7 +16,7 @@ export class User {
   phone: string;
   @Prop({
     default:
-      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/default.jpeg?alt=media',
+      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpeg?alt=media',
   })
   imageUrl: string | null;
 

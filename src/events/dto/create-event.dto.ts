@@ -1,4 +1,9 @@
-import { IsString, IsDateString, ValidateNested, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  ValidateNested,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreatePollDto } from '../../poll.events/dto/create-poll.dto';
 
