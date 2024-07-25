@@ -25,6 +25,7 @@ export class ApplicantsService {
 
     // No file handling here
     const createdApplicant = new this.applicantModel(createApplicantDto);
+    
     return await createdApplicant.save();
   }
   async uploadCv(file: Express.Multer.File, req: Request): Promise<string> {
@@ -52,9 +53,6 @@ export class ApplicantsService {
 
       await fileUpload.makePublic();
       const publicUrl = fileUpload.publicUrl();
-      await this.applicantModel.findByIdAndUpdate(req['user'].sub, {
-        cvAttachment: publicUrl,
-      });
       return publicUrl;
     } catch (error) {
       console.error('Error uploading file:', error);
