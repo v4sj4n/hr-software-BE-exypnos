@@ -1,19 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './user/user.module';
-import { AssetModule } from './asset/asset.module';
-import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
+import { AssetModule } from './asset/asset.module';
+import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
+
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
+
+import { ApplicantsModule } from './applicants/applicant.module'; // Fixed path to match your project structure
+
 
 @Module({
   imports: [
@@ -37,8 +41,8 @@ import { NoteModule } from './note/note.module';
           from: `"No Reply" <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(__dirname, './common/template'),
-          adapter: new HandlebarsAdapter(),
+          dir: join(__dirname, 'templates'),
+          adapter: new HandlebarsAdapter(), // or other adapter you are using
           options: {
             strict: true,
           },
@@ -49,11 +53,13 @@ import { NoteModule } from './note/note.module';
     UserModule,
     AssetModule,
     AuthModule,
-    VacationModule,
     EventsModule,
     PollModule,
     NotificationModule,
     NoteModule,
+    VacationModule,
+    ApplicantsModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],
