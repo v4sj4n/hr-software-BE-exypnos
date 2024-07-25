@@ -6,7 +6,9 @@ import { Applicant, ApplicantSchema } from '../common/schema/applicant.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Applicant.name, schema: ApplicantSchema }]),
+    MongooseModule.forFeature([
+      { name: Applicant.name, schema: ApplicantSchema },
+    ]),
   ],
   providers: [ApplicantsService],
   controllers: [ApplicantsController],

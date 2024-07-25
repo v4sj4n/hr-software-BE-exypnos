@@ -150,7 +150,7 @@ export class AuthService {
 
   async removeUser(email: string) {
     try {
-      const user = await this.authModel.findOneAndUpdate(
+      await this.authModel.findOneAndUpdate(
         { email },
         { isDeleted: true },
         { new: true },

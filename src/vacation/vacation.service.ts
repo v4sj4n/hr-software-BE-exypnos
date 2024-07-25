@@ -22,8 +22,7 @@ export class VacationService {
   constructor(
     @InjectModel(Vacation.name) private vacationModel: Model<Vacation>,
     private notificationService: NotificationService,
-    @InjectModel(User.name) private userModel: Model<User>, 
-    
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async create(createVacationDto: CreateVacationDto) {

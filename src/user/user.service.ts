@@ -13,7 +13,9 @@ export class UserService {
   ) {}
   async findAll(): Promise<User[]> {
     try {
-      const users = await this.userModel.find({ isDeleted: false }).populate('auth');
+      const users = await this.userModel
+        .find({ isDeleted: false })
+        .populate('auth');
       return users;
     } catch (err) {
       throw new ConflictException(err);

@@ -1,23 +1,25 @@
-import { Controller, Post, Body, UploadedFile, UseInterceptors, Req } from '@nestjs/common';
-import { CreateApplicantDto } from './dto/create-applicant.dto';
+import {
+  Controller,
+  Post,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApplicantsService } from 'src/applicants/applicant.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @Controller('applicants')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
+  @Public()
   @Post()
-  create(@Body() createApplicantDto: CreateApplicantDto) {
-    return this.applicantsService.create(createApplicantDto);
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() formData: any,
+  ) {
+    return await this.applicantsService.createApplicant(file, formData);
   }
-
-@Post('upload-cv')
-@UseInterceptors(FileInterceptor('file'))
-async uploadCv(
-  @UploadedFile() file: Express.Multer.File,
-  @Req() req: Request,
-) {
-  return this.applicantsService.uploadCv(file, req);
-}
 }

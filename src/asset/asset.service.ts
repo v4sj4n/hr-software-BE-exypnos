@@ -81,7 +81,6 @@ export class AssetService {
       history: [...existingAsset.history, newHistoryEntry],
     });
 
-
     await this.assetModel.findByIdAndUpdate(
       id,
       {

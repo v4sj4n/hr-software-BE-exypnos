@@ -1,15 +1,33 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, Body } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
-import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
+import { Applicant } from 'src/common/schema/applicant.schema';
 import * as admin from 'firebase-admin';
 
 @Injectable()
 export class ApplicantsService {
   constructor(
-    @InjectModel(Applicant.name) private readonly applicantModel: Model<ApplicantDocument>,
+    @InjectModel(Applicant.name)
+    private readonly applicantModel: Model<Applicant>,
   ) {}
+
+  async createApplicant(
+    file: Express.Multer.File,
+    @Body() createApplicantDto: CreateApplicantDto,
+  ) {
+    try {
+      const applicant = await this.applicantModel.create(createApplicantDto);
+      const cvUrl = await this.uploadCv(file);
+
+      applicant.cvAttachment = cvUrl;
+      await applicant.save();
+      return applicant;
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      throw new ConflictException('Failed to create applicant');
+    }
+  }
 
   async create(createApplicantDto: CreateApplicantDto): Promise<Applicant> {
     const existingApplicant = await this.applicantModel.findOne({
@@ -20,20 +38,21 @@ export class ApplicantsService {
     });
 
     if (existingApplicant) {
-      throw new ConflictException('Applicant with this email or phone number already exists');
+      throw new ConflictException(
+        'Applicant with this email or phone number already exists',
+      );
     }
 
     // No file handling here
     const createdApplicant = new this.applicantModel(createApplicantDto);
-    
+
     return await createdApplicant.save();
   }
-  async uploadCv(file: Express.Multer.File, req: Request): Promise<string> {
+  async uploadCv(file: Express.Multer.File): Promise<string> {
     try {
       const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
       const fileName = `${Date.now()}_${file.originalname}`;
       const fileUpload = bucket.file(`userCv/${fileName}`);
-
 
       const stream = fileUpload.createWriteStream({
         metadata: {

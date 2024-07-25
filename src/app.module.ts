@@ -16,8 +16,7 @@ import { VacationModule } from './vacation/vacation.module';
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
 
-import { ApplicantsModule } from './applicants/applicant.module'; // Fixed path to match your project structure
-
+import { ApplicantsModule } from './applicants/applicant.module';
 
 @Module({
   imports: [
@@ -59,7 +58,6 @@ import { ApplicantsModule } from './applicants/applicant.module'; // Fixed path 
     NoteModule,
     VacationModule,
     ApplicantsModule,
-
   ],
   controllers: [AppController],
   providers: [AppService],

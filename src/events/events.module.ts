@@ -10,7 +10,7 @@ import { NotificationModule } from 'src/notification/notification.module';
   imports: [
     MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
     PollModule,
-    NotificationModule
+    NotificationModule,
   ],
   controllers: [EventsController],
   providers: [EventsService],

@@ -31,8 +31,9 @@ export class CreateApplicantDto {
   @IsString()
   individualProjects: string;
 
+  @IsOptional()
   @IsDateString()
-  interviewDate: string;
+  interviewDate?: string;
 
   @IsString()
   notes: string;
