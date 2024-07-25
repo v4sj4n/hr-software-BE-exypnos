@@ -17,24 +17,12 @@ export class NoteService {
 
   async create(createNoteDto: CreateNoteDto): Promise<Note> {
     const createdNote = new this.noteModel(createNoteDto);
-    if (createNoteDto.date) {
-      createdNote.date = await this.checkDate(createNoteDto.date);
-    }
-
-    if (createdNote.willBeReminded) {
-      await this.notificationService.createNotification(
-        'Note: ' + createdNote.title,
-        createdNote.description,
-        NotificationType.NOTE,
-        createdNote._id as Types.ObjectId,
-        createdNote.date,
-      );
-    }
+    await this.validateNoteData(createdNote);
     return createdNote.save();
   }
 
   async findAll(): Promise<Note[]> {
-    return this.noteModel.find({ isDeleted: false }).exec();
+    return this.noteModel.find({ isDeleted: false });
   }
 
   async findOne(id: string): Promise<Note> {
@@ -46,7 +34,7 @@ export class NoteService {
   }
 
   async update(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
-    const exsistingNote = await this.noteModel.findById(id).exec();
+    const exsistingNote = await this.noteModel.findById(id);
     if (!exsistingNote) {
       throw new BadRequestException('Note not found');
     }
@@ -55,20 +43,7 @@ export class NoteService {
       updateNoteDto,
       { new: true },
     );
-    if (updateNoteDto.date) {
-      updatedNote.date = await this.checkDate(updateNoteDto.date);
-    }
-
-    if (updatedNote.willBeReminded) {
-      await this.notificationService.createNotification(
-        'Note: ' + updatedNote.title,
-        updatedNote.description,
-        NotificationType.NOTE,
-        updatedNote._id as Types.ObjectId,
-        updatedNote.date,
-      );
-    }
-
+    await this.validateNoteData(updatedNote);
     return updatedNote;
   }
 
@@ -103,5 +78,20 @@ export class NoteService {
       throw new BadRequestException('Date must be in the future');
     }
     return date;
+  }
+  
+  private async validateNoteData(note: Note) {
+    if (note.willBeReminded) {
+       if (!note.date) {
+        throw new BadRequestException('Date is required for reminder');
+    }
+      await this.notificationService.createNotification(
+        'Note: ' + note.title,
+        note.description,
+        NotificationType.NOTE,
+        note._id as Types.ObjectId,
+        note.date,
+      );
+    }
   }
 }

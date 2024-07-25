@@ -15,7 +15,7 @@ export class PollService {
   ) {}
 
   async vote(eventId: string, voteDto: VoteDto): Promise<Event> {
-    const event = await this.eventModel.findById(eventId).exec();
+    const event = await this.eventModel.findById(eventId);
     if (!event) {
       throw new NotFoundException(`Event with id ${eventId} not found`);
     }
@@ -38,7 +38,7 @@ export class PollService {
   }
 
   async updateVote(eventId: string, voteDto: VoteDto): Promise<Event> {
-    const event = await this.eventModel.findById(eventId).exec();
+    const event = await this.eventModel.findById(eventId);
     if (!event) {
       throw new NotFoundException(`Event with id ${eventId} not found`);
     }
@@ -74,7 +74,7 @@ export class PollService {
   }
 
   async deleteVote(eventId: string, voteDto: VoteDto): Promise<Event> {
-    const event = await this.eventModel.findById(eventId).exec();
+    const event = await this.eventModel.findById(eventId);
     if (!event) {
       throw new NotFoundException(`Event with id ${eventId} not found`);
     }

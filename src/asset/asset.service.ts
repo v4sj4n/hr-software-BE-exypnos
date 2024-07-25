@@ -20,6 +20,7 @@ export class AssetService {
 
   async create(createAssetDto: CreateAssetDto): Promise<Asset> {
     await this.validateAssetData(createAssetDto);
+    await this.checkSerialNumber(createAssetDto.serialNumber);
     const createdAsset = new this.assetModel(createAssetDto);
     createdAsset.receivedDate = createAssetDto.receivedDate
       ? new Date(createAssetDto.receivedDate)
@@ -64,6 +65,10 @@ export class AssetService {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
     await this.validateAssetData(updateAssetDto, existingAsset);
+    if (updateAssetDto.serialNumber) {
+      await this.checkSerialNumber(updateAssetDto.serialNumber, id);
+    }
+    console.log(updateAssetDto);
     const newHistoryEntry: AssetHistory = {
       updatedAt: new Date(),
       receivedDate: updateAssetDto.receivedDate,
@@ -71,9 +76,11 @@ export class AssetService {
       userId: updateAssetDto.userId,
       status: updateAssetDto.status,
     };
+    console.log(newHistoryEntry);
     Object.assign(updateAssetDto, {
       history: [...existingAsset.history, newHistoryEntry],
     });
+
 
     await this.assetModel.findByIdAndUpdate(
       id,
@@ -164,6 +171,19 @@ export class AssetService {
           `Cannot change status from ${existingAsset.status} to ${assetData.status}`,
         );
       }
+    }
+  }
+  private async checkSerialNumber(
+    serialNumber: string,
+    excludeId?: string,
+  ): Promise<void> {
+    const query = { serialNumber };
+    if (excludeId) {
+      Object.assign(query, { _id: { $ne: excludeId } });
+    }
+    const existingAsset = await this.assetModel.findOne(query);
+    if (existingAsset) {
+      throw new ConflictException('Serial number must be different');
     }
   }
 }

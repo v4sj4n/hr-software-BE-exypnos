@@ -25,11 +25,11 @@ export class EventsService {
   }
 
   async findAll(): Promise<Event[]> {
-    return this.eventModel.find().exec();
+    return this.eventModel.find();
   }
 
   async findOne(id: string): Promise<Event> {
-    const event = await this.eventModel.findById(id).exec();
+    const event = await this.eventModel.findById(id);
     if (!event) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
@@ -37,9 +37,11 @@ export class EventsService {
   }
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
-    const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(id, updateEventDto, { new: true })
-      .exec();
+    const updatedEvent = await this.eventModel.findByIdAndUpdate(
+      id,
+      updateEventDto,
+      { new: true },
+    );
     if (!updatedEvent) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
@@ -47,7 +49,7 @@ export class EventsService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.eventModel.findByIdAndDelete(id).exec();
+    const result = await this.eventModel.findByIdAndDelete(id);
     if (!result) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }

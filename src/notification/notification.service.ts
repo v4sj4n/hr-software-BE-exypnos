@@ -33,7 +33,7 @@ export class NotificationService {
   }
 
   async findAll(): Promise<Notification[]> {
-    return this.notificationModel.find({ isDeleted: false }).exec();
+    return this.notificationModel.find({ isDeleted: false });
   }
 
   async findOne(id: string): Promise<Notification> {
