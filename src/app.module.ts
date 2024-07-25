@@ -12,8 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
-import { ApplicantsModule } from './applicants/applicants.module';
-import { StorageModule } from './storage/storage.module';
+import { ApplicantsModule } from './applicants/applicant.module'; // Fixed path to match your project structure
 
 @Module({
   imports: [
@@ -34,4 +33,27 @@ import { StorageModule } from './storage/storage.module';
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('MAIL_FROM'
+          from: `"No Reply" <${config.get('MAIL_FROM')}>`,
+        },
+        template: {
+          dir: join(__dirname, 'templates'),
+          adapter: new HandlebarsAdapter(), // or other adapter you are using
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    UserModule,
+    AssetModule,
+    AuthModule,
+    EventsModule,
+    PollModule,
+    VacationModule,
+    ApplicantsModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}

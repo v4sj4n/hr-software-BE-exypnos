@@ -8,6 +8,7 @@ import { ServiceAccount } from 'firebase-admin';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService: ConfigService = app.get(ConfigService);
+
   const adminConfig: ServiceAccount = {
     projectId: configService.get<string>('FIREBASE_PROJECT_ID'),
     privateKey: configService
@@ -26,7 +27,14 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
     // credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe());
+
+  // Add the ValidationPipe globally
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true, // Automatically transform payloads to DTO instances
+    whitelist: true, // Automatically strip properties that do not have decorators
+    forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are found
+  }));
+
   await app.listen(3000);
 }
 bootstrap();
