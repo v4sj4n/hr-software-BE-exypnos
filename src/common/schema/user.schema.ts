@@ -31,6 +31,9 @@ export class User {
 
   @Prop({ required: true, unique: true, ref: 'Auth' })
   auth: Types.ObjectId;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 const UserSchema = SchemaFactory.createForClass(User);

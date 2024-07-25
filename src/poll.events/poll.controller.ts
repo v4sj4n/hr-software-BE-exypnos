@@ -2,7 +2,7 @@ import { Controller, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { PollService } from './poll.service';
 import { VoteDto } from './dto/vote.dto';
 
-@Controller('events')
+@Controller('event')
 export class PollController {
   constructor(private readonly pollService: PollService) {}
 

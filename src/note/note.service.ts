@@ -79,12 +79,13 @@ export class NoteService {
     }
     return date;
   }
-  
+
   private async validateNoteData(note: Note) {
     if (note.willBeReminded) {
-       if (!note.date) {
+      if (!note.date) {
         throw new BadRequestException('Date is required for reminder');
-    }
+      }
+      note.date = await this.checkDate(note.date as unknown as string);
       await this.notificationService.createNotification(
         'Note: ' + note.title,
         note.description,

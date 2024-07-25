@@ -13,7 +13,7 @@ export class UserService {
   ) {}
   async findAll(): Promise<User[]> {
     try {
-      const users = await this.userModel.find().populate('auth');
+      const users = await this.userModel.find({ isDeleted: false }).populate('auth');
       return users;
     } catch (err) {
       throw new ConflictException(err);
@@ -21,13 +21,11 @@ export class UserService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    try {
-      const user = await this.userModel.findById(id).populate('auth');
-
-      return user;
-    } catch (err) {
-      throw new ConflictException(err);
+    const user = await this.userModel.findById(id).populate('auth');
+    if (!user || user.isDeleted) {
+      throw new ConflictException(`User with id ${id} not found`);
     }
+    return user;
   }
 
   async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
@@ -45,10 +43,15 @@ export class UserService {
 
   async deleteUser(id: string): Promise<void> {
     try {
-      await this.userModel.findByIdAndDelete(id);
+      await this.userModel.findById(id);
     } catch (err) {
       throw new ConflictException(err);
     }
+    await this.userModel.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true },
+    );
   }
 
   async uploadImage(file: Express.Multer.File, req: Request): Promise<string> {
