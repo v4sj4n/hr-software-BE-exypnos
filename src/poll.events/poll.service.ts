@@ -5,14 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Event, EventDocument } from '../common/schema/event.schema';
+import { Event } from '../common/schema/event.schema';
 import { VoteDto } from './dto/vote.dto';
 
 @Injectable()
 export class PollService {
-  constructor(
-    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
-  ) {}
+  constructor(@InjectModel(Event.name) private eventModel: Model<Event>) {}
 
   async vote(eventId: string, voteDto: VoteDto): Promise<Event> {
     const event = await this.eventModel.findById(eventId);

@@ -7,14 +7,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { Event, EventDocument } from '../common/schema/event.schema';
+import { Event } from '../common/schema/event.schema';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 
 @Injectable()
 export class EventsService {
   constructor(
-    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(Event.name) private eventModel: Model<Event>,
     private notificationService: NotificationService,
   ) {}
 

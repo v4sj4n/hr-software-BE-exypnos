@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import * as muv from 'mongoose-unique-validator';
+import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { AssetStatus, AssetType } from '../enum/asset.enum';
 import { User } from './user.schema';
 import { IsDate, IsEnum, IsOptional } from 'class-validator';
@@ -33,14 +33,14 @@ export class AssetHistory {
 // Get Date is the date when the asset was received
 // Return Date is the date when the asset was returned
 @Schema({ timestamps: true })
-export class Asset extends Document {
-  @Prop({ required: true, enum: AssetType })
+export class Asset {
+  @Prop({ required: true, enum: AssetType, type: String })
   type: AssetType;
 
   @Prop({ required: true, unique: true })
   serialNumber: string;
 
-  @Prop({ enum: AssetStatus, default: AssetStatus.AVAILABLE })
+  @Prop({ enum: AssetStatus, default: AssetStatus.AVAILABLE, type: String })
   status: AssetStatus;
 
   @Prop()
@@ -62,5 +62,6 @@ export class Asset extends Document {
   @Prop({ default: false })
   isDeleted: boolean;
 }
-
-export const AssetSchema = SchemaFactory.createForClass(Asset).plugin(muv);
+const AssetSchema = SchemaFactory.createForClass(Asset);
+AssetSchema.plugin(muv);
+export { AssetSchema };

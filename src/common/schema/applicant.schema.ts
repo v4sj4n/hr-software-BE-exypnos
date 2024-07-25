@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as muv from 'mongoose-unique-validator';
+import muv from 'mongoose-unique-validator';
 
 @Schema({
   timestamps: true,

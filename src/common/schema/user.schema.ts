@@ -1,38 +1,41 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import * as muv from 'mongoose-unique-validator';
+import muv from 'mongoose-unique-validator';
+
 import { Role } from 'src/common/enum/role.enum';
 @Schema({
   timestamps: true,
 })
 export class User {
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   firstName: string;
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   lastName: string;
-  @Prop({ default: Role.DEV, enum: Role })
+  @Prop({ default: Role.DEV, enum: Role, type: String })
   role: Role;
   @Prop({ required: true })
   phone: string;
   @Prop({
     default:
       'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpeg?alt=media',
+    required: false,
+    type: String,
   })
   imageUrl: string | null;
 
-  @Prop({ default: null })
+  @Prop({ default: null, type: String })
   gender: string | null;
 
-  @Prop({ default: null })
+  @Prop({ default: null, type: String })
   dob: string | null;
 
-  @Prop({ default: null })
+  @Prop({ default: null, type: String })
   pob: string | null;
 
   @Prop({ required: true, unique: true, ref: 'Auth' })
   auth: Types.ObjectId;
 
-  @Prop({ default: false })
+  @Prop({ default: false, type: Boolean })
   isDeleted: boolean;
 }
 

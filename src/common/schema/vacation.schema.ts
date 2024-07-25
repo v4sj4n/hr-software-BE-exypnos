@@ -7,19 +7,19 @@ import { User } from './user.schema';
   timestamps: true,
 })
 export class Vacation {
-  @Prop({ required: true, enum: VacationType })
+  @Prop({ required: true, enum: VacationType, type: String })
   type: VacationType;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: String })
   description: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   startDate: Date;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   endDate: Date;
 
-  @Prop({ default: 'pending' })
+  @Prop({ default: 'pending', type: String })
   status: string;
 
   @Prop({
@@ -29,7 +29,7 @@ export class Vacation {
   })
   userId: Types.ObjectId;
 
-  @Prop({ default: false })
+  @Prop({ default: false, type: Boolean })
   isDeleted: boolean;
 }
 

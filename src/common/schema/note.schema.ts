@@ -1,21 +1,20 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class Note extends Document {
-  @Prop({ required: true })
+export class Note {
+  @Prop({ required: true, type: String })
   title: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   description: string;
 
-  @Prop()
+  @Prop({ required: false, type: String })
   date: Date;
 
-  @Prop({ default: false })
+  @Prop({ default: false, type: Boolean })
   willBeReminded: boolean;
 
-  @Prop({ default: false })
+  @Prop({ default: false, type: Boolean })
   isDeleted: boolean;
 }
 
