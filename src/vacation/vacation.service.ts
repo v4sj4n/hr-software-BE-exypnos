@@ -66,13 +66,13 @@ export class VacationService {
     if (updateVacationDto.userId) {
       await this.checkUserId(updateVacationDto.userId);
     }
-    if (updateVacationDto.startDate || updateVacationDto.endDate) {
-      await this.checkDatesforUpdate(updateVacationDto, id);
+    if(updateVacationDto.startDate || updateVacationDto.endDate) {
+    await this.checkDatesforUpdate(updateVacationDto, id);
     }
     const updatedVacation = await this.vacationModel.findByIdAndUpdate(
       id,
       {
-        ...updateVacationDto,
+        ...updateVacationDto
       },
       { new: true },
     );
@@ -120,12 +120,8 @@ export class VacationService {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
 
-    const startDate = updateVacationDto.startDate
-      ? formatDate(new Date(updateVacationDto.startDate))
-      : formatDate(new Date(existingVacation.startDate));
-    const endDate = updateVacationDto.endDate
-      ? formatDate(new Date(updateVacationDto.endDate))
-      : formatDate(new Date(existingVacation.endDate));
+    const startDate = formatDate(new Date(updateVacationDto.startDate));
+    const endDate = formatDate(new Date(updateVacationDto.endDate));
     const today = formatDate(new Date());
 
     if (compareDates(startDate, today) <= 0) {
