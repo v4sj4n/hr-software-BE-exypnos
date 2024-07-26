@@ -59,21 +59,23 @@ export class VacationService {
   }
 
   async update(id: string, updateVacationDto: UpdateVacationDto) {
+    const exsistingVacation = await this.vacationModel.findById(id);
+    if (!exsistingVacation) {
+      throw new NotFoundException(`Vacation with id ${id} not found`);
+    }
     if (updateVacationDto.userId) {
       await this.checkUserId(updateVacationDto.userId);
     }
+    if(updateVacationDto.startDate || updateVacationDto.endDate) {
     await this.checkDatesforUpdate(updateVacationDto, id);
+    }
     const updatedVacation = await this.vacationModel.findByIdAndUpdate(
       id,
       {
-        ...updateVacationDto,
-        userId: new mongoose.Types.ObjectId(updateVacationDto.userId),
+        ...updateVacationDto
       },
       { new: true },
     );
-    if (!updatedVacation) {
-      throw new NotFoundException(`Vacation with id ${id} not found`);
-    }
     await this.notificationService.createNotification(
       'Vacation Request Update',
       `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,

@@ -18,6 +18,6 @@ export function isDateRangeOverlapping(
   end2: string,
 ): boolean {
   return (
-    this.compareDates(start1, end2) <= 0 && this.compareDates(start2, end1) <= 0
+   compareDates(start1, end2) <= 0 && compareDates(start2, end1) <= 0
   );
 }
