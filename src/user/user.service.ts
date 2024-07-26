@@ -14,7 +14,7 @@ export class UserService {
   async findAll(): Promise<User[]> {
     try {
       const users = await this.userModel
-        .find({ isDeleted: false })
+        .find({ isDeleted: { $ne: true } })
         .populate('auth');
       return users;
     } catch (err) {
