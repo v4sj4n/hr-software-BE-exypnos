@@ -12,6 +12,9 @@ export class ApplicantsService {
     private readonly applicantModel: Model<Applicant>,
   ) {}
 
+  async getAllApplicants(): Promise<Applicant[]> {
+    return await this.applicantModel.find();
+  }
   async createApplicant(
     file: Express.Multer.File,
     @Body() createApplicantDto: CreateApplicantDto,
