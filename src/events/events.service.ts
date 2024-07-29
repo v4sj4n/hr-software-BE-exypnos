@@ -23,7 +23,6 @@ export class EventsService {
     if (!createdEvent) {
       throw new InternalServerErrorException('Event could not be created');
     }
-    console.log(createdEvent);
     await this.notificationService.createNotification(
       'Event Created',
       `Event ${createEventDto.title} has been created`,
