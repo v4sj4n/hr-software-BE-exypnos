@@ -68,7 +68,6 @@ export class AssetService {
     if (updateAssetDto.serialNumber) {
       await this.checkSerialNumber(updateAssetDto.serialNumber, id);
     }
-    console.log(updateAssetDto);
     const newHistoryEntry: AssetHistory = {
       updatedAt: new Date(),
       receivedDate: updateAssetDto.receivedDate,
@@ -76,7 +75,6 @@ export class AssetService {
       userId: updateAssetDto.userId,
       status: updateAssetDto.status,
     };
-    console.log(newHistoryEntry);
     Object.assign(updateAssetDto, {
       history: [...existingAsset.history, newHistoryEntry],
     });
