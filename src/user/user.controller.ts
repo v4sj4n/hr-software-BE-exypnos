@@ -53,4 +53,9 @@ export class UserController {
   ) {
     return this.userService.uploadImage(file, req);
   }
+
+  @Get('search/:name')
+  async searchUser(@Param('name') name: string): Promise<User[]> {
+    return this.userService.filterUsers(name);
+  }
 }
