@@ -35,8 +35,8 @@ export class Applicant {
   @Prop({ required: true })
   individualProjects: string;
 
-  @Prop({ required: true })
-  interviewDate: string;
+  @Prop()
+  interviewDate?: string;
 
   @Prop()
   notes?: string;
@@ -44,7 +44,7 @@ export class Applicant {
   @Prop({ required: true })
   salaryExpectations: string;
 
-  @Prop({ required: true })
+  @Prop({ default: 'pending' })
   status: string;
 
   @Prop()

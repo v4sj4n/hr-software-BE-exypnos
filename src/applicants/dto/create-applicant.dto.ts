@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsDateString, IsOptional, IsNumberString } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateApplicantDto {
   @IsString()
@@ -13,13 +13,13 @@ export class CreateApplicantDto {
   @IsString()
   applicationMethod: string;
 
-  @IsNumberString()
-  age: number;
+  @IsString()
+  age: string;
 
   @IsString()
   phoneNumber: string;
 
-  @IsEmail()
+  @IsString()
   email: string;
 
   @IsString()
@@ -31,18 +31,8 @@ export class CreateApplicantDto {
   @IsString()
   individualProjects: string;
 
-  @IsDateString()
-  interviewDate: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
   @IsString()
   salaryExpectations: string;
-
-  @IsString()
-  status: string;
 
   @IsOptional()
   @IsString()

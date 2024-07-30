@@ -13,7 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
-import { ApplicantsModule } from 'src/applicants/applicant.module';
+import { ApplicantsModule } from './applicants/applicant.module';
 
 @Module({
   imports: [

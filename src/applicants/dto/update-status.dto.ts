@@ -1,14 +1,6 @@
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class UpdateStatusDto {
   @IsString()
   status: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
-  @IsDateString()
-  interviewDate?: string;
 }
