@@ -147,17 +147,4 @@ export class AuthService {
       throw new ConflictException(err);
     }
   }
-
-  async removeUser(email: string) {
-    try {
-      const user = await this.authModel.findOneAndUpdate(
-        { email },
-        { isDeleted: true },
-        { new: true },
-      );
-      return 'User deleted succesfully';
-    } catch (err) {
-      throw new ConflictException(err);
-    }
-  }
 }

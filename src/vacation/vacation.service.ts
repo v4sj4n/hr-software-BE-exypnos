@@ -9,8 +9,6 @@ import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
-import { NotificationService } from 'src/notification/notification.service';
-import { NotificationType } from 'src/common/enum/notification.enum';
 import {
   compareDates,
   formatDate,
@@ -21,9 +19,7 @@ import {
 export class VacationService {
   constructor(
     @InjectModel(Vacation.name) private vacationModel: Model<Vacation>,
-    private notificationService: NotificationService,
-    @InjectModel(User.name) private userModel: Model<User>, 
-    
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async create(createVacationDto: CreateVacationDto) {
@@ -32,13 +28,6 @@ export class VacationService {
     const createdVacation = new this.vacationModel(createVacationDto);
     createdVacation.userId = new mongoose.Types.ObjectId(
       createVacationDto.userId,
-    );
-    await this.notificationService.createNotification(
-      'Vacation Request',
-      `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
-      NotificationType.VACATION,
-      createdVacation._id,
-      new Date(),
     );
     return await createdVacation.save();
   }
@@ -75,13 +64,6 @@ export class VacationService {
     if (!updatedVacation) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
-    await this.notificationService.createNotification(
-      'Vacation Request Update',
-      `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,
-      NotificationType.VACATION,
-      updatedVacation._id,
-      new Date(),
-    );
     return updatedVacation;
   }
 
@@ -94,13 +76,6 @@ export class VacationService {
     if (!vacation) {
       throw new NotFoundException(`Vacation with id ${id} not found`);
     }
-    await this.notificationService.createNotification(
-      'Vacation Request Deleted',
-      `Vacation request from ${vacation.startDate} to ${vacation.endDate} has been deleted`,
-      NotificationType.VACATION,
-      vacation._id,
-      new Date(),
-    );
     return vacation;
   }
 

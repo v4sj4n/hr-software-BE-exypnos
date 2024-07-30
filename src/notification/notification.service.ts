@@ -7,7 +7,6 @@ import { NotificationType } from 'src/common/enum/notification.enum';
 
 @Injectable()
 export class NotificationService {
-  
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<Notification>,

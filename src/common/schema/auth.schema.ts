@@ -10,9 +10,6 @@ export class Auth {
 
   @Prop({ required: true })
   password: string;
-
-  @Prop({ default: false })
-  isDeleted: boolean;
 }
 
 const AuthSchema = SchemaFactory.createForClass(Auth);
