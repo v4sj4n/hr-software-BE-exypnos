@@ -5,4 +5,5 @@ export interface Event {
   description: string;
   date: Date;
   poll?: Poll;
+  location: string;
 }

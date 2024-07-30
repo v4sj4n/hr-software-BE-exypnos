@@ -13,12 +13,16 @@ export class PollOption {
   @Prop({ default: false })
   isDeleted: boolean;
 }
+
 export class Poll {
   @Prop({ required: true })
   question: string;
 
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
+
+  @Prop({ type: String, default: 'Tirana' })
+  location: string;
 }
 
 @Schema({ timestamps: true })
@@ -29,8 +33,11 @@ export class Event {
   @Prop({ required: true, type: String })
   description: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date })
   date: Date;
+
+  @Prop({ type: String, default: 'Tirana' })
+  location: string;
 
   @Prop({ type: Poll, required: false })
   poll?: Poll;
