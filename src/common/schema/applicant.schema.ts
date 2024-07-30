@@ -18,7 +18,7 @@ export class Applicant {
   applicationMethod: string;
 
   @Prop({ required: true })
-  age: number;
+  age: string;
 
   @Prop({ required: true })
   phoneNumber: string;

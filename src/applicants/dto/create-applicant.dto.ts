@@ -19,7 +19,7 @@ export class CreateApplicantDto {
   @IsString()
   phoneNumber: string;
 
-  @IsString()
+  @IsEmail()
   email: string;
 
   @IsString()

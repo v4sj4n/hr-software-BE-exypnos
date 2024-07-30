@@ -4,19 +4,18 @@ import * as path from 'path';
 
 export const MailerConfig = MailerModule.forRoot({
   transport: {
-    host: 'smtp.example.com', // Replace with your SMTP host
-    port: 587,
-    secure: false,
+    host: process.env.MAIL_SERVER,
+    port: parseInt(process.env.MAIL_PORT, 10),
     auth: {
-      user: 'your-email@example.com', // Replace with your email
-      pass: 'your-email-password', // Replace with your email password
+      user: process.env.MAIL_USERNAME,
+      pass: process.env.MAIL_PASSWORD,
     },
   },
   defaults: {
-    from: '"No Reply" <no-reply@example.com>',
+    from: `"No Reply" <${process.env.MAIL_FROM}>`,
   },
   template: {
-    dir: path.join(__dirname, '../templates'),
+    dir: path.join(__dirname, '../common/template'),
     adapter: new HandlebarsAdapter(),
     options: {
       strict: true,

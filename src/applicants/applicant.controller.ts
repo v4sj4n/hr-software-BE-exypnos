@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Patch, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Param, Patch, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApplicantsService } from './applicant.service';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -34,11 +34,16 @@ export class ApplicantController {
     return this.applicantsService.updateStatus(id, updateStatusDto);
   }
 
-  @Post('schedule/:id')
-  schedule(
+  @Post(':id/schedule')
+  async scheduleInterview(
     @Param('id') id: string,
-    @Body('date') date: string,
-  ): void {
-    this.applicantsService.scheduleInterview(id, new Date(date));
+    @Body('interviewDate') interviewDate: string,
+  ) {
+    if (!interviewDate) {
+      throw new BadRequestException('interviewDate must be provided');
+    }
+
+    const date = new Date(interviewDate);
+    return this.applicantsService.scheduleInterview(id, date);
   }
 }
