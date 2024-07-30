@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -12,11 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
-
-import { NotificationModule } from './notification/notification.module';
-import { NoteModule } from './note/note.module';
-
-import { ApplicantsModule } from './applicants/applicant.module';
+import { ApplicantsModule } from 'src/applicants/applicant.module';
 
 @Module({
   imports: [
@@ -40,8 +37,8 @@ import { ApplicantsModule } from './applicants/applicant.module';
           from: `"No Reply" <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(), // or other adapter you are using
+          dir: join(__dirname, './common/template'),
+          adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
           },
@@ -52,11 +49,9 @@ import { ApplicantsModule } from './applicants/applicant.module';
     UserModule,
     AssetModule,
     AuthModule,
+    VacationModule,
     EventsModule,
     PollModule,
-    NotificationModule,
-    NoteModule,
-    VacationModule,
     ApplicantsModule,
   ],
   controllers: [AppController],

@@ -1,31 +1,21 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UploadedFile,
-  UseInterceptors,
-  Get,
-} from '@nestjs/common';
-import { ApplicantsService } from 'src/applicants/applicant.service';
+import { Controller, Post, Body, Patch, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/common/decorator/public.decorator';
+import { CreateApplicantDto } from './dto/create-applicant.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
+import { ApplicantsService } from 'src/applicants/applicant.service';
 
 @Controller('applicants')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() formData: any,
-  ) {
-    return await this.applicantsService.createApplicant(file, formData);
+  @UseInterceptors(FileInterceptor('cvAttachment'))
+  create(@Body() createApplicantDto: CreateApplicantDto, @UploadedFile() file: Express.Multer.File) {
+    return this.applicantsService.create(createApplicantDto, file);
   }
 
-  @Get()
-  async getAllApplicants() {
-    return await this.applicantsService.getAllApplicants();
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateStatusDto) {
+    return this.applicantsService.updateStatus(id, updateStatusDto);
   }
 }
