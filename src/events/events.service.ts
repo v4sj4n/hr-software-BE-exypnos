@@ -19,18 +19,19 @@ export class EventsService {
   ) {}
 
   async create(createEventDto: CreateEventDto): Promise<Event> {
-    const createdEvent = new this.eventModel(createEventDto);
-    if (!createdEvent) {
-      throw new InternalServerErrorException('Event could not be created');
+    try {
+      const createdEvent = new this.eventModel(createEventDto);
+      await this.notificationService.createNotification(
+        'Event Created',
+        `Event ${createEventDto.title} has been created`,
+        NotificationType.EVENT,
+        createdEvent._id as Types.ObjectId,
+        new Date(),
+      );
+      return await createdEvent.save();
+    } catch (error) {
+      throw new InternalServerErrorException('Error creating event');
     }
-    await this.notificationService.createNotification(
-      'Event Created',
-      `Event ${createEventDto.title} has been created`,
-      NotificationType.EVENT,
-      createdEvent._id as Types.ObjectId,
-      new Date(),
-    );
-    return await createdEvent.save();
   }
 
   async findAll(): Promise<Event[]> {
@@ -39,7 +40,7 @@ export class EventsService {
 
   async findOne(id: string): Promise<Event> {
     const event = await this.eventModel.findById(id);
-    if (!event || event.isDeleted) {
+    if (!event || event.$isDeleted) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
 
@@ -67,9 +68,6 @@ export class EventsService {
 
   async remove(id: string): Promise<void> {
     const result = await this.eventModel.findById(id);
-    if (!result) {
-      throw new NotFoundException(`Event with id ${id} not found`);
-    }
     await this.eventModel.findByIdAndUpdate(
       id,
       { isDeleted: true },
