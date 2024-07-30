@@ -26,83 +26,103 @@ export class VacationService {
   ) {}
 
   async create(createVacationDto: CreateVacationDto) {
-    await this.checkUserId(createVacationDto.userId);
-    await this.checkDatesforCreate(createVacationDto);
-    const createdVacation = new this.vacationModel(createVacationDto);
-    createdVacation.userId = new mongoose.Types.ObjectId(
-      createVacationDto.userId,
-    );
-    await this.notificationService.createNotification(
-      'Vacation Request',
-      `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
-      NotificationType.VACATION,
-      createdVacation._id,
-      new Date(),
-    );
-    return await createdVacation.save();
+    try {
+      await this.checkUserId(createVacationDto.userId);
+      await this.checkDatesforCreate(createVacationDto);
+      const createdVacation = new this.vacationModel(createVacationDto);
+      createdVacation.userId = new mongoose.Types.ObjectId(
+        createVacationDto.userId,
+      );
+      await this.notificationService.createNotification(
+        'Vacation Request',
+        `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
+        NotificationType.VACATION,
+        createdVacation._id,
+        new Date(),
+      );
+      return await createdVacation.save();
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 
   async findAll() {
-    return await this.vacationModel
-      .find({ isDeleted: false })
-      .populate('userId', 'firstName lastName');
+    try {
+      return await this.vacationModel
+        .find({ isDeleted: false })
+        .populate('userId', 'firstName lastName');
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 
   async findOne(id: string) {
-    const vacation = await this.vacationModel
-      .findById(id)
-      .populate('userId', 'firstName lastName');
-    if (!vacation || vacation.isDeleted) {
-      throw new NotFoundException(`Vacation with id ${id} not found`);
+    try {
+      const vacation = await this.vacationModel
+        .findById(id)
+        .populate('userId', 'firstName lastName');
+      if (!vacation || vacation.isDeleted) {
+        throw new NotFoundException(`Vacation with id ${id} not found`);
+      }
+      return vacation;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    return vacation;
   }
 
   async update(id: string, updateVacationDto: UpdateVacationDto) {
-    const exsistingVacation = await this.vacationModel.findById(id);
-    if (!exsistingVacation) {
-      throw new NotFoundException(`Vacation with id ${id} not found`);
+    try {
+      const exsistingVacation = await this.vacationModel.findById(id);
+      if (!exsistingVacation) {
+        throw new NotFoundException(`Vacation with id ${id} not found`);
+      }
+      if (updateVacationDto.userId) {
+        await this.checkUserId(updateVacationDto.userId);
+      }
+      if (updateVacationDto.startDate || updateVacationDto.endDate) {
+        await this.checkDatesforUpdate(updateVacationDto, id);
+      }
+      const updatedVacation = await this.vacationModel.findByIdAndUpdate(
+        id,
+        {
+          ...updateVacationDto,
+        },
+        { new: true },
+      );
+      await this.notificationService.createNotification(
+        'Vacation Request Update',
+        `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,
+        NotificationType.VACATION,
+        updatedVacation._id,
+        new Date(),
+      );
+      return updatedVacation;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    if (updateVacationDto.userId) {
-      await this.checkUserId(updateVacationDto.userId);
-    }
-    if (updateVacationDto.startDate || updateVacationDto.endDate) {
-      await this.checkDatesforUpdate(updateVacationDto, id);
-    }
-    const updatedVacation = await this.vacationModel.findByIdAndUpdate(
-      id,
-      {
-        ...updateVacationDto,
-      },
-      { new: true },
-    );
-    await this.notificationService.createNotification(
-      'Vacation Request Update',
-      `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,
-      NotificationType.VACATION,
-      updatedVacation._id,
-      new Date(),
-    );
-    return updatedVacation;
   }
 
   async remove(id: string) {
-    const vacation = await this.vacationModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
-    if (!vacation) {
-      throw new NotFoundException(`Vacation with id ${id} not found`);
+    try {
+      const vacation = await this.vacationModel.findByIdAndUpdate(
+        id,
+        { isDeleted: true },
+        { new: true },
+      );
+      if (!vacation) {
+        throw new NotFoundException(`Vacation with id ${id} not found`);
+      }
+      await this.notificationService.createNotification(
+        'Vacation Request Deleted',
+        `Vacation request from ${vacation.startDate} to ${vacation.endDate} has been deleted`,
+        NotificationType.VACATION,
+        vacation._id,
+        new Date(),
+      );
+      return vacation;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    await this.notificationService.createNotification(
-      'Vacation Request Deleted',
-      `Vacation request from ${vacation.startDate} to ${vacation.endDate} has been deleted`,
-      NotificationType.VACATION,
-      vacation._id,
-      new Date(),
-    );
-    return vacation;
   }
 
   private async checkUserId(userId: Types.ObjectId) {
