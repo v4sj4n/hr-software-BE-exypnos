@@ -21,4 +21,8 @@ export class CreateEventDto {
   @ValidateNested()
   @Type(() => CreatePollDto)
   poll?: CreatePollDto;
+
+  @IsOptional()
+  @IsString()
+  location: string;
 }
