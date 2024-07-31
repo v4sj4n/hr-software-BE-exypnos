@@ -4,7 +4,6 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
-  Get,
 } from '@nestjs/common';
 import { ApplicantsService } from 'src/applicants/applicant.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -22,10 +21,5 @@ export class ApplicantsController {
     @Body() formData: any,
   ) {
     return await this.applicantsService.createApplicant(file, formData);
-  }
-
-  @Get()
-  async getAllApplicants() {
-    return await this.applicantsService.getAllApplicants();
   }
 }
