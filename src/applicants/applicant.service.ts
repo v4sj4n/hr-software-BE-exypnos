@@ -3,12 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
 import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Express } from 'express';
 
 @Injectable()
 export class ApplicantsService {
@@ -77,20 +75,6 @@ export class ApplicantsService {
     return updatedApplicant;
   }
 
-  async updateStatus(id: string, updateStatusDto: UpdateStatusDto): Promise<ApplicantDocument> {
-    const updatedApplicant = await this.applicantModel.findByIdAndUpdate(id, updateStatusDto, { new: true }).exec();
-    if (!updatedApplicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
-    }
-
-    if (updateStatusDto.status === 'accepted') {
-      await this.sendAcceptEmail(updatedApplicant);
-    } else if (updateStatusDto.status === 'rejected') {
-      await this.sendRejectEmail(updatedApplicant);
-    }
-
-    return updatedApplicant;
-  }
 
   async remove(id: string): Promise<void> {
     const result = await this.applicantModel.findByIdAndDelete(id).exec();

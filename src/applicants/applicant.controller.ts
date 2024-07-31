@@ -3,7 +3,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApplicantsService } from './applicant.service';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Controller('applicants')
 export class ApplicantController {
@@ -26,15 +25,7 @@ export class ApplicantController {
     return this.applicantsService.update(id, updateApplicantDto);
   }
 
-  @Post(':id/status')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() updateStatusDto: UpdateStatusDto,
-  ) {
-    return this.applicantsService.updateStatus(id, updateStatusDto);
-  }
-
-  @Post(':id/schedule')
+  @Patch(':id/schedule')
   async scheduleInterview(
     @Param('id') id: string,
     @Body('interviewDate') interviewDate: string,
