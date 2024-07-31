@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 
-export type ApplicantDocument = Applicant & Document;
-
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Applicant {
   @Prop({ required: true })
   firstName: string;
@@ -18,12 +18,12 @@ export class Applicant {
   applicationMethod: string;
 
   @Prop({ required: true })
-  age: string;
+  age: number;
 
   @Prop({ required: true })
   phoneNumber: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   email: string;
 
   @Prop({ required: true })
@@ -32,23 +32,31 @@ export class Applicant {
   @Prop({ required: true })
   technologiesUsed: string;
 
-  @Prop({ required: true })
-  individualProjects: string;
+  //@Prop({ required: true })
+  //individualProjects: string;
 
   @Prop()
-  interviewDate?: string;
+  interviewDate?: Date;
 
-  @Prop()
-  notes?: string;
+  //@Prop({ required: true })
+  //notes: string;
 
   @Prop({ required: true })
   salaryExpectations: string;
 
-  @Prop({ default: 'pending' })
+  @Prop()
+  cvAttachment?: string;
+
+  @Prop({ required: true })
   status: string;
 
   @Prop()
-  cvAttachment?: string;
+  interviewNotes?: string;
+
+  @Prop()
+  rejectionNotes?: string;
 }
 
-export const ApplicantSchema = SchemaFactory.createForClass(Applicant);
+const ApplicantSchema = SchemaFactory.createForClass(Applicant);
+ApplicantSchema.plugin(muv);
+export { ApplicantSchema };
