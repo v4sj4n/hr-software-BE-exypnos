@@ -32,14 +32,14 @@ export class Applicant {
   @Prop({ required: true })
   technologiesUsed: string;
 
-  //@Prop({ required: true })
-  //individualProjects: string;
+  @Prop({ required: false })
+  individualProjects: string;
 
-  @Prop()
+  @Prop({ required: false })
   interviewDate?: Date;
 
-  //@Prop({ required: true })
-  //notes: string;
+  @Prop({ required: false })
+  notes: string;
 
   @Prop({ required: true })
   salaryExpectations: string;
@@ -47,13 +47,13 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   status: string;
 
-  @Prop()
+  @Prop({ required: false })
   interviewNotes?: string;
 
-  @Prop()
+  @Prop({ required: false })
   rejectionNotes?: string;
 }
 

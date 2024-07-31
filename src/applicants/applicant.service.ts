@@ -12,16 +12,20 @@ export class ApplicantsService {
     private readonly applicantModel: Model<Applicant>,
   ) {}
 
+  async findAll(): Promise<Applicant[]> {
+    return await this.applicantModel.find();
+  }
+
   async createApplicant(
     file: Express.Multer.File,
     @Body() createApplicantDto: CreateApplicantDto,
   ) {
     try {
-      const applicant = await this.applicantModel.create(createApplicantDto);
       const cvUrl = await this.uploadCv(file);
-
-      applicant.cvAttachment = cvUrl;
-      await applicant.save();
+      const applicant = await this.applicantModel.create({
+        ...createApplicantDto,
+        cvAttachment: cvUrl,
+      });
       return applicant;
     } catch (err) {
       console.error('Error uploading file:', err);
@@ -72,6 +76,8 @@ export class ApplicantsService {
 
       await fileUpload.makePublic();
       const publicUrl = fileUpload.publicUrl();
+      console.log(fileUpload);
+      console.log(publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error uploading file:', error);
