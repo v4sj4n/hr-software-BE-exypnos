@@ -91,15 +91,15 @@ export class SalaryService {
   }
 
   async remove(id: string): Promise<Salary> {
-    try{
-    const salary = await this.salaryModel.findByIdAndDelete(id);
-    if (!salary) {
-      throw new NotFoundException(`Salary with id ${id} not found`);
+    try {
+      const salary = await this.salaryModel.findByIdAndDelete(id);
+      if (!salary) {
+        throw new NotFoundException(`Salary with id ${id} not found`);
+      }
+      return salary;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    return salary;
-  } catch (error) {
-    throw new ConflictException(error);
-  }
   }
 
   private async validateSalaryData(
@@ -151,10 +151,12 @@ export class SalaryService {
   async getSalaryByUniqueId(uniqueId: string): Promise<Salary> {
     const salary = await this.salaryModel.findOne({ uniqueId });
     if (!salary) {
-      throw new NotFoundException(`Salary with unique id ${uniqueId} not found`);
+      throw new NotFoundException(
+        `Salary with unique id ${uniqueId} not found`,
+      );
     }
     return salary;
-  } 
+  }
 
   async getSalaryByMonthAndYear(
     month: number,
@@ -168,5 +170,4 @@ export class SalaryService {
     }
     return salary;
   }
-  
 }

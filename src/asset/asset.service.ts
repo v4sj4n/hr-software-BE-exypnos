@@ -10,14 +10,12 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
-
 @Injectable()
 export class AssetService {
   constructor(
     @InjectModel(Asset.name) private assetModel: Model<Asset>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
-
   async create(createAssetDto: CreateAssetDto): Promise<Asset> {
     try {
       await this.validateAssetData(createAssetDto);
@@ -32,7 +30,6 @@ export class AssetService {
       createdAsset.userId = createAssetDto.userId
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
         : null;
-
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
         receivedDate: createdAsset.receivedDate,
@@ -46,7 +43,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-
   async findAll(): Promise<Asset[]> {
     try {
       return await this.assetModel
@@ -56,7 +52,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-
   async findOne(id: string): Promise<Asset> {
     try {
       const asset = await this.assetModel
@@ -70,7 +65,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-
   async update(id: string, updateAssetDto: UpdateAssetDto): Promise<Asset> {
     try {
       const existingAsset = await this.assetModel.findById(id);
@@ -91,7 +85,6 @@ export class AssetService {
       Object.assign(updateAssetDto, {
         history: [...existingAsset.history, newHistoryEntry],
       });
-
       await this.assetModel.findByIdAndUpdate(
         id,
         {
@@ -108,13 +101,11 @@ export class AssetService {
         },
         { new: true },
       );
-
       return await this.assetModel.findById(id);
     } catch (error) {
       throw new ConflictException(error);
     }
   }
-
   async remove(id: string): Promise<Asset> {
     try {
       const asset = await this.assetModel.findByIdAndUpdate(
@@ -130,7 +121,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-
   async getAssetHistory(id: string): Promise<AssetHistory[]> {
     const asset = await this.assetModel.findById(id);
     if (!asset) {
@@ -138,7 +128,6 @@ export class AssetService {
     }
     return asset.history;
   }
-
   private async validateAssetData(
     assetData: CreateAssetDto | UpdateAssetDto,
     existingAsset?: Asset,
@@ -151,13 +140,16 @@ export class AssetService {
         );
       }
     }
-
     if (!assetData.userId && assetData.status === AssetStatus.ASSIGNED) {
       throw new ConflictException(
         `Asset with status ${assetData.status} must have a user`,
       );
     }
-
+    if (!assetData.status && assetData.userId) {
+      throw new ConflictException(
+        `Asset with user ${assetData.userId} must have a status assigned`,
+      );
+    }
     if (
       assetData.userId &&
       (assetData.status === AssetStatus.AVAILABLE ||
@@ -167,7 +159,6 @@ export class AssetService {
         `Asset with status ${assetData.status} cannot have a user`,
       );
     }
-
     if (existingAsset) {
       if (
         (assetData.status === AssetStatus.AVAILABLE ||
@@ -201,6 +192,80 @@ export class AssetService {
     const existingAsset = await this.assetModel.findOne(query);
     if (existingAsset) {
       throw new ConflictException('Serial number must be different');
+    }
+  }
+
+  async getAllUserWithAssets(): Promise<User[]> {
+    try {
+      const usersWithAsset = await this.userModel.aggregate([
+        {
+          $lookup: {
+            from: 'assets',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'assets',
+          },
+        },
+        {
+          $match: {
+            assets: { $ne: [] },
+          },
+        },
+        {
+          $sort: {
+            firstName: 1,
+            lastName: 1,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            imageUrl: 1,
+            assets: 1,
+          },
+        },
+      ]);
+      return usersWithAsset;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async getUserWithAssets(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).populate('auth');
+    if (!user || user.isDeleted) {
+      throw new ConflictException(`User with id ${id} not found`);
+    }
+
+    try {
+      const userWithAsset = await this.userModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(id),
+          },
+        },
+        {
+          $lookup: {
+            from: 'assets',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'assets',
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            assets: 1,
+          },
+        },
+      ]);
+      return userWithAsset[0];
+    } catch (err) {
+      throw new ConflictException(err);
     }
   }
 }

@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Param, Patch, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Patch,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApplicantsService } from './applicant.service';
 import { CreateApplicantDto } from './dto/create-applicant.dto';

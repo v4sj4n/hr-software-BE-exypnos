@@ -17,10 +17,10 @@ export class Salary {
   @Prop({ default: 0, type: 'number' })
   bonus: number;
 
-  @Prop({default:0, type: 'number' })
+  @Prop({ default: 0, type: 'number' })
   month: number;
 
-  @Prop({default:0, type: 'number' })
+  @Prop({ default: 0, type: 'number' })
   year: number;
 
   @Prop({

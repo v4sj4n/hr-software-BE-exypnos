@@ -10,9 +10,9 @@ import { User, UserSchema } from 'src/common/schema/user.schema';
     MongooseModule.forFeature([
       { name: Salary.name, schema: SalarySchema },
       { name: User.name, schema: UserSchema },
-    ])
+    ]),
   ],
   controllers: [SalaryController],
-  providers: [SalaryService]
+  providers: [SalaryService],
 })
 export class SalaryModule {}

@@ -25,6 +25,16 @@ export class AssetController {
     return this.assetService.findAll();
   }
 
+  @Get('user')
+  findAllWithUsers() {
+    return this.assetService.getAllUserWithAssets();
+  }
+
+  @Get('user/:id')
+  findAllWithUsersById(@Param('id') id: string) {
+    return this.assetService.getUserWithAssets(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.assetService.findOne(id);

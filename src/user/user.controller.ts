@@ -29,14 +29,6 @@ export class UserController {
   async searchUser(@Param('name') name: string): Promise<User[]> {
     return this.userService.filterUsers(name);
   }
-  @Get('asset')
-  async getAssets(): Promise<any> {
-    return this.userService.getAllUserWithAssets();
-  }
-  @Get('asset/:id')
-  async getAssetsById(@Param('id') id: string): Promise<any> {
-    return this.userService.getUserWithAssets(id);
-  }
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User | null> {
     return await this.userService.findOne(id);
