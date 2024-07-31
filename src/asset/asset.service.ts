@@ -203,4 +203,71 @@ export class AssetService {
       throw new ConflictException('Serial number must be different');
     }
   }
+
+  async getAllUserWithAssets(): Promise<User[]> {
+    try {
+      const usersWithAsset = await this.userModel.aggregate([
+        {
+          $lookup: {
+            from: 'assets',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'assets',
+          },
+        },
+        {
+          $match: {
+            assets: { $ne: [] },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            assets: 1,
+          },
+        },
+      ]);
+      return usersWithAsset;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async getUserWithAssets(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).populate('auth');
+    if (!user || user.isDeleted) {
+      throw new ConflictException(`User with id ${id} not found`);
+    }
+
+    try {
+      const userWithAsset = await this.userModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(id),
+          },
+        },
+        {
+          $lookup: {
+            from: 'assets',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'assets',
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            assets: 1,
+          },
+        },
+      ]);
+      return userWithAsset[0];
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
 }
