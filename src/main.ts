@@ -28,12 +28,11 @@ async function bootstrap() {
     // credentials: true,
   });
 
-  // Add the ValidationPipe globally
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // Automatically transform payloads to DTO instances
-      whitelist: true, // Automatically strip properties that do not have decorators
-      forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are found
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
 

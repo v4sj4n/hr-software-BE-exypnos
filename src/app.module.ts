@@ -40,8 +40,9 @@ import { ApplicantsModule } from './applicants/applicant.module';
           from: `"No Reply" <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(), // or other adapter you are using
+          dir: join(__dirname, '../src/common/template'),
+
+          adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
           },

@@ -1,4 +1,16 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateApplicantDto } from './create-applicant.dto';
+import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
-export class UpdateApplicantDto extends PartialType(CreateApplicantDto) {}
+export class UpdateApplicantDto {
+  @IsOptional()
+  @IsDateString()
+  interviewDate?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsEnum(ApplicantStatus)
+  status?: string;
+}

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import muv from 'mongoose-unique-validator';
+import { ApplicantStatus } from '../enum/applicantStatus.enum';
 
 @Schema({
   timestamps: true,
@@ -47,7 +48,7 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, enum: ApplicantStatus, default: 'pending' })
   status: string;
 
   @Prop({ required: false })
@@ -55,6 +56,9 @@ export class Applicant {
 
   @Prop({ required: false })
   rejectionNotes?: string;
+
+  @Prop({ default: false, type: Boolean })
+  isDeleted: boolean;
 }
 
 const ApplicantSchema = SchemaFactory.createForClass(Applicant);
