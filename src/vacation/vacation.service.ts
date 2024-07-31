@@ -27,15 +27,18 @@ export class VacationService {
 
   async create(createVacationDto: CreateVacationDto) {
     try {
+      console.log(typeof createVacationDto.startDate);
+      console.log(typeof createVacationDto.endDate);
       await this.checkUserId(createVacationDto.userId);
       await this.checkDatesforCreate(createVacationDto);
       const createdVacation = new this.vacationModel(createVacationDto);
       createdVacation.userId = new mongoose.Types.ObjectId(
         createVacationDto.userId,
       );
+
       await this.notificationService.createNotification(
         'Vacation Request',
-        `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
+        `Vacation request from ${createdVacation.startDate} to ${createdVacation.endDate}`,
         NotificationType.VACATION,
         createdVacation._id,
         new Date(),

@@ -158,6 +158,12 @@ export class AssetService {
       );
     }
 
+    if(!assetData.status && assetData.userId) {
+      throw new ConflictException(
+        `Asset with user ${assetData.userId} must have a status assigned`,
+      );
+    }
+
     if (
       assetData.userId &&
       (assetData.status === AssetStatus.AVAILABLE ||

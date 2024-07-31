@@ -1,6 +1,7 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
 import { AssetType, AssetStatus } from '../../common/enum/asset.enum';
 import { Types } from 'mongoose';
+import { Type } from 'class-transformer';
 
 export class CreateAssetDto {
   @IsEnum(AssetType)
@@ -14,9 +15,13 @@ export class CreateAssetDto {
   status: AssetStatus;
 
   @IsOptional()
+  @IsDate()
+  @Type(() => Date)
   receivedDate?: Date;
 
   @IsOptional()
+  @IsDate()
+  @Type(() => Date)
   returnDate?: Date;
 
   @IsString()

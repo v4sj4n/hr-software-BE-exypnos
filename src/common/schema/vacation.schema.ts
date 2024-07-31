@@ -13,10 +13,10 @@ export class Vacation {
   @Prop({ required: false, type: String })
   description: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date })
   startDate: Date;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date })
   endDate: Date;
 
   @Prop({ default: 'pending', type: String })

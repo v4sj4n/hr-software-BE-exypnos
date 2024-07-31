@@ -34,6 +34,7 @@ export class NotificationService {
       const createdNotification = new this.notificationModel(
         createNotificationDto,
       );
+      console.log(createdNotification);
       return createdNotification.save();
     } catch (error) {
       throw new ConflictException(error);

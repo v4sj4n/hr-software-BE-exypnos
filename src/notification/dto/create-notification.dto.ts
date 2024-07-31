@@ -2,9 +2,9 @@ import {
   IsNotEmpty,
   IsString,
   IsEnum,
-  IsDate,
   IsMongoId,
   IsOptional,
+  IsDateString,
 } from 'class-validator';
 import { NotificationType } from '../../common/enum/notification.enum';
 import { Types } from 'mongoose';
@@ -23,7 +23,7 @@ export class CreateNotificationDto {
   type: NotificationType;
 
   @IsOptional()
-  @IsDate()
+  @IsDateString()
   date: Date;
 
   @IsNotEmpty()

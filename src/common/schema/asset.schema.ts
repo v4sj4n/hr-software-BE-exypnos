@@ -43,7 +43,7 @@ export class Asset {
   @Prop({ enum: AssetStatus, default: AssetStatus.AVAILABLE, type: String })
   status: AssetStatus;
 
-  @Prop()
+  @Prop({type: Date})
   receivedDate: Date;
 
   @Prop()

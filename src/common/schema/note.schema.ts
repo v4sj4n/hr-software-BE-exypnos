@@ -9,7 +9,7 @@ export class Note extends Document {
   @Prop({ required: true, type: String })
   description: string;
 
-  @Prop({ required: false, type: String })
+  @Prop({ required: false, type: Date })
   date: Date;
 
   @Prop({ default: false, type: Boolean })
