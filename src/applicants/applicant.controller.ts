@@ -1,31 +1,40 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UploadedFile,
-  UseInterceptors,
-  Get,
-} from '@nestjs/common';
-import { ApplicantsService } from 'src/applicants/applicant.service';
+import { Controller, Post, Body, Param, Patch, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/common/decorator/public.decorator';
+import { ApplicantsService } from './applicant.service';
+import { CreateApplicantDto } from './dto/create-applicant.dto';
+import { UpdateApplicantDto } from './dto/update-applicant.dto';
 
 @Controller('applicants')
-export class ApplicantsController {
+export class ApplicantController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() formData: any,
+  @UseInterceptors(FileInterceptor('cvAttachment'))
+  async create(
+    @Body() createApplicantDto: CreateApplicantDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.applicantsService.createApplicant(file, formData);
+    return this.applicantsService.create(createApplicantDto, file);
   }
 
-  @Get()
-  async getAllApplicants() {
-    return await this.applicantsService.getAllApplicants();
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateApplicantDto: UpdateApplicantDto,
+  ) {
+    return this.applicantsService.update(id, updateApplicantDto);
+  }
+
+  @Patch(':id/schedule')
+  async scheduleInterview(
+    @Param('id') id: string,
+    @Body('interviewDate') interviewDate: string,
+  ) {
+    if (!interviewDate) {
+      throw new BadRequestException('interviewDate must be provided');
+    }
+
+    const date = new Date(interviewDate);
+    return this.applicantsService.scheduleInterview(id, date);
   }
 }
