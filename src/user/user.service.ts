@@ -89,4 +89,16 @@ export class UserService {
       throw new ConflictException('Failed to upload file');
     }
   }
+
+  async filterUsers(name: string): Promise<User[]> {
+    try {
+      const users = await this.userModel.find({
+        firstName: { $regex: name, $options: 'i' },
+        isDeleted: { $ne: true },
+      });
+      return users;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
 }

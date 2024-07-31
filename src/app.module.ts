@@ -5,6 +5,7 @@ import { MailerConfig } from 'src/common/config/mailer.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ApplicantsModule } from './applicants/applicant.module';
+import { SalaryModule } from './salary/salary.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ApplicantsModule } from './applicants/applicant.module';
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MailerConfig, // Use the MailerConfig here
     ApplicantsModule,
+    SalaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

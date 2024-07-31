@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Note } from '../common/schema/note.schema';
@@ -16,57 +20,77 @@ export class NoteService {
   ) {}
 
   async create(createNoteDto: CreateNoteDto): Promise<Note> {
-    const createdNote = new this.noteModel(createNoteDto);
-    await this.validateNoteData(createdNote);
-    return createdNote.save();
+    try {
+      const createdNote = new this.noteModel(createNoteDto);
+      await this.validateNoteData(createdNote);
+      return createdNote.save();
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 
   async findAll(): Promise<Note[]> {
-    return this.noteModel.find({ isDeleted: false });
+    try {
+      return this.noteModel.find({ isDeleted: false });
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 
   async findOne(id: string): Promise<Note> {
-    const note = await this.noteModel.findById(id);
-    if (!note || note.isDeleted) {
-      throw new BadRequestException('Note not found');
+    try {
+      const note = await this.noteModel.findById(id);
+      if (!note || note.isDeleted) {
+        throw new BadRequestException('Note not found');
+      }
+      return note;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    return note;
   }
 
   async update(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
-    const exsistingNote = await this.noteModel.findById(id);
-    if (!exsistingNote) {
-      throw new BadRequestException('Note not found');
+    try {
+      const exsistingNote = await this.noteModel.findById(id);
+      if (!exsistingNote) {
+        throw new BadRequestException('Note not found');
+      }
+      const updatedNote = await this.noteModel.findByIdAndUpdate(
+        id,
+        updateNoteDto,
+        { new: true },
+      );
+      await this.validateNoteData(updatedNote);
+      return updatedNote;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    const updatedNote = await this.noteModel.findByIdAndUpdate(
-      id,
-      updateNoteDto,
-      { new: true },
-    );
-    await this.validateNoteData(updatedNote);
-    return updatedNote;
   }
 
   async remove(id: string): Promise<Note> {
-    const note = await this.noteModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
-    if (!note) {
-      throw new BadRequestException('Note not found');
-    }
-    if (note.willBeReminded) {
-      await this.notificationService.updateNotification(
-        'Note: ' + note.title,
-        note.description,
-        NotificationType.NOTE,
-        note._id as Types.ObjectId,
-        note.date,
-        note.isDeleted,
+    try {
+      const note = await this.noteModel.findByIdAndUpdate(
+        id,
+        { isDeleted: true },
+        { new: true },
       );
+      if (!note) {
+        throw new BadRequestException('Note not found');
+      }
+      if (note.willBeReminded) {
+        await this.notificationService.updateNotification(
+          'Note: ' + note.title,
+          note.description,
+          NotificationType.NOTE,
+          note._id as Types.ObjectId,
+          note.date,
+          note.isDeleted,
+        );
+      }
+      return note;
+    } catch (error) {
+      throw new ConflictException(error);
     }
-    return note;
   }
 
   private async checkDate(dateString: string): Promise<Date> {
