@@ -32,6 +32,10 @@ export class ApplicantsService {
     });
   }
 
+  async findOne(id: string): Promise<Applicant> {
+    return await this.applicantModel.findById(id);
+  }
+
   async createApplicant(
     file: Express.Multer.File,
     @Body() createApplicantDto: CreateApplicantDto,
@@ -146,7 +150,6 @@ export class ApplicantsService {
       );
     }
 
-    // No file handling here
     const createdApplicant = new this.applicantModel(createApplicantDto);
 
     return await createdApplicant.save();

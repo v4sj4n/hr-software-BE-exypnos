@@ -12,7 +12,6 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
-
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
 

@@ -24,6 +24,11 @@ export class ApplicantsController {
     return await this.applicantsService.findAll();
   }
 
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.applicantsService.findOne(id);
+  }
+
   @Patch(':id')
   async updateApplicant(
     @Param('id') id: string,
