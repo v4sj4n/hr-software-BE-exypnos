@@ -3,6 +3,13 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "builder": "swc",
-    "typeCheck": true
+    "typeCheck": true,
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "common/template/*.hbs",
+        "outDir": "dist/common/template"
+      }
+    ]
   }
 }

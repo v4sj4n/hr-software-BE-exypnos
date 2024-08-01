@@ -1,10 +1,18 @@
-import { IsString, IsEmail, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  IsEmail,
+} from 'class-validator';
 
 export class CreateApplicantDto {
   @IsString()
+  @MinLength(3)
   firstName: string;
 
   @IsString()
+  @MinLength(3)
   lastName: string;
 
   @IsString()
@@ -14,11 +22,14 @@ export class CreateApplicantDto {
   applicationMethod: string;
 
   @IsString()
-  age: string;
+  age: number;
 
   @IsString()
+  @MinLength(10)
+  @MaxLength(15)
   phoneNumber: string;
 
+  @IsString()
   @IsEmail()
   email: string;
 
@@ -29,12 +40,5 @@ export class CreateApplicantDto {
   technologiesUsed: string;
 
   @IsString()
-  individualProjects: string;
-
-  @IsString()
   salaryExpectations: string;
-
-  @IsOptional()
-  @IsString()
-  cvAttachment?: string;
 }

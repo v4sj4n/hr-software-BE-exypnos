@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Applicant, ApplicantSchema } from 'src/common/schema/applicant.schema';
 import { ApplicantsService } from './applicant.service';
-import { ApplicantController } from './applicant.controller';
+import { ApplicantsController } from './applicant.controller';
+import { Applicant, ApplicantSchema } from '../common/schema/applicant.schema';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { ApplicantController } from './applicant.controller';
       { name: Applicant.name, schema: ApplicantSchema },
     ]),
   ],
-  controllers: [ApplicantController],
   providers: [ApplicantsService],
+  controllers: [ApplicantsController],
 })
 export class ApplicantsModule {}

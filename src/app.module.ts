@@ -16,7 +16,7 @@ import { VacationModule } from './vacation/vacation.module';
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
 
-import { ApplicantsModule } from './applicants/applicant.module';
+import { ApplicantsModule } from './applicant/applicant.module';
 import { SalaryModule } from './salary/salary.module';
 
 @Module({
