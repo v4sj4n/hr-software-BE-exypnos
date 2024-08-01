@@ -268,4 +268,12 @@ export class AssetService {
       throw new ConflictException(err);
     }
   }
+
+  async getAssetBySerialNumber(serialNumber: string): Promise<Asset> {
+    const asset = await this.assetModel.findOne({ serialNumber });
+    if (!asset) {
+      throw new NotFoundException(`Asset with serial number ${serialNumber} not found`);
+    }
+    return asset;
+  }
 }
