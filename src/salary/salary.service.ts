@@ -10,7 +10,6 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import * as bcrypt from 'bcrypt';
-import { forEachChild } from 'typescript';
 
 @Injectable()
 export class SalaryService {

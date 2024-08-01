@@ -1,5 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import muv from 'mongoose-unique-validator';
 import { ApplicantStatus } from '../enum/applicantStatus.enum';
 
 @Schema()
