@@ -18,6 +18,7 @@ import { NoteModule } from './note/note.module';
 import { ApplicantsModule } from './applicants/applicant.module';
 import { MailModule } from './mail/mail.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { SalaryModule } from './salary/salary.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     ApplicantsModule,
     MailModule,
     FirebaseModule,
+    SalaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

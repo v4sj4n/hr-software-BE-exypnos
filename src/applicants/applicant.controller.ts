@@ -2,18 +2,18 @@ import {
   Controller,
   Post,
   Body,
+  Param,
+  Patch,
   UploadedFile,
   UseInterceptors,
   Get,
-  Param,
-  Patch,
   Delete,
 } from '@nestjs/common';
-import { ApplicantsService } from 'src/applicants/applicant.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
+import { ApplicantsService } from './applicant.service';
 
 @Controller('applicant')
 export class ApplicantsController {
@@ -45,7 +45,7 @@ export class ApplicantsController {
   @Public()
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
+  async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
   ) {

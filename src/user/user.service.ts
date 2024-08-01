@@ -14,7 +14,7 @@ export class UserService {
   async findAll(): Promise<User[]> {
     try {
       const users = await this.userModel
-        .find({ isDeleted: false })
+        .find({ isDeleted: { $ne: true } })
         .populate('auth');
       return users;
     } catch (err) {
@@ -87,6 +87,18 @@ export class UserService {
     } catch (error) {
       console.error('Error uploading file:', error);
       throw new ConflictException('Failed to upload file');
+    }
+  }
+
+  async filterUsers(name: string): Promise<User[]> {
+    try {
+      const users = await this.userModel.find({
+        firstName: { $regex: name, $options: 'i' },
+        isDeleted: { $ne: true },
+      });
+      return users;
+    } catch (err) {
+      throw new ConflictException(err);
     }
   }
 }

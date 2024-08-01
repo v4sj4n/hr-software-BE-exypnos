@@ -2,6 +2,7 @@ import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { VacationType } from 'src/common/enum/vacation.enum';
 import { Types } from 'mongoose';
+import { Type } from 'class-transformer';
 
 export class CreateVacationDto {
   @IsEnum(VacationType)

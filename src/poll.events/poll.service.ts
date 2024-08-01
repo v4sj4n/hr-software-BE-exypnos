@@ -23,7 +23,13 @@ export class PollService {
       throw new NotFoundException(`Option ${voteDto.option} not found`);
     }
 
-    // Check if the user has already voted for this option
+    if (!option.voters) {
+      option.voters = [];
+    }
+    if (option.votes === null || option.votes === undefined) {
+      option.votes = 0;
+    }
+
     if (option.voters.includes(voteDto.userId)) {
       throw new BadRequestException('User has already voted for this option');
     }
@@ -41,15 +47,13 @@ export class PollService {
       throw new NotFoundException(`Event with id ${eventId} not found`);
     }
 
-    // Find the option the user has already voted for
     const currentOption = event.poll.options.find((o) =>
-      o.voters.includes(voteDto.userId),
+      o.voters?.includes(voteDto.userId),
     );
     if (!currentOption) {
       throw new NotFoundException(`User has not voted yet`);
     }
 
-    // Find the new option to vote for
     const newOption = event.poll.options.find(
       (o) => o.option === voteDto.option,
     );
@@ -57,14 +61,21 @@ export class PollService {
       throw new NotFoundException(`Option ${voteDto.option} not found`);
     }
 
-    // Remove the user's vote from the current option
+    if (currentOption.votes === null) {
+      currentOption.votes = 1;
+    }
+    if (newOption.votes === null) {
+      newOption.votes = 0;
+    }
+
     currentOption.votes--;
     currentOption.voters = currentOption.voters.filter(
       (id) => id !== voteDto.userId,
     );
-
-    // Add the user's vote to the new option
     newOption.votes++;
+    if (!newOption.voters) {
+      newOption.voters = [];
+    }
     newOption.voters.push(voteDto.userId);
 
     await event.save();
@@ -79,10 +90,15 @@ export class PollService {
 
     // Find the option the user has voted for
     const option = event.poll.options.find((o) =>
-      o.voters.includes(voteDto.userId),
+      o.voters?.includes(voteDto.userId),
     );
     if (!option) {
       throw new NotFoundException(`User has not voted for any option`);
+    }
+
+    // Initialize votes if it's null
+    if (option.votes === null) {
+      option.votes = 1; // It had one vote before
     }
 
     // Remove the user's vote

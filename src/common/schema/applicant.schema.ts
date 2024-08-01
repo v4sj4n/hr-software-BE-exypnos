@@ -2,9 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import muv from 'mongoose-unique-validator';
 import { ApplicantStatus } from '../enum/applicantStatus.enum';
 
-@Schema({
-  timestamps: true,
-})
+@Schema()
 export class Applicant {
   @Prop({ required: true })
   firstName: string;
@@ -19,12 +17,12 @@ export class Applicant {
   applicationMethod: string;
 
   @Prop({ required: true })
-  age: number;
+  age: string;
 
   @Prop({ required: true })
   phoneNumber: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   email: string;
 
   @Prop({ required: true })
@@ -61,6 +59,4 @@ export class Applicant {
   isDeleted: boolean;
 }
 
-const ApplicantSchema = SchemaFactory.createForClass(Applicant);
-ApplicantSchema.plugin(muv);
-export { ApplicantSchema };
+export const ApplicantSchema = SchemaFactory.createForClass(Applicant);
