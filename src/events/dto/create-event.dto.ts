@@ -1,11 +1,5 @@
-import {
-  IsString,
-  IsDateString,
-  ValidateNested,
-  IsOptional,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreatePollDto } from '../../poll.events/dto/create-poll.dto';
+import { IsString, IsDateString, IsOptional } from 'class-validator';
+import { Poll } from 'src/common/schema/event.schema';
 
 export class CreateEventDto {
   @IsString()
@@ -15,12 +9,10 @@ export class CreateEventDto {
   description: string;
 
   @IsDateString()
-  date: string;
+  date: Date;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => CreatePollDto)
-  poll?: CreatePollDto;
+  poll: Poll;
 
   @IsOptional()
   @IsString()

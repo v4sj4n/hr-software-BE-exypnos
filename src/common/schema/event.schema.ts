@@ -23,6 +23,9 @@ export class Poll {
 
   @Prop({ type: String, default: 'Tirana' })
   location: string;
+
+  @Prop({ default: false })
+  isMultipleVote: boolean;
 }
 
 @Schema({ timestamps: true })

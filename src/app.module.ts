@@ -10,11 +10,9 @@ import { UserModule } from './user/user.module';
 import { AssetModule } from './asset/asset.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
-import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
-
 import { ApplicantsModule } from './applicants/applicant.module';
 import { MailModule } from './mail/mail.module';
 import { FirebaseModule } from './firebase/firebase.module';
@@ -56,7 +54,6 @@ import { SalaryModule } from './salary/salary.module';
     AssetModule,
     AuthModule,
     EventsModule,
-    PollModule,
     NotificationModule,
     NoteModule,
     VacationModule,
