@@ -9,17 +9,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { Applicant } from 'src/common/schema/applicant.schema';
-import * as admin from 'firebase-admin';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { MailerService } from '@nestjs-modules/mailer';
 import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
+import { MailService } from 'src/mail/mail.service';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class ApplicantsService {
   constructor(
     @InjectModel(Applicant.name)
     private readonly applicantModel: Model<Applicant>,
-    private readonly mailService: MailerService,
+    private readonly mailService: MailService,
+    private readonly firebaseService: FirebaseService,
   ) {}
   private readonly dateDetails = {
     locale: 'sq',
@@ -41,14 +42,13 @@ export class ApplicantsService {
     @Body() createApplicantDto: CreateApplicantDto,
   ) {
     try {
-      const cvUrl = await this.uploadCv(file);
+      const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
       });
       await this.mailService.sendMail({
-        from: process.env.MAIL_USERNAME,
-        to: createApplicantDto.email,
+        to: applicant.email,
         subject: 'Aplikimi u mor me sukses',
         template: './succesfulApplication',
         context: {
@@ -75,7 +75,6 @@ export class ApplicantsService {
       if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
         updateApplicantDto.interviewDate = null;
         await this.mailService.sendMail({
-          from: process.env.MAIL_USERNAME,
           to: applicationToUpdate.email,
           subject: 'Na vjen keq',
           template: './rejectionApplicant',
@@ -88,7 +87,6 @@ export class ApplicantsService {
         });
       } else if (applicationToUpdate.interviewDate) {
         await this.mailService.sendMail({
-          from: process.env.MAIL_USERNAME,
           to: applicationToUpdate.email,
           subject: 'Ndryshim planesh',
           template: './scheduleApplicantInterviewChange',
@@ -110,7 +108,6 @@ export class ApplicantsService {
       } else if (updateApplicantDto.interviewDate) {
         updateApplicantDto.status = ApplicantStatus.ACCEPTED;
         await this.mailService.sendMail({
-          from: process.env.MAIL_USERNAME,
           to: applicationToUpdate.email,
           subject: 'Intervista',
           template: './interview',
@@ -122,7 +119,15 @@ export class ApplicantsService {
             date: DateTime.fromISO(updateApplicantDto.interviewDate)
               .setLocale(this.dateDetails.locale)
               .toFormat(this.dateDetails.format),
+            message: updateApplicantDto.message || '',
           },
+        });
+      }
+      if (updateApplicantDto.message) {
+        const { message, ...rest } = updateApplicantDto;
+        console.log(message);
+        return await this.applicantModel.findByIdAndUpdate(id, rest, {
+          new: true,
         });
       }
       return await this.applicantModel.findByIdAndUpdate(
@@ -154,37 +159,6 @@ export class ApplicantsService {
 
     return await createdApplicant.save();
   }
-  async uploadCv(file: Express.Multer.File): Promise<string> {
-    try {
-      const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
-      const fileName = `${Date.now()}_${file.originalname}`;
-      const fileUpload = bucket.file(`userCv/${fileName}`);
-
-      const stream = fileUpload.createWriteStream({
-        metadata: {
-          contentType: file.mimetype,
-        },
-      });
-
-      await new Promise<void>((resolve, reject) => {
-        stream.on('error', (error) => {
-          console.error('Error in stream:', error);
-          reject(new ConflictException('Failed to upload file'));
-        });
-
-        stream.on('finish', resolve);
-        stream.end(file.buffer);
-      });
-
-      await fileUpload.makePublic();
-      const publicUrl = fileUpload.publicUrl();
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw new ConflictException('Failed to upload file');
-    }
-  }
-
   async deleteApplicant(id: string): Promise<Applicant> {
     const deletedApplicant = await this.applicantModel.findByIdAndUpdate(
       id,

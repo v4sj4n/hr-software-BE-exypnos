@@ -16,6 +16,8 @@ import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
 
 import { ApplicantsModule } from './applicants/applicant.module';
+import { MailModule } from './mail/mail.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { ApplicantsModule } from './applicants/applicant.module';
     NoteModule,
     VacationModule,
     ApplicantsModule,
+    MailModule,
+    FirebaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

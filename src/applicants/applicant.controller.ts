@@ -15,7 +15,7 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 
-@Controller('applicants')
+@Controller('applicant')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 

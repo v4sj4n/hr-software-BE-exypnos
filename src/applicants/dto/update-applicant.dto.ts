@@ -13,4 +13,8 @@ export class UpdateApplicantDto {
   @IsOptional()
   @IsEnum(ApplicantStatus)
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  message?: string;
 }
