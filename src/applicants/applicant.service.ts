@@ -1,9 +1,10 @@
-import { Injectable, ConflictException, Body } from '@nestjs/common';
+import { Body, ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateApplicantDto } from './dto/create-applicant.dto';
-import { Applicant } from 'src/common/schema/applicant.schema';
 import * as admin from 'firebase-admin';
+import { Model } from 'mongoose';
+import { Applicant } from 'src/common/schema/applicant.schema';
+
+import { CreateApplicantDto } from './dto/create-applicant.dto';
 
 @Injectable()
 export class ApplicantsService {
