@@ -6,44 +6,49 @@ import {
   Patch,
   UploadedFile,
   UseInterceptors,
-  BadRequestException,
+  Get,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApplicantsService } from './applicant.service';
+import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
+import { ApplicantsService } from './applicant.service';
 
-@Controller('applicants')
-export class ApplicantController {
+@Controller('applicant')
+export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  @Post()
-  @UseInterceptors(FileInterceptor('cvAttachment'))
-  async create(
-    @Body() createApplicantDto: CreateApplicantDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    return this.applicantsService.create(createApplicantDto, file);
+  @Get()
+  async findAll() {
+    return await this.applicantsService.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.applicantsService.findOne(id);
   }
 
   @Patch(':id')
-  async update(
+  async updateApplicant(
     @Param('id') id: string,
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    return this.applicantsService.update(id, updateApplicantDto);
+    return await this.applicantsService.update(id, updateApplicantDto);
   }
 
-  @Patch(':id/schedule')
-  async scheduleInterview(
-    @Param('id') id: string,
-    @Body('interviewDate') interviewDate: string,
-  ) {
-    if (!interviewDate) {
-      throw new BadRequestException('interviewDate must be provided');
-    }
+  @Delete(':id')
+  async deleteApplicant(@Param('id') id: string) {
+    return await this.applicantsService.deleteApplicant(id);
+  }
 
-    const date = new Date(interviewDate);
-    return this.applicantsService.scheduleInterview(id, date);
+  @Public()
+  @Post()
+  @UseInterceptors(FileInterceptor('file'))
+  async createApplicant(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() formData: CreateApplicantDto,
+  ) {
+    return await this.applicantsService.createApplicant(file, formData);
   }
 }

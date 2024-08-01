@@ -12,11 +12,12 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { PollModule } from './poll.events/poll.module';
 import { VacationModule } from './vacation/vacation.module';
-
 import { NotificationModule } from './notification/notification.module';
 import { NoteModule } from './note/note.module';
 
 import { ApplicantsModule } from './applicants/applicant.module';
+import { MailModule } from './mail/mail.module';
+import { FirebaseModule } from './firebase/firebase.module';
 import { SalaryModule } from './salary/salary.module';
 
 @Module({
@@ -41,8 +42,9 @@ import { SalaryModule } from './salary/salary.module';
           from: `"No Reply" <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(), // or other adapter you are using
+          dir: join(__dirname, '../src/common/template'),
+
+          adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
           },
@@ -59,6 +61,8 @@ import { SalaryModule } from './salary/salary.module';
     NoteModule,
     VacationModule,
     ApplicantsModule,
+    MailModule,
+    FirebaseModule,
     SalaryModule,
   ],
   controllers: [AppController],

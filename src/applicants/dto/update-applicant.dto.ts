@@ -1,60 +1,7 @@
-import {
-  IsString,
-  IsOptional,
-  IsNumber,
-  IsEmail,
-  IsDateString,
-} from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
 export class UpdateApplicantDto {
-  @IsOptional()
-  @IsString()
-  firstName?: string;
-
-  @IsOptional()
-  @IsString()
-  lastName?: string;
-
-  @IsOptional()
-  @IsString()
-  experience?: string;
-
-  @IsOptional()
-  @IsString()
-  applicationMethod?: string;
-
-  @IsOptional()
-  @IsString()
-  age?: string;
-
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  positionApplied?: string;
-
-  @IsOptional()
-  @IsString()
-  technologiesUsed?: string;
-
-  @IsOptional()
-  @IsString()
-  individualProjects?: string;
-
-  @IsOptional()
-  @IsString()
-  salaryExpectations?: string;
-
-  @IsOptional()
-  @IsString()
-  cvAttachment?: string;
-
   @IsOptional()
   @IsDateString()
   interviewDate?: string;
@@ -64,6 +11,10 @@ export class UpdateApplicantDto {
   notes?: string;
 
   @IsOptional()
-  @IsString()
+  @IsEnum(ApplicantStatus)
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  message?: string;
 }
