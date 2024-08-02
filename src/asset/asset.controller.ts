@@ -36,6 +36,11 @@ export class AssetController {
     return this.assetService.getUserWithAssets(id);
   }
 
+  @Get('sn/:serialNumber')
+  findBySerialNumber(@Param('serialNumber') serialNumber: string) {
+    return this.assetService.getAssetBySerialNumber(serialNumber);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.assetService.findOne(id);

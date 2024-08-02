@@ -31,17 +31,17 @@ import { SalaryModule } from './salary/salary.module';
           host: config.get('MAIL_SERVER'),
           secure: false,
           port: config.get('MAIL_PORT'),
+
           auth: {
             user: config.get('MAIL_USERNAME'),
             pass: config.get('MAIL_PASSWORD'),
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('MAIL_FROM')}>`,
+          from: `"No Reply" <${config.get('MAIL_SENDER')}>`,
         },
         template: {
           dir: join(__dirname, '../src/common/template'),
-
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
