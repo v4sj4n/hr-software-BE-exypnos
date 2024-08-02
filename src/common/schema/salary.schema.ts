@@ -4,7 +4,6 @@ import { User } from './user.schema';
 
 @Schema({ timestamps: true })
 export class Salary {
-
   @Prop({ required: true, type: 'number' })
   amount: number;
 

@@ -270,9 +270,13 @@ export class AssetService {
   }
 
   async getAssetBySerialNumber(serialNumber: string): Promise<Asset> {
-    const asset = await this.assetModel.findOne({ serialNumber });
+    const asset = await this.assetModel
+      .findOne({ serialNumber })
+      .populate('userId', 'firstName lastName imageUrl');
     if (!asset) {
-      throw new NotFoundException(`Asset with serial number ${serialNumber} not found`);
+      throw new NotFoundException(
+        `Asset with serial number ${serialNumber} not found`,
+      );
     }
     return asset;
   }
