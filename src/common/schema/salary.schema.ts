@@ -1,13 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { UUID } from 'crypto';
 import { Types } from 'mongoose';
 import { User } from './user.schema';
 
 @Schema({ timestamps: true })
 export class Salary {
-  static uniqueId(arg0: string, uniqueId: any) {
-    throw new Error('Method not implemented.');
-  }
   @Prop({ required: true, type: 'number' })
   amount: number;
 

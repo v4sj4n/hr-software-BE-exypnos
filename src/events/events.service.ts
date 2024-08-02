@@ -80,25 +80,29 @@ export class EventsService {
       if (!existingEvent) {
         throw new NotFoundException(`Event with id ${id} not found`);
       }
-      
+
       if (!existingEvent.poll && updateEventDto.poll) {
-        updateEventDto.poll.options = updateEventDto.poll.options.map(opt => ({
-          ...opt,
-          votes: 0,
-          voters: []
-        }));
+        updateEventDto.poll.options = updateEventDto.poll.options.map(
+          (opt) => ({
+            ...opt,
+            votes: 0,
+            voters: [],
+          }),
+        );
       }
-  
+
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
         { ...updateEventDto },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
-  
-      if (compareDates(formatDate(new Date()), formatDate(updatedEvent.date)) >= 1) {
+
+      if (
+        compareDates(formatDate(new Date()), formatDate(updatedEvent.date)) >= 1
+      ) {
         throw new BadRequestException('Event date cannot be in the past');
       }
-  
+
       await this.notificationService.createNotification(
         'Event Updated',
         `Event ${updatedEvent.title} has been updated`,
@@ -106,7 +110,7 @@ export class EventsService {
         updatedEvent._id as Types.ObjectId,
         new Date(),
       );
-  
+
       return updatedEvent;
     } catch (error) {
       throw new ConflictException(error);

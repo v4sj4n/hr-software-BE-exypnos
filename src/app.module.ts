@@ -31,6 +31,7 @@ import { SalaryModule } from './salary/salary.module';
           host: config.get('MAIL_SERVER'),
           secure: false,
           port: config.get('MAIL_PORT'),
+
           auth: {
             user: config.get('MAIL_USERNAME'),
             pass: config.get('MAIL_PASSWORD'),
