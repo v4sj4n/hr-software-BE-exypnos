@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AssetService } from './asset.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
@@ -21,8 +22,8 @@ export class AssetController {
   }
 
   @Get()
-  findAll() {
-    return this.assetService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.assetService.findAllPaginate(page, limit);
   }
 
   @Get('user')

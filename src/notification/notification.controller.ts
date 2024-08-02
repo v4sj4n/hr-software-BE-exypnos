@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification } from '../common/schema/notification.schema';
 
@@ -7,8 +7,8 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  findAll(): Promise<Notification[]> {
-    return this.notificationService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.notificationService.findAllPaginate(page, limit);
   }
 
   @Get(':id')

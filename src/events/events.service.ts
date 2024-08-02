@@ -15,6 +15,7 @@ import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
 import { VoteDto } from './dto/vote.dto';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class EventsService {
@@ -61,6 +62,9 @@ export class EventsService {
       throw new ConflictException(error);
     }
   }
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.eventModel);
+   }
 
   async findOne(id: string): Promise<Event> {
     try {

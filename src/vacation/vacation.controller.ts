@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { VacationService } from './vacation.service';
@@ -22,8 +23,8 @@ export class VacationController {
   }
 
   @Get()
-  findAll() {
-    return this.vacationService.findAll();
+  findAll(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.vacationService.findAllPaginate(page, limit);
   }
 
   @Get(':id')

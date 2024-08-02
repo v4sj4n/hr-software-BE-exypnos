@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   Get,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -20,8 +21,8 @@ export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
   @Get()
-  async findAll() {
-    return await this.applicantsService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.applicantsService.findAllPaginate(page, limit);
   }
 
   @Get(':id')

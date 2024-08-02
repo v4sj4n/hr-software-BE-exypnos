@@ -8,6 +8,7 @@ import { Model, Types } from 'mongoose';
 import { Notification } from '../common/schema/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationType } from 'src/common/enum/notification.enum';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class NotificationService {
@@ -47,6 +48,9 @@ export class NotificationService {
       throw new ConflictException(error);
     }
   }
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.notificationModel);
+   }
 
   async findOne(id: string): Promise<Notification> {
     try {

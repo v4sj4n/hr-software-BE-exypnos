@@ -11,6 +11,7 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class NoteService {
@@ -36,6 +37,9 @@ export class NoteService {
       throw new ConflictException(error);
     }
   }
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.noteModel);
+   }
 
   async findOne(id: string): Promise<Note> {
     try {

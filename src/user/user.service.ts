@@ -4,6 +4,7 @@ import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as admin from 'firebase-admin';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,10 @@ export class UserService {
       throw new ConflictException(err);
     }
   }
+
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.userModel);
+   }
 
   async findOne(id: string): Promise<User | null> {
     const user = await this.userModel.findById(id).populate('auth');

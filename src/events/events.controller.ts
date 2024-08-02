@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -22,8 +23,8 @@ export class EventsController {
   }
 
   @Get()
-  findAll() {
-    return this.eventsService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.eventsService.findAllPaginate(page, limit);
   }
   @Get('poll')
   getEventPollResults(@Param('id') id: string) {

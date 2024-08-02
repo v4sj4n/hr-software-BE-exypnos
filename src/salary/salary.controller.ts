@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { SalaryService } from './salary.service';
 import { CreateSalaryDto } from './dto/create-salary.dto';
@@ -21,8 +22,8 @@ export class SalaryController {
   }
 
   @Get()
-  findAll() {
-    return this.salaryService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.salaryService.findAllPaginate(page, limit);
   }
 
   @Get(':id')

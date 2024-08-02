@@ -13,6 +13,7 @@ import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 import { MailService } from 'src/mail/mail.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class ApplicantsService {
@@ -27,11 +28,9 @@ export class ApplicantsService {
     format: 'dd MMMM yyyy HH:mm',
   };
 
-  async findAll(): Promise<Applicant[]> {
-    return await this.applicantModel.find({
-      isDeleted: false,
-    });
-  }
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.applicantModel);
+   }
 
   async findOne(id: string): Promise<Applicant> {
     return await this.applicantModel.findById(id);

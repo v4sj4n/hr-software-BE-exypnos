@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { NoteService } from './note.service';
 import { Note } from '../common/schema/note.schema';
@@ -22,8 +23,8 @@ export class NoteController {
   }
 
   @Get()
-  findAll(): Promise<Note[]> {
-    return this.noteService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.noteService.findAllPaginate(page, limit);
   }
 
   @Get(':id')

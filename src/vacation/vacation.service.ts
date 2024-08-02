@@ -16,6 +16,7 @@ import {
   formatDate,
   isDateRangeOverlapping,
 } from '../common/util/dateUtil';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class VacationService {
@@ -55,6 +56,10 @@ export class VacationService {
       throw new ConflictException(error);
     }
   }
+
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.vacationModel);
+   }
 
   async findOne(id: string) {
     try {

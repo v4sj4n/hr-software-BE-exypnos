@@ -10,6 +10,7 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import * as bcrypt from 'bcrypt';
+import { paginate } from 'src/common/util/paginate';
 
 @Injectable()
 export class SalaryService {
@@ -52,6 +53,10 @@ export class SalaryService {
       throw new ConflictException(error);
     }
   }
+
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+    return paginate(page, limit, this.salaryModel);
+   }
 
   async findOne(id: string): Promise<Salary> {
     try {

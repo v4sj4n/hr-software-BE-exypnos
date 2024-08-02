@@ -9,6 +9,7 @@ import {
   Post,
   UploadedFile,
   Req,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '../common/schema/user.schema';
@@ -22,8 +23,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async findAll(): Promise<User[]> {
-    return await this.userService.findAll();
+  findAll(@Query("page") page: number, @Query("limit") limit: number) {
+    return this.userService.findAllPaginate(page, limit);
   }
   @Get('search/:name')
   async searchUser(@Param('name') name: string): Promise<User[]> {

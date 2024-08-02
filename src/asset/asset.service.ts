@@ -10,6 +10,7 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { paginate } from 'src/common/util/paginate';
 @Injectable()
 export class AssetService {
   constructor(
@@ -43,14 +44,8 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-  async findAll(): Promise<Asset[]> {
-    try {
-      return await this.assetModel
-        .find({ isDeleted: false })
-        .populate('userId', 'firstName lastName');
-    } catch (error) {
-      throw new ConflictException(error);
-    }
+  async findAllPaginate(page:number,limit:number): Promise<any> {
+   return paginate(page, limit, this.assetModel);
   }
   async findOne(id: string): Promise<Asset> {
     try {
