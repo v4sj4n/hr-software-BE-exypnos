@@ -5,11 +5,15 @@ import { MailContent } from './IMailContent';
 @Injectable()
 export class MailService {
   constructor(private readonly mailService: MailerService) {}
-  // MAIL SERVICE U GJET NGA GERBANE
+
   async sendMail(dataMailer: MailContent): Promise<void> {
     await this.mailService.sendMail({
-      from: process.env.MAIL_USERNAME,
-      ...dataMailer,
+      from: process.env.MAIL_SENDER,
+      to: dataMailer.to,
+      subject: dataMailer.subject,
+      template: dataMailer.template,
+      context: dataMailer.context,
+      html: dataMailer.html, 
     });
   }
 }

@@ -37,11 +37,10 @@ import { SalaryModule } from './salary/salary.module';
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('MAIL_FROM')}>`,
+          from: `"No Reply" <${config.get('MAIL_SENDER')}>`,
         },
         template: {
           dir: join(__dirname, '../src/common/template'),
-
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
