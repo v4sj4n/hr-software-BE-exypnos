@@ -42,7 +42,6 @@ import { SalaryModule } from './salary/salary.module';
         },
         template: {
           dir: join(__dirname, '../src/common/template'),
-
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
