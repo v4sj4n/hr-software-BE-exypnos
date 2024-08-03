@@ -4,12 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+
 @Injectable()
 export class AssetService {
   constructor(
@@ -195,7 +196,28 @@ export class AssetService {
     }
   }
 
-  async getAllUserWithAssets(): Promise<User[]> {
+  async getAllUserWithAssets(search: string, users: string): Promise<User[]> {
+    let objectToPassToMatch: FilterQuery<any> =
+      users === 'with'
+        ? {
+            assets: { $ne: [] },
+          }
+        : users === 'without'
+          ? {
+              assets: { $eq: [] },
+            }
+          : {};
+
+    if (search) {
+      objectToPassToMatch = {
+        ...objectToPassToMatch,
+        $or: [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
     try {
       const usersWithAsset = await this.userModel.aggregate([
         {
@@ -208,7 +230,7 @@ export class AssetService {
         },
         {
           $match: {
-            assets: { $ne: [] },
+            ...objectToPassToMatch,
           },
         },
         {
@@ -227,6 +249,7 @@ export class AssetService {
           },
         },
       ]);
+
       return usersWithAsset;
     } catch (err) {
       throw new ConflictException(err);
