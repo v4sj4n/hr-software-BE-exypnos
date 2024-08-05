@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { Event, PollOption } from '../common/schema/event.schema';
+import { Event, Poll, PollOption } from '../common/schema/event.schema';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
@@ -35,7 +35,8 @@ export class EventsService {
       ) {
         throw new BadRequestException('Event date cannot be in the past');
       }
-      if (createdEvent.poll) {
+      if (createEventDto.poll) {
+        this.validatePollData(createEventDto.poll);
         createdEvent.poll.options.forEach((opt) => {
           opt.votes = 0;
           opt.voters = [];
@@ -82,6 +83,7 @@ export class EventsService {
       }
 
       if (!existingEvent.poll && updateEventDto.poll) {
+        this.validatePollData(updateEventDto.poll);
         updateEventDto.poll.options = updateEventDto.poll.options.map(
           (opt) => ({
             ...opt,
@@ -224,4 +226,26 @@ export class EventsService {
       throw new BadRequestException('This event does not have a poll');
     }
   }
+
+  private async validatePollData(poll:Poll): Promise<void> {
+    
+  if(poll.question.length === 0){
+    throw new BadRequestException('Poll question cannot be empty');
+  }
+  if(poll.options.length <= 1){
+    console.log("SELMA");
+    throw new BadRequestException('Poll options must be more than one');
+  }
+  if(poll.options.length > 10){
+    throw new BadRequestException('Poll options must be less than 10');
+  }
+  if(poll.options.some((opt) => opt.option.length <= 1)){
+    throw new BadRequestException('Poll option cannot be less than 1 character');
+  }
+
+
+
+
+}
+
 }
