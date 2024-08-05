@@ -10,6 +10,7 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { auth } from 'firebase-admin';
 
 @Injectable()
 export class AssetService {
@@ -216,8 +217,6 @@ export class AssetService {
         $or: [
           { firstName: { $regex: search, $options: 'i' } },
           { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { phone: { $regex: search, $options: 'i' } },
         ],
       };
     }
@@ -249,6 +248,7 @@ export class AssetService {
             firstName: 1,
             lastName: 1,
             imageUrl: 1,
+            phone: 1,
             assets: 1,
           },
         },
@@ -282,14 +282,37 @@ export class AssetService {
           },
         },
         {
+          $lookup: {
+            from: 'auths',
+            localField: 'auth',
+            foreignField: '_id',
+            as: 'authData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$authData',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
           $project: {
             _id: 1,
             firstName: 1,
             lastName: 1,
+            role: 1,
+            imageUrl: 1,
+            email: '$authData.email',
+            phone: 1,
             assets: 1,
           },
         },
       ]);
+
+      if (userWithAsset.length === 0) {
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
+
       return userWithAsset[0];
     } catch (err) {
       throw new ConflictException(err);
