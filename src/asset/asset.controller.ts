@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AssetService } from './asset.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
@@ -26,8 +27,11 @@ export class AssetController {
   }
 
   @Get('user')
-  findAllWithUsers() {
-    return this.assetService.getAllUserWithAssets();
+  findAllWithUsers(
+    @Query('search') search: string = '',
+    @Query('users') users: string = 'all',
+  ) {
+    return this.assetService.getAllUserWithAssets(search, users);
   }
 
   @Get('user/:id')

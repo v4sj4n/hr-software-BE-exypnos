@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DateTime } from 'luxon';
@@ -12,9 +16,11 @@ import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { UpdateEmploymentStatusDto } from './dto/update-employment-status.dto';
-import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
-import { SendCustomEmailDto } from 'src/applicants/dto/send-custom-email.dto'; 
-
+import {
+  Applicant,
+  ApplicantDocument,
+} from 'src/common/schema/applicant.schema';
+import { SendCustomEmailDto } from 'src/applicants/dto/send-custom-email.dto';
 
 @Injectable()
 export class ApplicantsService {
@@ -22,7 +28,8 @@ export class ApplicantsService {
     throw new Error('Method not implemented.');
   }
   constructor(
-    @InjectModel(Applicant.name) private readonly applicantModel: Model<ApplicantDocument>,
+    @InjectModel(Applicant.name)
+    private readonly applicantModel: Model<ApplicantDocument>,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
   ) {}
@@ -78,7 +85,9 @@ export class ApplicantsService {
         updateApplicantDto.interviewDate = null;
         await this.sendRejectEmail(applicationToUpdate);
       } else if (applicationToUpdate.interviewDate) {
-        const oldDate = DateTime.fromISO(applicationToUpdate.interviewDate.toISOString())
+        const oldDate = DateTime.fromISO(
+          applicationToUpdate.interviewDate.toISOString(),
+        )
           .setLocale('sq')
           .toFormat('dd MMMM yyyy HH:mm');
         const newDate = DateTime.fromISO(updateApplicantDto.interviewDate)
@@ -115,16 +124,23 @@ export class ApplicantsService {
       if (updateApplicantDto.message) {
         const { message, ...rest } = updateApplicantDto;
         console.log(message);
-        return await this.applicantModel.findByIdAndUpdate(id, rest, { new: true }).exec();
+        return await this.applicantModel
+          .findByIdAndUpdate(id, rest, { new: true })
+          .exec();
       }
-      return await this.applicantModel.findByIdAndUpdate(id, updateApplicantDto, { new: true }).exec();
+      return await this.applicantModel
+        .findByIdAndUpdate(id, updateApplicantDto, { new: true })
+        .exec();
     } catch (err) {
       console.error(err);
       throw new ConflictException(err);
     }
   }
 
-  async addInterviewNote(id: string, addInterviewNoteDto: AddInterviewNoteDto): Promise<ApplicantDocument> {
+  async addInterviewNote(
+    id: string,
+    addInterviewNoteDto: AddInterviewNoteDto,
+  ): Promise<ApplicantDocument> {
     const { phase, note } = addInterviewNoteDto;
     const applicant = await this.findOne(id);
     if (!applicant.notes) {
@@ -135,7 +151,10 @@ export class ApplicantsService {
     return applicant;
   }
 
-  async updateInterviewStatus(id: string, updateInterviewStatusDto: UpdateInterviewStatusDto): Promise<ApplicantDocument> {
+  async updateInterviewStatus(
+    id: string,
+    updateInterviewStatusDto: UpdateInterviewStatusDto,
+  ): Promise<ApplicantDocument> {
     const { phase, status, interviewDate } = updateInterviewStatusDto;
     const applicant = await this.findOne(id);
     if (!applicant.notes) {
@@ -170,7 +189,10 @@ export class ApplicantsService {
     return applicant;
   }
 
-  async scheduleInterview(id: string, scheduleInterviewDto: ScheduleInterviewDto): Promise<ApplicantDocument> {
+  async scheduleInterview(
+    id: string,
+    scheduleInterviewDto: ScheduleInterviewDto,
+  ): Promise<ApplicantDocument> {
     const { phase, interviewDate } = scheduleInterviewDto;
     const applicant = await this.findOne(id);
     if (!applicant) {
@@ -192,7 +214,8 @@ export class ApplicantsService {
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
-        interviewDate: DateTime.fromISO(interviewDate).toFormat('dd MMMM yyyy HH:mm'),
+        interviewDate:
+          DateTime.fromISO(interviewDate).toFormat('dd MMMM yyyy HH:mm'),
         phase,
       },
     });
@@ -201,7 +224,10 @@ export class ApplicantsService {
     return applicant;
   }
 
-  async rescheduleInterview(id: string, rescheduleInterviewDto: RescheduleInterviewDto): Promise<ApplicantDocument> {
+  async rescheduleInterview(
+    id: string,
+    rescheduleInterviewDto: RescheduleInterviewDto,
+  ): Promise<ApplicantDocument> {
     const { phase, newInterviewDate } = rescheduleInterviewDto;
     const applicant = await this.findOne(id);
     if (!applicant) {
@@ -223,7 +249,8 @@ export class ApplicantsService {
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
-        newInterviewDate: DateTime.fromISO(newInterviewDate).toFormat('dd MMMM yyyy HH:mm'),
+        newInterviewDate:
+          DateTime.fromISO(newInterviewDate).toFormat('dd MMMM yyyy HH:mm'),
         phase,
       },
     });
@@ -232,7 +259,10 @@ export class ApplicantsService {
     return applicant;
   }
 
-  private async sendSecondInterviewEmail(applicant: ApplicantDocument, interviewDate?: Date): Promise<void> {
+  private async sendSecondInterviewEmail(
+    applicant: ApplicantDocument,
+    interviewDate?: Date,
+  ): Promise<void> {
     await this.mailService.sendMail({
       to: 'rediballa1@gmail.com', // Change this to your email address
       subject: 'Second Interview Scheduled',
@@ -240,7 +270,11 @@ export class ApplicantsService {
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
-        interviewDate: interviewDate ? DateTime.fromISO(interviewDate.toISOString()).toFormat('dd MMMM yyyy HH:mm') : null,
+        interviewDate: interviewDate
+          ? DateTime.fromISO(interviewDate.toISOString()).toFormat(
+              'dd MMMM yyyy HH:mm',
+            )
+          : null,
       },
     });
   }
@@ -257,7 +291,9 @@ export class ApplicantsService {
     });
   }
 
-  private async addToEmploymentList(applicant: ApplicantDocument): Promise<void> {
+  private async addToEmploymentList(
+    applicant: ApplicantDocument,
+  ): Promise<void> {
     applicant.status = ApplicantStatus.EMPLOYED;
     await this.mailService.sendMail({
       to: 'rediballa1@gmail.com', // Change this to your email address
@@ -271,19 +307,28 @@ export class ApplicantsService {
     await applicant.save();
   }
 
-  async updateEmploymentStatus(id: string, updateEmploymentStatusDto: UpdateEmploymentStatusDto): Promise<ApplicantDocument> {
+  async updateEmploymentStatus(
+    id: string,
+    updateEmploymentStatusDto: UpdateEmploymentStatusDto,
+  ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
 
-    applicant.status = updateEmploymentStatusDto.employed ? ApplicantStatus.EMPLOYED : ApplicantStatus.REJECTED;
+    applicant.status = updateEmploymentStatusDto.employed
+      ? ApplicantStatus.EMPLOYED
+      : ApplicantStatus.REJECTED;
     await applicant.save();
 
     await this.mailService.sendMail({
       to: 'rediballa1@gmail.com', // Change this to your email address
-      subject: updateEmploymentStatusDto.employed ? 'Employment Confirmation' : 'Employment Rejection',
-      template: updateEmploymentStatusDto.employed ? './employment' : './reject', // Assuming you have these templates
+      subject: updateEmploymentStatusDto.employed
+        ? 'Employment Confirmation'
+        : 'Employment Rejection',
+      template: updateEmploymentStatusDto.employed
+        ? './employment'
+        : './reject', // Assuming you have these templates
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -292,7 +337,10 @@ export class ApplicantsService {
 
     return applicant;
   }
-  async sendCustomEmail(id: string, sendCustomEmailDto: SendCustomEmailDto): Promise<void> {
+  async sendCustomEmail(
+    id: string,
+    sendCustomEmailDto: SendCustomEmailDto,
+  ): Promise<void> {
     const applicant = await this.findOne(id);
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
@@ -307,4 +355,3 @@ export class ApplicantsService {
     });
   }
 }
-

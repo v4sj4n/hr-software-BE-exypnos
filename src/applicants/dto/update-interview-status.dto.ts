@@ -1,5 +1,5 @@
 export class UpdateInterviewStatusDto {
-    phase: string;
-    status: string; // 'accepted', 'rejected'
-    interviewDate?: Date;
-  }
+  phase: string;
+  status: string; // 'accepted', 'rejected'
+  interviewDate?: Date;
+}

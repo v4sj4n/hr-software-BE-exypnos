@@ -59,7 +59,7 @@ export class Applicant {
 
   @Prop({ required: false })
   rejectionNotes?: string;
-  
+
   @Prop({ type: Date, default: null })
   interviewDate: Date;
 

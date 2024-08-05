@@ -20,10 +20,7 @@ export class Poll {
 
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
-
-  @Prop({ type: String, default: 'Tirana' })
-  location: string;
-
+  
   @Prop({ default: false })
   isMultipleVote: boolean;
 }
