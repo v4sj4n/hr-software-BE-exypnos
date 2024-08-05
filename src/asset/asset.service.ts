@@ -22,19 +22,20 @@ export class AssetService {
       await this.validateAssetData(createAssetDto);
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
-      createdAsset.receivedDate = createAssetDto.receivedDate
-        ? new Date(createAssetDto.receivedDate)
+      createdAsset.receive = createAssetDto.receive
+        ? new Date(createAssetDto.receive)
         : null;
-      createdAsset.returnDate = createAssetDto.returnDate
-        ? new Date(createAssetDto.returnDate)
+      createdAsset.return = createAssetDto.return
+        ? new Date(createAssetDto.return)
         : null;
       createdAsset.userId = createAssetDto.userId
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
         : null;
+
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
-        receivedDate: createdAsset.receivedDate,
-        returnDate: createdAsset.returnDate,
+        receive: createdAsset.receive,
+        returned: createdAsset.return,
         userId: createdAsset.userId,
         status: createdAsset.status,
       };
@@ -78,8 +79,8 @@ export class AssetService {
       }
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
-        receivedDate: updateAssetDto.receivedDate,
-        returnDate: updateAssetDto.returnDate,
+        receive: updateAssetDto.receive,
+        returned: updateAssetDto.return,
         userId: updateAssetDto.userId,
         status: updateAssetDto.status,
       };
@@ -90,11 +91,11 @@ export class AssetService {
         id,
         {
           ...updateAssetDto,
-          receivedDate: updateAssetDto.receivedDate
-            ? new Date(updateAssetDto.receivedDate)
+          receive: updateAssetDto.receive
+            ? new Date(updateAssetDto.receive)
             : null,
-          returnDate: updateAssetDto.returnDate
-            ? new Date(updateAssetDto.returnDate)
+          return: updateAssetDto.return
+            ? new Date(updateAssetDto.return)
             : null,
           userId: updateAssetDto.userId
             ? new mongoose.Types.ObjectId(updateAssetDto.userId)
@@ -147,9 +148,15 @@ export class AssetService {
       );
     }
     if (!assetData.status && assetData.userId) {
+      assetData.status = AssetStatus.ASSIGNED;
+    }
+    if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
       throw new ConflictException(
         `Asset with user ${assetData.userId} must have a status assigned`,
       );
+    }
+    if (assetData.userId && !assetData.receive) {
+      throw new ConflictException(`Asset with user must have a receive date`);
     }
     if (
       assetData.userId &&
@@ -164,20 +171,15 @@ export class AssetService {
       if (
         (assetData.status === AssetStatus.AVAILABLE ||
           assetData.status === AssetStatus.BROKEN) &&
-        assetData.receivedDate !== undefined
+        assetData.receive !== undefined
       ) {
         throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status} with received date`,
+          `Cannot change status from ${existingAsset.status} to ${assetData.status} with receive date`,
         );
       }
-      if (
-        (assetData.status === AssetStatus.AVAILABLE ||
-          assetData.status === AssetStatus.BROKEN) &&
-        assetData.returnDate &&
-        existingAsset?.status !== AssetStatus.ASSIGNED
-      ) {
+      if (existingAsset?.status === AssetStatus.ASSIGNED && !assetData.return) {
         throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status}`,
+          `Asset must have a return date to change status from ${existingAsset.status} to ${assetData.status}`,
         );
       }
     }
@@ -192,7 +194,7 @@ export class AssetService {
     }
     const existingAsset = await this.assetModel.findOne(query);
     if (existingAsset) {
-      throw new ConflictException('Serial number must be different');
+      throw new ConflictException('Serial number must be unique');
     }
   }
 
@@ -214,6 +216,8 @@ export class AssetService {
         $or: [
           { firstName: { $regex: search, $options: 'i' } },
           { lastName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } },
         ],
       };
     }
