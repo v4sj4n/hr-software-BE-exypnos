@@ -14,12 +14,12 @@ export class AssetHistory {
   @Prop()
   @IsDate()
   @IsOptional()
-  receive?: Date;
+  takenDate?: Date;
 
   @Prop()
   @IsDate()
   @IsOptional()
-  returned?: Date;
+  returnDate?: Date;
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   @IsOptional()
@@ -30,7 +30,7 @@ export class AssetHistory {
   status: AssetStatus;
 }
 //SKU = Stock Keeping Unit is a unique code that identifies each asset
-// Get Date is the date when the asset was receive
+// Get Date is the date when the asset was takenDate
 // Return Date is the date when the asset was returned
 @Schema({ timestamps: true })
 export class Asset {
@@ -44,10 +44,10 @@ export class Asset {
   status: AssetStatus;
 
   @Prop()
-  receive: Date;
+  takenDate: Date;
 
   @Prop()
-  return: Date;
+  returnDate: Date;
 
   @Prop({
     type: Types.ObjectId,
