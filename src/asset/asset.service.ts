@@ -10,7 +10,8 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
-import { auth } from 'firebase-admin';
+import { compareDates, formatDate } from 'src/common/util/dateUtil';
+
 
 @Injectable()
 export class AssetService {
@@ -180,40 +181,21 @@ export class AssetService {
     }
     if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
       throw new ConflictException(
-        `Asset with user ${assetData.userId} must have a status assigned`,
+        `Asset with user must have status ${AssetStatus.ASSIGNED}`,
       );
     }
     if (assetData.userId && !assetData.takenDate) {
       throw new ConflictException(`Asset with user must have a takenDate date`);
     }
-    if (
-      assetData.userId &&
-      (assetData.status === AssetStatus.AVAILABLE ||
-        assetData.status === AssetStatus.BROKEN)
-    ) {
+    if (assetData.returnDate && !existingAsset.takenDate) {
+      throw new ConflictException(`Asset must have a takenDate date first`);
+    }
+    if (assetData.returnDate && compareDates(formatDate(new Date(existingAsset.takenDate)), formatDate(new Date(assetData.returnDate))) >= 1) {
       throw new ConflictException(
-        `Asset with status ${assetData.status} cannot have a user`,
+        `Return date cannot be before the taken date`,
       );
     }
-    if (existingAsset) {
-      if (
-        (assetData.status === AssetStatus.AVAILABLE ||
-          assetData.status === AssetStatus.BROKEN) &&
-        assetData.takenDate !== undefined
-      ) {
-        throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status} with takenDate date`,
-        );
-      }
-      if (
-        existingAsset?.status === AssetStatus.ASSIGNED &&
-        !assetData.returnDate
-      ) {
-        throw new ConflictException(
-          `Asset must have a return date to change status from ${existingAsset.status} to ${assetData.status}`,
-        );
-      }
-    }
+
   }
   private async checkSerialNumber(
     serialNumber: string,
