@@ -307,4 +307,11 @@ export class AssetService {
     }
     return asset;
   }
+
+  async getAvaibleAssets(): Promise<Asset[]> {
+    return await this.assetModel.find({
+      status: AssetStatus.AVAILABLE,
+      isDeleted: false,
+    });
+  }
 }
