@@ -195,7 +195,6 @@ export class AssetService {
         `Return date cannot be before the taken date`,
       );
     }
-
   }
   private async checkSerialNumber(
     serialNumber: string,

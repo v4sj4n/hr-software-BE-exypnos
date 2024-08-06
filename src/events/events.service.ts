@@ -298,5 +298,12 @@ export class EventsService {
         'Poll option cannot be less than 1 character',
       );
     }
+    for (let i = 0; i < poll.options.length; i++) {
+      for (let j = i + 1; j < poll.options.length; j++) {
+        if (poll.options[i].option === poll.options[j].option) {
+          throw new BadRequestException('Poll options must be unique');
+        }
+      }
+    }
   }
 }
