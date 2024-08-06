@@ -149,11 +149,10 @@ export class EventsService {
 
     for (const option of event.poll.options) {
       if (
-        option.voters.some(
-          (voter) =>
-            voter._id.toString() === user._id.toString() &&
-            voter.firstName === user.firstName &&
-            voter.lastName === user.lastName,
+        option.voters.some(voter => 
+          voter._id.toString() === user._id.toString() &&
+          voter.firstName === user.firstName &&
+          voter.lastName === user.lastName
         ) &&
         !event.poll.isMultipleVote
       ) {
@@ -162,14 +161,11 @@ export class EventsService {
     }
 
     const option = event.poll.options.find((opt) => opt.option === vote.option);
-    if (
-      option.voters.some(
-        (voter) =>
-          voter._id.toString() === user._id.toString() &&
-          voter.firstName === user.firstName &&
-          voter.lastName === user.lastName,
-      )
-    ) {
+    if (option.voters.some(voter => 
+      voter._id.toString() === user._id.toString() &&
+      voter.firstName === user.firstName &&
+      voter.lastName === user.lastName
+    )) {
       throw new ConflictException('User has already voted for this option');
     }
 
@@ -201,14 +197,11 @@ export class EventsService {
     const option = event.poll.options.find((opt) => opt.option === vote.option);
     const user = await this.userModel.findById(vote.userId);
 
-    if (
-      !option.voters.some(
-        (voter) =>
-          voter._id.toString() === user._id.toString() &&
-          voter.firstName === user.firstName &&
-          voter.lastName === user.lastName,
-      )
-    ) {
+    if (!option.voters.some(voter => 
+      voter._id.toString() === user._id.toString() &&
+      voter.firstName === user.firstName &&
+      voter.lastName === user.lastName
+    )) {
       throw new ConflictException('User has not voted for this option');
     }
 
@@ -217,10 +210,10 @@ export class EventsService {
       {
         $inc: { 'poll.options.$.votes': -1 },
         $pull: {
-          'poll.options.$.voters': {
+          'poll.options.$.voters': { 
             _id: user._id,
             firstName: user.firstName,
-            lastName: user.lastName,
+            lastName: user.lastName 
           },
         },
       },
@@ -247,7 +240,8 @@ export class EventsService {
 
   async getptionThatUserVotedFor(id: string, userId: string): Promise<number> {
     const event = await this.eventModel.findById(id);
-    if (!event) {
+    if
+    (!event) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
     if (!event.poll || !event.poll.options) {
@@ -258,14 +252,13 @@ export class EventsService {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
     const votedOption = event.poll.options.find((opt) =>
-      opt.voters.some(
-        (voter) =>
-          voter._id.toString() === userId &&
-          voter.firstName === user.firstName &&
-          voter.lastName === user.lastName,
+      opt.voters.some(voter => 
+        voter._id.toString() === userId &&
+        voter.firstName === user.firstName &&
+        voter.lastName === user.lastName
       ),
     );
-    return votedOption ? event.poll.options.indexOf(votedOption) + 1 : -1;
+    return votedOption ? event.poll.options.indexOf(votedOption) + 1  : -1;
   }
 
   private async validateData(id: string, vote: VoteDto): Promise<void> {
@@ -304,13 +297,6 @@ export class EventsService {
       throw new BadRequestException(
         'Poll option cannot be less than 1 character',
       );
-    }
-    for (let i = 0; i < poll.options.length; i++) {
-      for (let j = i + 1; j < poll.options.length; j++) {
-        if (poll.options[i].option === poll.options[j].option) {
-          throw new BadRequestException('Poll options must be unique');
-        }
-      }
     }
   }
 }
