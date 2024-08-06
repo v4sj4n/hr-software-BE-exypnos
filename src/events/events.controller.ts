@@ -25,7 +25,7 @@ export class EventsController {
   findAll() {
     return this.eventsService.findAll();
   }
-  @Get('poll')
+  @Get('poll/:id')
   getEventPollResults(@Param('id') id: string) {
     return this.eventsService.getEventPollResults(id);
   }
@@ -33,7 +33,10 @@ export class EventsController {
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
   }
-
+  @Get(':id/user/:userId')
+  getEventsByUser(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.eventsService.getptionThatUserVotedFor(id, userId);
+  }
   @Patch(':id')
   partialUpdate(
     @Param('id') id: string,
