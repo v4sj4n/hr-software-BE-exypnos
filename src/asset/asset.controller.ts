@@ -26,6 +26,11 @@ export class AssetController {
     return this.assetService.findAll();
   }
 
+  @Get('avaible')
+  findAllWithStatus() {
+    return this.assetService.getAvaibleAssets();
+  }
+
   @Get('user')
   findAllWithUsers(
     @Query('search') search: string = '',
