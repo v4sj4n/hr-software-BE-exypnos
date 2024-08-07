@@ -29,6 +29,10 @@ export class UserController {
   async searchUser(@Param('name') name: string): Promise<User[]> {
     return this.userService.filterUsers(name);
   }
+  @Get('position/:position')
+  async getProfile(@Param('position') position: string): Promise<User[]> {
+    return this.userService.getUserByPosition(position);
+  }
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User | null> {
     return await this.userService.findOne(id);

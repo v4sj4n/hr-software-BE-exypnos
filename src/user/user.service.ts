@@ -101,4 +101,18 @@ export class UserService {
       throw new ConflictException(err);
     }
   }
+
+  async getUserByPosition(position: string): Promise<User[]> {
+    try {
+      const users = await this.userModel
+        .find({
+          position,
+          isDeleted: false,
+        })
+        .select('firstName lastName');
+      return users;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
 }
