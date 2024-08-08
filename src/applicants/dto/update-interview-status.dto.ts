@@ -7,7 +7,7 @@ export class UpdateInterviewStatusDto {
 
   @IsOptional()
   @IsString()
-  status: 'accepted' | 'rejected ';
+  status: 'accepted' | 'rejected';
 
   @IsOptional()
   @IsString()
