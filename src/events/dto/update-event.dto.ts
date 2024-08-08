@@ -1,4 +1,5 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 import { Poll } from 'src/common/schema/event.schema';
 
 export class UpdateEventDto {
@@ -11,8 +12,18 @@ export class UpdateEventDto {
   description: string;
 
   @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  @IsNotEmpty()
+  participant: Types.ObjectId[];
+
+  @IsOptional()
   @IsDateString()
-  date: Date;
+  startDate: Date;
+
+  @IsOptional()
+  @IsDateString()
+  endDate: Date;
 
   @IsOptional()
   @IsString()

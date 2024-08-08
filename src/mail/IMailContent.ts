@@ -1,5 +1,5 @@
 export interface MailContent {
-  to: string;
+  to: string | string[];
   subject: string;
   template?: string; // optional
   context?: { [key: string]: any }; //  optional
