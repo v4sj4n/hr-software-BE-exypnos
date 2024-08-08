@@ -146,29 +146,43 @@ export class EventsService {
     await this.validateData(id, vote);
     const event = await this.eventModel.findById(id);
     const user = await this.userModel.findById(vote.userId);
-
+  
     for (const option of event.poll.options) {
-      if (
-        option.voters.some(voter => 
-          voter._id.toString() === user._id.toString() &&
-          voter.firstName === user.firstName &&
-          voter.lastName === user.lastName
-        ) &&
-        !event.poll.isMultipleVote
-      ) {
-        throw new ConflictException('User has already voted for an option');
+     var existingVoter = option.voters.find(voter =>
+        voter._id.toString() === user._id.toString() &&
+        voter.firstName === user.firstName &&
+        voter.lastName === user.lastName
+      );
+      if (existingVoter) {
+        var existingVote = option.option;
       }
     }
-
+    console.log(existingVote);
+    if (existingVote && !event.poll.isMultipleVote) {
+      await this.eventModel.findOneAndUpdate(
+        { _id: id, 'poll.options.option': existingVote },
+        {
+          $inc: { 'poll.options.$.votes': -1 },
+          $pull: {
+            'poll.options.$.voters': {
+              _id: user._id,
+              firstName: user.firstName,
+              lastName: user.lastName
+            }
+          }
+        },
+        { new: true }
+      );
+    }
     const option = event.poll.options.find((opt) => opt.option === vote.option);
-    if (option.voters.some(voter => 
+    if (option.voters.some(voter =>
       voter._id.toString() === user._id.toString() &&
       voter.firstName === user.firstName &&
       voter.lastName === user.lastName
     )) {
       throw new ConflictException('User has already voted for this option');
     }
-
+  
     const updatedEvent = await this.eventModel.findOneAndUpdate(
       { _id: id, 'poll.options.option': vote.option },
       {
@@ -177,17 +191,17 @@ export class EventsService {
           'poll.options.$.voters': {
             _id: user._id,
             firstName: user.firstName,
-            lastName: user.lastName,
-          },
-        },
+            lastName: user.lastName
+          }
+        }
       },
-      { new: true },
+      { new: true }
     );
-
+  
     if (!updatedEvent) {
       throw new NotFoundException(`Event with id ${id} or option not found`);
     }
-
+  
     return updatedEvent;
   }
 
