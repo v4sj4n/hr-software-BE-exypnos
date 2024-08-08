@@ -1,9 +1,13 @@
-import { IsString, IsDateString } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class ScheduleInterviewDto {
   @IsString()
-  phase: string;
+  phase: 'applicant' | 'first' | 'second';
 
   @IsDateString()
   interviewDate: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

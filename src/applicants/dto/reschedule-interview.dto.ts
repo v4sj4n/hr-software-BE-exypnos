@@ -1,8 +1,8 @@
-import { IsString, IsDateString } from 'class-validator';
+import { IsDateString, IsString } from 'class-validator';
 
 export class RescheduleInterviewDto {
   @IsString()
-  phase: string;
+  phase: 'applicant' | 'first' | 'second';
 
   @IsDateString()
   newInterviewDate: string;

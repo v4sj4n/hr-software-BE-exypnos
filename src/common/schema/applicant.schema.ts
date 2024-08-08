@@ -4,7 +4,7 @@ import { ApplicantStatus } from '../enum/applicantStatus.enum';
 
 export type ApplicantDocument = Applicant & Document;
 
-@Schema()
+@Schema({ timestamps: true }) // Ensure timestamps are enabled
 export class Applicant {
   @Prop({ required: true })
   firstName: string;
@@ -65,6 +65,9 @@ export class Applicant {
 
   @Prop({ default: false })
   isDeleted: boolean;
+
+  @Prop({ required: false })
+  currentPhase?: string;
 }
 
 export const ApplicantSchema = SchemaFactory.createForClass(Applicant);
