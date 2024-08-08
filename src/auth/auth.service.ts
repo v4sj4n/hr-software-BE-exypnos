@@ -120,7 +120,7 @@ export class AuthService {
         auth: userAuth._id,
       });
       return {
-        ...user,
+        ...user.toObject(),
         email,
       };
     } catch (err) {

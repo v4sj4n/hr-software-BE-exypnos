@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -21,6 +25,8 @@ export class ApplicantsService {
   }
 
   constructor(
+    @InjectModel(Applicant.name)
+    private readonly applicantModel: Model<ApplicantDocument>,
     @InjectModel(Applicant.name)
     private readonly applicantModel: Model<ApplicantDocument>,
     private readonly mailService: MailService,
@@ -133,6 +139,9 @@ export class ApplicantsService {
       return await this.applicantModel
         .findByIdAndUpdate(id, updateApplicantDto, { new: true })
         .exec();
+      return await this.applicantModel
+        .findByIdAndUpdate(id, updateApplicantDto, { new: true })
+        .exec();
     } catch (err) {
       console.error(err);
       throw new ConflictException(err);
@@ -229,6 +238,10 @@ export class ApplicantsService {
     return applicant;
   }
 
+  async rescheduleInterview(
+    id: string,
+    rescheduleInterviewDto: RescheduleInterviewDto,
+  ): Promise<ApplicantDocument> {
   async rescheduleInterview(
     id: string,
     rescheduleInterviewDto: RescheduleInterviewDto,

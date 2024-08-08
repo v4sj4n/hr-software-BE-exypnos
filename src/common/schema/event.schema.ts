@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 
 export class PollOption {
   @Prop({ required: true, type: String })
@@ -7,11 +8,11 @@ export class PollOption {
   @Prop({ default: 0, type: Number })
   votes: number;
 
-  @Prop({ type: [String], default: [] })
-  voters: string[];
-
-  @Prop({ default: false })
-  isDeleted: boolean;
+  @Prop({
+    type: [{ _id: Types.ObjectId, firstName: String, lastName: String }],
+    default: [],
+  })
+  voters: { _id: Types.ObjectId; firstName: string; lastName: string }[];
 }
 
 export class Poll {
@@ -20,9 +21,6 @@ export class Poll {
 
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
-
-  @Prop({ type: String, default: 'Tirana' })
-  location: string;
 
   @Prop({ default: false })
   isMultipleVote: boolean;
