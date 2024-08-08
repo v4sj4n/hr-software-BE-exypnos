@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional} from 'class-validator';
 
 export class SendCustomEmailDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   subject: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   message: string;
 }

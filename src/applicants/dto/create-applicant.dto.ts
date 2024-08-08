@@ -1,38 +1,48 @@
-import { IsString, MinLength, MaxLength, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateApplicantDto {
+@IsOptional()
   @IsString()
-  @MinLength(3)
   firstName: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(3)
   lastName: string;
 
+  @IsOptional()
   @IsString()
   experience: string;
 
+  @IsOptional()
   @IsString()
   applicationMethod: string;
 
+  @IsOptional()
   @IsString()
-  age: number;
+  age: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(10)
-  @MaxLength(15)
   phoneNumber: string;
 
+  @IsOptional()
   @IsString()
-  @IsEmail()
   email: string;
 
+  @IsOptional()
   @IsString()
   positionApplied: string;
 
+  @IsOptional()
   @IsString()
   technologiesUsed: string;
 
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
   @IsString()
   salaryExpectations: string;
 }
