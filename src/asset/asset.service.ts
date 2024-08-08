@@ -36,10 +36,7 @@ export class AssetService {
 
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
-        takenDate: createdAsset.takenDate,
-        returnDate: createdAsset.returnDate,
-        userId: createdAsset.userId,
-        status: createdAsset.status,
+        status: createdAsset.status
       };
       createdAsset.history = [initialHistory];
       return await createdAsset.save();

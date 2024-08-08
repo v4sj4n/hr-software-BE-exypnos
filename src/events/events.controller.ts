@@ -6,19 +6,32 @@ import {
   Param,
   Delete,
   Patch,
+  UseInterceptors,
+  UploadedFiles,
+  UploadedFile,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VoteDto } from './dto/vote.dto';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 
 @Controller('event')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  create(@Body() createEventDto: CreateEventDto) {
-    return this.eventsService.create(createEventDto);
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'files', maxCount: 10 }]))
+  async create(
+    @UploadedFiles()
+    photo: { files: Express.Multer.File[] },
+    @Body() createEventDto: CreateEventDto,
+  ) {
+    console.log('files', photo);
+    return await this.eventsService.create([], createEventDto);
   }
 
   @Get()
@@ -35,7 +48,7 @@ export class EventsController {
   }
   @Get(':id/user/:userId')
   getEventsByUser(@Param('id') id: string, @Param('userId') userId: string) {
-    return this.eventsService.getptionThatUserVotedFor(id, userId);
+    return this.eventsService.geOtptionThatUserVotedFor(id, userId);
   }
   @Patch(':id')
   partialUpdate(
