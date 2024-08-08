@@ -5,6 +5,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { GradeType, PositionType } from 'src/common/enum/position.enum';
 import { Role } from 'src/common/enum/role.enum';
 
 export class UpdateUserDto {
@@ -42,4 +43,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   pob?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(PositionType)
+  position: PositionType;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(GradeType)
+  grade: GradeType;
 }

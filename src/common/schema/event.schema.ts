@@ -8,7 +8,10 @@ export class PollOption {
   @Prop({ default: 0, type: Number })
   votes: number;
 
-  @Prop({ type: [{ _id: Types.ObjectId, firstName: String, lastName: String }], default: [] })
+  @Prop({
+    type: [{ _id: Types.ObjectId, firstName: String, lastName: String }],
+    default: [],
+  })
   voters: { _id: Types.ObjectId; firstName: string; lastName: string }[];
 }
 

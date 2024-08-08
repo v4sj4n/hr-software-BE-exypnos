@@ -10,7 +10,8 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
-import { auth } from 'firebase-admin';
+import { compareDates, formatDate } from 'src/common/util/dateUtil';
+
 
 @Injectable()
 export class AssetService {
@@ -23,11 +24,11 @@ export class AssetService {
       await this.validateAssetData(createAssetDto);
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
-      createdAsset.receive = createAssetDto.receive
-        ? new Date(createAssetDto.receive)
+      createdAsset.takenDate = createAssetDto.takenDate
+        ? new Date(createAssetDto.takenDate)
         : null;
-      createdAsset.return = createAssetDto.return
-        ? new Date(createAssetDto.return)
+      createdAsset.returnDate = createAssetDto.returnDate
+        ? new Date(createAssetDto.returnDate)
         : null;
       createdAsset.userId = createAssetDto.userId
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
@@ -35,8 +36,8 @@ export class AssetService {
 
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
-        receive: createdAsset.receive,
-        returned: createdAsset.return,
+        takenDate: createdAsset.takenDate,
+        returnDate: createdAsset.returnDate,
         userId: createdAsset.userId,
         status: createdAsset.status,
       };
@@ -78,25 +79,17 @@ export class AssetService {
       if (updateAssetDto.serialNumber) {
         await this.checkSerialNumber(updateAssetDto.serialNumber, id);
       }
-      const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        receive: updateAssetDto.receive,
-        returned: updateAssetDto.return,
-        userId: updateAssetDto.userId,
-        status: updateAssetDto.status,
-      };
-      Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
-      });
+
+      this.validateHistoryData(updateAssetDto, existingAsset);
       await this.assetModel.findByIdAndUpdate(
         id,
         {
           ...updateAssetDto,
-          receive: updateAssetDto.receive
-            ? new Date(updateAssetDto.receive)
+          takenDate: updateAssetDto.takenDate
+            ? new Date(updateAssetDto.takenDate)
             : null,
-          return: updateAssetDto.return
-            ? new Date(updateAssetDto.return)
+          return: updateAssetDto.returnDate
+            ? new Date(updateAssetDto.returnDate)
             : null,
           userId: updateAssetDto.userId
             ? new mongoose.Types.ObjectId(updateAssetDto.userId)
@@ -107,6 +100,41 @@ export class AssetService {
       return await this.assetModel.findById(id);
     } catch (error) {
       throw new ConflictException(error);
+    }
+  }
+  validateHistoryData(
+    updateAssetDto: UpdateAssetDto,
+    existingAsset: mongoose.Document<unknown, {}, Asset> &
+      Asset & { _id: mongoose.Types.ObjectId },
+  ) {
+    if (updateAssetDto.status === AssetStatus.ASSIGNED) {
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: updateAssetDto.takenDate,
+        returnDate: null,
+        userId: updateAssetDto.userId,
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
+    } else if (
+      (updateAssetDto.status === AssetStatus.AVAILABLE ||
+        updateAssetDto.status === AssetStatus.BROKEN) &&
+      existingAsset.status
+    ) {
+      // make sure to add the returnDate date in the last history entry
+      const lastHistoryEntry = existingAsset.history.pop();
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: lastHistoryEntry.takenDate,
+        returnDate: updateAssetDto.returnDate,
+        userId: lastHistoryEntry.userId,
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
     }
   }
   async remove(id: string): Promise<Asset> {
@@ -153,36 +181,19 @@ export class AssetService {
     }
     if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
       throw new ConflictException(
-        `Asset with user ${assetData.userId} must have a status assigned`,
+        `Asset with user must have status ${AssetStatus.ASSIGNED}`,
       );
     }
-    if (assetData.userId && !assetData.receive) {
-      throw new ConflictException(`Asset with user must have a receive date`);
+    if (assetData.userId && !assetData.takenDate) {
+      throw new ConflictException(`Asset with user must have a takenDate date`);
     }
-    if (
-      assetData.userId &&
-      (assetData.status === AssetStatus.AVAILABLE ||
-        assetData.status === AssetStatus.BROKEN)
-    ) {
+    if (assetData.returnDate && !existingAsset.takenDate) {
+      throw new ConflictException(`Asset must have a takenDate date first`);
+    }
+    if (assetData.returnDate && compareDates(formatDate(new Date(existingAsset.takenDate)), formatDate(new Date(assetData.returnDate))) >= 1) {
       throw new ConflictException(
-        `Asset with status ${assetData.status} cannot have a user`,
+        `Return date cannot be before the taken date`,
       );
-    }
-    if (existingAsset) {
-      if (
-        (assetData.status === AssetStatus.AVAILABLE ||
-          assetData.status === AssetStatus.BROKEN) &&
-        assetData.receive !== undefined
-      ) {
-        throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status} with receive date`,
-        );
-      }
-      if (existingAsset?.status === AssetStatus.ASSIGNED && !assetData.return) {
-        throw new ConflictException(
-          `Asset must have a return date to change status from ${existingAsset.status} to ${assetData.status}`,
-        );
-      }
     }
   }
   private async checkSerialNumber(
