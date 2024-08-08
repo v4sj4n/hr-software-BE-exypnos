@@ -1,5 +1,15 @@
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class UpdateInterviewStatusDto {
-    phase: string;
-    status: string; // 'accepted', 'rejected'
-    interviewDate?: Date;
-  }
+  @IsNotEmpty()
+  @IsString()
+  phase: 'first' | 'second';
+
+  @IsOptional()
+  @IsString()
+  status: 'accepted' | 'rejected';
+
+  @IsOptional()
+  @IsString()
+  interviewDate?: string;
+}

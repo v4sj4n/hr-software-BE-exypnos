@@ -1,18 +1,21 @@
-import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
 export class UpdateApplicantDto {
+  static interviewDate(interviewDate: any) {
+    throw new Error('Method not implemented.');
+  }
   @IsOptional()
-  @IsDateString()
+  @IsEnum(ApplicantStatus)
+  status?: ApplicantStatus;
+
+  @IsOptional()
+  @IsString()
   interviewDate?: string;
 
   @IsOptional()
   @IsString()
   notes?: string;
-
-  @IsOptional()
-  @IsEnum(ApplicantStatus)
-  status?: string;
 
   @IsOptional()
   @IsString()

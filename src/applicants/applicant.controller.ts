@@ -1,33 +1,27 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  Patch,
-  UploadedFile,
-  UseInterceptors,
-  Get,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Query, Param, Patch, Post, Body, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantsService } from './applicant.service';
-import { AddInterviewNoteDto } from './dto/add-interview-note.dto'; 
-import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
-import { UpdateEmploymentStatusDto } from './dto/update-employment-status.dto';
-
+import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
-import { SendCustomEmailDto } from 'src/applicants/dto/send-custom-email.dto'; 
-
-
-
+import { SendCustomEmailDto } from './dto/send-custom-email.dto';
+import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
 @Controller('applicant')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
+
+  @Get('filter')
+  async filterByDateRange(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('phase') phase?: 'first' | 'second'
+  ) {
+    return await this.applicantsService.filterByDateRange(startDate, endDate, phase);
+  }
 
   @Get()
   async findAll() {
@@ -54,27 +48,19 @@ export class ApplicantsController {
 
   @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('cvAttachment')) // Ensure the file field name matches
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
   ) {
+    console.log('File:', file);
+    console.log('Form Data:', formData);
     return await this.applicantsService.createApplicant(file, formData);
   }
 
   @Patch(':id/interview/note')
   addInterviewNote(@Param('id') id: string, @Body() addInterviewNoteDto: AddInterviewNoteDto) {
-    return this.applicantsService.addInterviewNote(id, addInterviewNoteDto); // Correct the service name
-  }
-
-  @Patch(':id/interview/status')
-  updateInterviewStatus(@Param('id') id: string, @Body() updateInterviewStatusDto: UpdateInterviewStatusDto) {
-    return this.applicantsService.updateInterviewStatus(id, updateInterviewStatusDto); // Correct the service name
-  }
-
-  @Patch(':id/employment-status')
-  async updateEmploymentStatus(@Param('id') id: string, @Body() updateEmploymentStatusDto: UpdateEmploymentStatusDto) {
-    return this.applicantsService.updateEmploymentStatus(id, updateEmploymentStatusDto); 
+    return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
   }
 
   @Patch(':id/interview/schedule')
@@ -92,8 +78,17 @@ export class ApplicantsController {
   ) {
     return await this.applicantsService.rescheduleInterview(id, rescheduleInterviewDto);
   }
+
   @Post(':id/send-email')
   async sendCustomEmail(@Param('id') id: string, @Body() sendCustomEmailDto: SendCustomEmailDto) {
     return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: ApplicantStatus,
+  ) {
+    return await this.applicantsService.updateApplicantStatus(id, status);
   }
 }
