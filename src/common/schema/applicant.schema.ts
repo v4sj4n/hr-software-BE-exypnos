@@ -33,8 +33,8 @@ export class Applicant {
   @Prop({ required: true })
   technologiesUsed: string;
 
-  @Prop({ required: false })
-  individualProjects: string;
+  // @Prop({ required: false })
+  // individualProjects: string;
 
   @Prop({ type: Date, default: null })
   firstInterviewDate?: Date;

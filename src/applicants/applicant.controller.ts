@@ -8,7 +8,6 @@ import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { SendCustomEmailDto } from './dto/send-custom-email.dto';
-import { UpdateApplicantStatusDto } from './dto/update-applicant-status.dto';
 import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
 @Controller('applicant')
@@ -49,13 +48,11 @@ export class ApplicantsController {
 
   @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('cvAttachment')) 
+  @UseInterceptors(FileInterceptor('file')) 
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
   ) {
-    console.log('File:', file);
-    console.log('Form Data:', formData);
     return await this.applicantsService.createApplicant(file, formData);
   }
 
@@ -97,8 +94,8 @@ export class ApplicantsController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body() updateApplicantStatusDto: UpdateApplicantStatusDto,
+    @Body('status') status: ApplicantStatus,
   ) {
-    return await this.applicantsService.updateApplicantStatus(id, updateApplicantStatusDto.status);
+    return await this.applicantsService.updateApplicantStatus(id, status);
   }
 }

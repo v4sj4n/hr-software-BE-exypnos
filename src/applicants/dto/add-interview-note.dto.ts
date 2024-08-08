@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AddInterviewNoteDto {
-  @IsNotEmpty()
+@IsOptional()
   @IsString()
   phase: 'first' | 'second';
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   note: string;
 }

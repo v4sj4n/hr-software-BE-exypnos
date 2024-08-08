@@ -16,6 +16,9 @@ import { UpdateApplicantStatusDto } from 'src/applicants/dto/update-applicant-st
 
 @Injectable()
 export class ApplicantsService {
+  deleteApplicant(id: string) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectModel(Applicant.name)
     private readonly applicantModel: Model<ApplicantDocument>,
@@ -28,21 +31,32 @@ export class ApplicantsService {
   }
 
   async findOne(id: string): Promise<ApplicantDocument> {
-    const applicant = await this.applicantModel.findOne({ _id: id, isDeleted: false }).exec();
+    const applicant = await this.applicantModel.findById(id).exec();
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
     return applicant;
   }
 
-  async deleteApplicant(id: string): Promise<Applicant> {
-    const applicant = await this.findOne(id);
-    if (!applicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
+  async filterByDateRange(
+    startDate: string,
+    endDate: string,
+    phase?: 'first' | 'second'
+  ): Promise<Applicant[]> {
+    const query: any = {
+      isDeleted: false,
+      createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+    };
+
+    if (phase) {
+      if (phase === 'first') {
+        query.firstInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      } else if (phase === 'second') {
+        query.secondInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
     }
-    applicant.isDeleted = true;
-    await applicant.save();
-    return applicant;
+
+    return await this.applicantModel.find(query).exec();
   }
 
   async createApplicant(
@@ -54,10 +68,10 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING, // Assuming this is the initial status
+        status: ApplicantStatus.PENDING, 
       });
       await this.mailService.sendMail({
-        to: createApplicantDto.email, // Applicant's email address
+        to: createApplicantDto.email, 
         subject: 'Aplikimi u mor me sukses',
         template: './successfulApplication',
         context: {
@@ -120,7 +134,7 @@ export class ApplicantsService {
         });
 
         await this.mailService.sendMail({
-          to: applicationToUpdate.email, // Applicant's email address
+          to: applicationToUpdate.email, 
           subject: 'Intervista',
           template: './interview',
           context: {
@@ -143,27 +157,6 @@ export class ApplicantsService {
       console.error(err);
       throw new ConflictException(err);
     }
-  }
-
-  async filterByDateRange(
-    startDate: string,
-    endDate: string,
-    phase?: 'first' | 'second'
-  ): Promise<Applicant[]> {
-    const query: any = {
-      isDeleted: false,
-      createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-    };
-
-    if (phase) {
-      if (phase === 'first') {
-        query.firstInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-      } else if (phase === 'second') {
-        query.secondInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-      }
-    }
-
-    return await this.applicantModel.find(query).exec();
   }
 
   async addInterviewNote(
@@ -331,7 +324,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject: 'Second Interview Scheduled',
-      template: './second-interview', // Ensure this template exists
+      template: './second-interview', 
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -352,7 +345,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject: 'Application Rejected',
-      template: './reject', // Ensure this template exists
+      template: './reject', 
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -374,7 +367,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject,
-      html: `<p>${message}</p>`, // Use `html` to send a plain HTML message
+      html: `<p>${message}</p>`, 
     });
   }
 }

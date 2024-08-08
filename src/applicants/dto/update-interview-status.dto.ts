@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateInterviewStatusDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   phase: 'first' | 'second';
 
