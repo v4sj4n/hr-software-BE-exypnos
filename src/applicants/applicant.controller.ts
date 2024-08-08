@@ -8,6 +8,7 @@ import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { SendCustomEmailDto } from './dto/send-custom-email.dto';
+import { UpdateApplicantStatusDto } from './dto/update-applicant-status.dto';
 import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
 
 @Controller('applicant')
@@ -42,13 +43,13 @@ export class ApplicantsController {
   }
 
   @Delete(':id')
-  async deleteApplicant(@Param('id') id: string) {
-    return await this.applicantsService.deleteApplicant(id);
+  deleteApplicant(@Param('id') id: string) {
+    return this.applicantsService.deleteApplicant(id);
   }
 
   @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('cvAttachment')) // Ensure the file field name matches
+  @UseInterceptors(FileInterceptor('cvAttachment')) 
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
@@ -66,29 +67,38 @@ export class ApplicantsController {
   @Patch(':id/interview/schedule')
   async scheduleInterview(
     @Param('id') id: string,
-    @Body() scheduleInterviewDto: ScheduleInterviewDto
+    @Body() scheduleInterviewDto: ScheduleInterviewDto,
   ) {
-    return await this.applicantsService.scheduleInterview(id, scheduleInterviewDto);
+    return await this.applicantsService.scheduleInterview(
+      id,
+      scheduleInterviewDto,
+    );
   }
 
   @Patch(':id/interview/reschedule')
   async rescheduleInterview(
     @Param('id') id: string,
-    @Body() rescheduleInterviewDto: RescheduleInterviewDto
+    @Body() rescheduleInterviewDto: RescheduleInterviewDto,
   ) {
-    return await this.applicantsService.rescheduleInterview(id, rescheduleInterviewDto);
+    return await this.applicantsService.rescheduleInterview(
+      id,
+      rescheduleInterviewDto,
+    );
   }
 
   @Post(':id/send-email')
-  async sendCustomEmail(@Param('id') id: string, @Body() sendCustomEmailDto: SendCustomEmailDto) {
+  async sendCustomEmail(
+    @Param('id') id: string,
+    @Body() sendCustomEmailDto: SendCustomEmailDto,
+  ) {
     return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
   }
 
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body('status') status: ApplicantStatus,
+    @Body() updateApplicantStatusDto: UpdateApplicantStatusDto,
   ) {
-    return await this.applicantsService.updateApplicantStatus(id, status);
+    return await this.applicantsService.updateApplicantStatus(id, updateApplicantStatusDto.status);
   }
 }

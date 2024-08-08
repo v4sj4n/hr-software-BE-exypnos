@@ -13,7 +13,7 @@ export class MailService {
       subject: dataMailer.subject,
       template: dataMailer.template,
       context: dataMailer.context,
-      html: dataMailer.html, 
+      html: dataMailer.html,
     });
   }
 }

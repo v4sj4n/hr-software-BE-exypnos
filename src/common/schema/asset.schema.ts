@@ -14,7 +14,7 @@ export class AssetHistory {
   @Prop()
   @IsDate()
   @IsOptional()
-  receivedDate?: Date;
+  takenDate?: Date;
 
   @Prop()
   @IsDate()
@@ -30,7 +30,7 @@ export class AssetHistory {
   status: AssetStatus;
 }
 //SKU = Stock Keeping Unit is a unique code that identifies each asset
-// Get Date is the date when the asset was received
+// Get Date is the date when the asset was takenDate
 // Return Date is the date when the asset was returned
 @Schema({ timestamps: true })
 export class Asset {
@@ -44,7 +44,7 @@ export class Asset {
   status: AssetStatus;
 
   @Prop()
-  receivedDate: Date;
+  takenDate: Date;
 
   @Prop()
   returnDate: Date;

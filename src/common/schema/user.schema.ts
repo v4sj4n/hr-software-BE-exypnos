@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import muv from 'mongoose-unique-validator';
-
 import { Role } from 'src/common/enum/role.enum';
+import { GradeType, PositionType } from '../enum/position.enum';
 @Schema({
   timestamps: true,
 })
@@ -34,6 +34,12 @@ export class User {
 
   @Prop({ required: true, unique: true, ref: 'Auth' })
   auth: Types.ObjectId;
+
+  @Prop({ required: false, enum: Role, type: String })
+  position: PositionType;
+
+  @Prop({ required: false, enum: Role, type: String})
+  grade: GradeType;
 
   @Prop({ default: false, type: Boolean })
   isDeleted: boolean;

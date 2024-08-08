@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  IsAlphanumeric,
+} from 'class-validator';
 import { AssetStatus, AssetType } from '../../common/enum/asset.enum';
 import { Types } from 'mongoose';
 
@@ -9,6 +16,9 @@ export class UpdateAssetDto {
 
   @IsString()
   @IsOptional()
+  @MinLength(8)
+  @MaxLength(12)
+  @IsAlphanumeric()
   serialNumber: string;
 
   @IsEnum(AssetStatus)
@@ -16,7 +26,7 @@ export class UpdateAssetDto {
   status: AssetStatus;
 
   @IsOptional()
-  receivedDate?: Date;
+  takenDate?: Date;
 
   @IsOptional()
   returnDate?: Date;

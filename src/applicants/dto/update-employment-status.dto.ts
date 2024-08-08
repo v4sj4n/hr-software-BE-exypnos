@@ -1,4 +1,3 @@
 export class UpdateEmploymentStatusDto {
-    employed: boolean;
-  }
-  
+  employed: boolean;
+}

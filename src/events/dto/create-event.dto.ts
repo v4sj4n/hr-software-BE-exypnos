@@ -1,6 +1,5 @@
 import { IsString, IsDateString, IsOptional } from 'class-validator';
-import { Poll } from 'src/common/schema/event.schema';
-
+import { Poll } from '../../common/schema/event.schema';
 export class CreateEventDto {
   @IsString()
   title: string;

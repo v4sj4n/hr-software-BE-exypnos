@@ -4,12 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { compareDates, formatDate } from 'src/common/util/dateUtil';
+
+
 @Injectable()
 export class AssetService {
   constructor(
@@ -21,8 +24,8 @@ export class AssetService {
       await this.validateAssetData(createAssetDto);
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
-      createdAsset.receivedDate = createAssetDto.receivedDate
-        ? new Date(createAssetDto.receivedDate)
+      createdAsset.takenDate = createAssetDto.takenDate
+        ? new Date(createAssetDto.takenDate)
         : null;
       createdAsset.returnDate = createAssetDto.returnDate
         ? new Date(createAssetDto.returnDate)
@@ -30,9 +33,10 @@ export class AssetService {
       createdAsset.userId = createAssetDto.userId
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
         : null;
+
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
-        receivedDate: createdAsset.receivedDate,
+        takenDate: createdAsset.takenDate,
         returnDate: createdAsset.returnDate,
         userId: createdAsset.userId,
         status: createdAsset.status,
@@ -75,24 +79,16 @@ export class AssetService {
       if (updateAssetDto.serialNumber) {
         await this.checkSerialNumber(updateAssetDto.serialNumber, id);
       }
-      const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        receivedDate: updateAssetDto.receivedDate,
-        returnDate: updateAssetDto.returnDate,
-        userId: updateAssetDto.userId,
-        status: updateAssetDto.status,
-      };
-      Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
-      });
+
+      this.validateHistoryData(updateAssetDto, existingAsset);
       await this.assetModel.findByIdAndUpdate(
         id,
         {
           ...updateAssetDto,
-          receivedDate: updateAssetDto.receivedDate
-            ? new Date(updateAssetDto.receivedDate)
+          takenDate: updateAssetDto.takenDate
+            ? new Date(updateAssetDto.takenDate)
             : null,
-          returnDate: updateAssetDto.returnDate
+          return: updateAssetDto.returnDate
             ? new Date(updateAssetDto.returnDate)
             : null,
           userId: updateAssetDto.userId
@@ -104,6 +100,41 @@ export class AssetService {
       return await this.assetModel.findById(id);
     } catch (error) {
       throw new ConflictException(error);
+    }
+  }
+  validateHistoryData(
+    updateAssetDto: UpdateAssetDto,
+    existingAsset: mongoose.Document<unknown, {}, Asset> &
+      Asset & { _id: mongoose.Types.ObjectId },
+  ) {
+    if (updateAssetDto.status === AssetStatus.ASSIGNED) {
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: updateAssetDto.takenDate,
+        returnDate: null,
+        userId: updateAssetDto.userId,
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
+    } else if (
+      (updateAssetDto.status === AssetStatus.AVAILABLE ||
+        updateAssetDto.status === AssetStatus.BROKEN) &&
+      existingAsset.status
+    ) {
+      // make sure to add the returnDate date in the last history entry
+      const lastHistoryEntry = existingAsset.history.pop();
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: lastHistoryEntry.takenDate,
+        returnDate: updateAssetDto.returnDate,
+        userId: lastHistoryEntry.userId,
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
     }
   }
   async remove(id: string): Promise<Asset> {
@@ -146,39 +177,23 @@ export class AssetService {
       );
     }
     if (!assetData.status && assetData.userId) {
+      assetData.status = AssetStatus.ASSIGNED;
+    }
+    if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
       throw new ConflictException(
-        `Asset with user ${assetData.userId} must have a status assigned`,
+        `Asset with user must have status ${AssetStatus.ASSIGNED}`,
       );
     }
-    if (
-      assetData.userId &&
-      (assetData.status === AssetStatus.AVAILABLE ||
-        assetData.status === AssetStatus.BROKEN)
-    ) {
-      throw new ConflictException(
-        `Asset with status ${assetData.status} cannot have a user`,
-      );
+    if (assetData.userId && !assetData.takenDate) {
+      throw new ConflictException(`Asset with user must have a takenDate date`);
     }
-    if (existingAsset) {
-      if (
-        (assetData.status === AssetStatus.AVAILABLE ||
-          assetData.status === AssetStatus.BROKEN) &&
-        assetData.receivedDate !== undefined
-      ) {
-        throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status} with received date`,
-        );
-      }
-      if (
-        (assetData.status === AssetStatus.AVAILABLE ||
-          assetData.status === AssetStatus.BROKEN) &&
-        assetData.returnDate &&
-        existingAsset?.status !== AssetStatus.ASSIGNED
-      ) {
-        throw new ConflictException(
-          `Cannot change status from ${existingAsset.status} to ${assetData.status}`,
-        );
-      }
+    if (assetData.returnDate && !existingAsset.takenDate) {
+      throw new ConflictException(`Asset must have a takenDate date first`);
+    }
+    if (assetData.returnDate && compareDates(formatDate(new Date(existingAsset.takenDate)), formatDate(new Date(assetData.returnDate))) >= 1) {
+      throw new ConflictException(
+        `Return date cannot be before the taken date`,
+      );
     }
   }
   private async checkSerialNumber(
@@ -191,11 +206,32 @@ export class AssetService {
     }
     const existingAsset = await this.assetModel.findOne(query);
     if (existingAsset) {
-      throw new ConflictException('Serial number must be different');
+      throw new ConflictException('Serial number must be unique');
     }
   }
 
-  async getAllUserWithAssets(): Promise<User[]> {
+  async getAllUserWithAssets(search: string, users: string): Promise<User[]> {
+    let objectToPassToMatch: FilterQuery<any> =
+      users === 'with'
+        ? {
+            assets: { $ne: [] },
+          }
+        : users === 'without'
+          ? {
+              assets: { $eq: [] },
+            }
+          : {};
+
+    if (search) {
+      objectToPassToMatch = {
+        ...objectToPassToMatch,
+        $or: [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
     try {
       const usersWithAsset = await this.userModel.aggregate([
         {
@@ -208,7 +244,7 @@ export class AssetService {
         },
         {
           $match: {
-            assets: { $ne: [] },
+            ...objectToPassToMatch,
           },
         },
         {
@@ -223,10 +259,12 @@ export class AssetService {
             firstName: 1,
             lastName: 1,
             imageUrl: 1,
+            phone: 1,
             assets: 1,
           },
         },
       ]);
+
       return usersWithAsset;
     } catch (err) {
       throw new ConflictException(err);
@@ -255,14 +293,37 @@ export class AssetService {
           },
         },
         {
+          $lookup: {
+            from: 'auths',
+            localField: 'auth',
+            foreignField: '_id',
+            as: 'authData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$authData',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
           $project: {
             _id: 1,
             firstName: 1,
             lastName: 1,
+            role: 1,
+            imageUrl: 1,
+            email: '$authData.email',
+            phone: 1,
             assets: 1,
           },
         },
       ]);
+
+      if (userWithAsset.length === 0) {
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
+
       return userWithAsset[0];
     } catch (err) {
       throw new ConflictException(err);
@@ -279,5 +340,12 @@ export class AssetService {
       );
     }
     return asset;
+  }
+
+  async getAvaibleAssets(): Promise<Asset[]> {
+    return await this.assetModel.find({
+      status: AssetStatus.AVAILABLE,
+      isDeleted: false,
+    });
   }
 }

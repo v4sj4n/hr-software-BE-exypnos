@@ -12,14 +12,10 @@ import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
 import { SendCustomEmailDto } from './dto/send-custom-email.dto';
+import { UpdateApplicantStatusDto } from 'src/applicants/dto/update-applicant-status.dto';
 
 @Injectable()
 export class ApplicantsService {
-  updateApplicantStatus: any;
-  deleteApplicant(id: string) {
-    throw new Error('Method not implemented.');
-  }
-
   constructor(
     @InjectModel(Applicant.name)
     private readonly applicantModel: Model<ApplicantDocument>,
@@ -32,10 +28,20 @@ export class ApplicantsService {
   }
 
   async findOne(id: string): Promise<ApplicantDocument> {
-    const applicant = await this.applicantModel.findById(id).exec();
+    const applicant = await this.applicantModel.findOne({ _id: id, isDeleted: false }).exec();
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
+    return applicant;
+  }
+
+  async deleteApplicant(id: string): Promise<Applicant> {
+    const applicant = await this.findOne(id);
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    applicant.isDeleted = true;
+    await applicant.save();
     return applicant;
   }
 
@@ -48,10 +54,10 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING,
+        status: ApplicantStatus.PENDING, // Assuming this is the initial status
       });
       await this.mailService.sendMail({
-        to: createApplicantDto.email,
+        to: createApplicantDto.email, // Applicant's email address
         subject: 'Aplikimi u mor me sukses',
         template: './successfulApplication',
         context: {
@@ -94,7 +100,7 @@ export class ApplicantsService {
         });
 
         await this.mailService.sendMail({
-          to: applicationToUpdate.email, 
+          to: applicationToUpdate.email, // Applicant's email address
           subject: 'Ndryshim planesh',
           template: './scheduleApplicantInterviewChange',
           context: {
@@ -114,7 +120,7 @@ export class ApplicantsService {
         });
 
         await this.mailService.sendMail({
-          to: applicationToUpdate.email, 
+          to: applicationToUpdate.email, // Applicant's email address
           subject: 'Intervista',
           template: './interview',
           context: {
@@ -148,7 +154,7 @@ export class ApplicantsService {
       isDeleted: false,
       createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
     };
-  
+
     if (phase) {
       if (phase === 'first') {
         query.firstInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
@@ -156,8 +162,7 @@ export class ApplicantsService {
         query.secondInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
       }
     }
-  
-    console.log('Filter Query:', query); // Add this line
+
     return await this.applicantModel.find(query).exec();
   }
 
@@ -175,7 +180,38 @@ export class ApplicantsService {
     return applicant;
   }
 
-  
+  async updateInterviewStatus(
+    id: string,
+    updateInterviewStatusDto: UpdateInterviewStatusDto,
+  ): Promise<ApplicantDocument> {
+    const { phase, status, interviewDate } = updateInterviewStatusDto;
+    const applicant = await this.findOne(id);
+    if (!applicant.notes) {
+      applicant.notes = '';
+    }
+
+    if (status === 'accepted') {
+      applicant.notes += `\n${phase} phase accepted`;
+      if (interviewDate) {
+        if (phase === 'first') {
+          applicant.firstInterviewDate = new Date(interviewDate);
+        } else if (phase === 'second') {
+          applicant.secondInterviewDate = new Date(interviewDate);
+        }
+      }
+      if (phase === 'first') {
+        await this.sendSecondInterviewEmail(applicant, new Date(interviewDate));
+      }
+    } else if (status === 'rejected') {
+      applicant.notes += `\n${phase} phase rejected`;
+      if (phase === 'first') {
+        await this.sendRejectEmail(applicant);
+      }
+    }
+
+    await applicant.save();
+    return applicant;
+  }
 
   async scheduleInterview(
     id: string,
@@ -274,16 +310,28 @@ export class ApplicantsService {
     return applicant;
   }
 
-  
+  async updateApplicantStatus(
+    id: string,
+    status: ApplicantStatus,
+  ): Promise<ApplicantDocument> {
+    const applicant = await this.findOne(id);
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+
+    applicant.status = status;
+    await applicant.save();
+    return applicant;
+  }
 
   private async sendSecondInterviewEmail(
     applicant: ApplicantDocument,
     interviewDate?: Date,
   ): Promise<void> {
     await this.mailService.sendMail({
-      to: applicant.email, 
+      to: applicant.email,
       subject: 'Second Interview Scheduled',
-      template: './second-interview', 
+      template: './second-interview', // Ensure this template exists
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -302,9 +350,9 @@ export class ApplicantsService {
 
   private async sendRejectEmail(applicant: ApplicantDocument): Promise<void> {
     await this.mailService.sendMail({
-      to: applicant.email, 
+      to: applicant.email,
       subject: 'Application Rejected',
-      template: './reject', 
+      template: './reject', // Ensure this template exists
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -326,7 +374,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject,
-      html: `<p>${message}</p>`, 
+      html: `<p>${message}</p>`, // Use `html` to send a plain HTML message
     });
   }
 }

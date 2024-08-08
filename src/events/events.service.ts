@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { Event, PollOption } from '../common/schema/event.schema';
+import { Event, Poll, PollOption } from '../common/schema/event.schema';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
@@ -35,7 +35,8 @@ export class EventsService {
       ) {
         throw new BadRequestException('Event date cannot be in the past');
       }
-      if (createdEvent.poll) {
+      if (createEventDto.poll) {
+        this.validatePollData(createEventDto.poll);
         createdEvent.poll.options.forEach((opt) => {
           opt.votes = 0;
           opt.voters = [];
@@ -82,6 +83,7 @@ export class EventsService {
       }
 
       if (!existingEvent.poll && updateEventDto.poll) {
+        this.validatePollData(updateEventDto.poll);
         updateEventDto.poll.options = updateEventDto.poll.options.map(
           (opt) => ({
             ...opt,
@@ -116,6 +118,7 @@ export class EventsService {
       throw new ConflictException(error);
     }
   }
+
   async remove(id: string): Promise<void> {
     try {
       const result = await this.eventModel.findById(id);
@@ -142,15 +145,27 @@ export class EventsService {
   async addVote(id: string, vote: VoteDto): Promise<Event> {
     await this.validateData(id, vote);
     const event = await this.eventModel.findById(id);
+    const user = await this.userModel.findById(vote.userId);
 
     for (const option of event.poll.options) {
-      if (option.voters.includes(vote.userId) && !event.poll.isMultipleVote) {
+      if (
+        option.voters.some(voter => 
+          voter._id.toString() === user._id.toString() &&
+          voter.firstName === user.firstName &&
+          voter.lastName === user.lastName
+        ) &&
+        !event.poll.isMultipleVote
+      ) {
         throw new ConflictException('User has already voted for an option');
       }
     }
 
     const option = event.poll.options.find((opt) => opt.option === vote.option);
-    if (option.voters.includes(vote.userId)) {
+    if (option.voters.some(voter => 
+      voter._id.toString() === user._id.toString() &&
+      voter.firstName === user.firstName &&
+      voter.lastName === user.lastName
+    )) {
       throw new ConflictException('User has already voted for this option');
     }
 
@@ -158,7 +173,13 @@ export class EventsService {
       { _id: id, 'poll.options.option': vote.option },
       {
         $inc: { 'poll.options.$.votes': 1 },
-        $addToSet: { 'poll.options.$.voters': vote.userId },
+        $addToSet: {
+          'poll.options.$.voters': {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
+        },
       },
       { new: true },
     );
@@ -174,8 +195,13 @@ export class EventsService {
     await this.validateData(id, vote);
     const event = await this.eventModel.findById(id);
     const option = event.poll.options.find((opt) => opt.option === vote.option);
+    const user = await this.userModel.findById(vote.userId);
 
-    if (!option.voters.includes(vote.userId)) {
+    if (!option.voters.some(voter => 
+      voter._id.toString() === user._id.toString() &&
+      voter.firstName === user.firstName &&
+      voter.lastName === user.lastName
+    )) {
       throw new ConflictException('User has not voted for this option');
     }
 
@@ -183,7 +209,13 @@ export class EventsService {
       { _id: id, 'poll.options.option': vote.option },
       {
         $inc: { 'poll.options.$.votes': -1 },
-        $pull: { 'poll.options.$.voters': vote.userId },
+        $pull: {
+          'poll.options.$.voters': { 
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName 
+          },
+        },
       },
       { new: true },
     );
@@ -200,7 +232,33 @@ export class EventsService {
     if (!event) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
+    if (!event.poll || !event.poll.options) {
+      throw new BadRequestException('This event does not have a poll');
+    }
     return event.poll.options;
+  }
+
+  async getptionThatUserVotedFor(id: string, userId: string): Promise<number> {
+    const event = await this.eventModel.findById(id);
+    if
+    (!event) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+    if (!event.poll || !event.poll.options) {
+      throw new BadRequestException('This event does not have a poll');
+    }
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+    const votedOption = event.poll.options.find((opt) =>
+      opt.voters.some(voter => 
+        voter._id.toString() === userId &&
+        voter.firstName === user.firstName &&
+        voter.lastName === user.lastName
+      ),
+    );
+    return votedOption ? event.poll.options.indexOf(votedOption) + 1  : -1;
   }
 
   private async validateData(id: string, vote: VoteDto): Promise<void> {
@@ -222,6 +280,30 @@ export class EventsService {
 
     if (!event.poll || !event.poll.options) {
       throw new BadRequestException('This event does not have a poll');
+    }
+  }
+
+  private validatePollData(poll: Poll) {
+    if (poll.question.length === 0) {
+      throw new BadRequestException('Poll question cannot be empty');
+    }
+    if (poll.options.length <= 1) {
+      throw new BadRequestException('Poll options must be more than one');
+    }
+    if (poll.options.length > 3) {
+      throw new BadRequestException('Poll options must be 3 or 2');
+    }
+    if (poll.options.some((opt) => opt.option.length <= 1)) {
+      throw new BadRequestException(
+        'Poll option cannot be less than 1 character',
+      );
+    }
+    for (let i = 0; i < poll.options.length; i++) {
+      for (let j = i + 1; j < poll.options.length; j++) {
+        if (poll.options[i].option === poll.options[j].option) {
+          throw new BadRequestException('Poll options must be unique');
+        }
+      }
     }
   }
 }
