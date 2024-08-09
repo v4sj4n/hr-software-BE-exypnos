@@ -76,7 +76,7 @@ export class AssetService {
         await this.checkSerialNumber(updateAssetDto.serialNumber, id);
       }
 
-      this.validateHistoryData(updateAssetDto, existingAsset);
+      await this.validateHistoryData(updateAssetDto, existingAsset);
       await this.assetModel.findByIdAndUpdate(
         id,
         {
@@ -98,17 +98,18 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-  validateHistoryData(
+  async validateHistoryData(
     updateAssetDto: UpdateAssetDto,
     existingAsset: mongoose.Document<unknown, {}, Asset> &
       Asset & { _id: mongoose.Types.ObjectId },
   ) {
     if (updateAssetDto.status === AssetStatus.ASSIGNED) {
+      const updateUser =await this.userModel.findById(updateAssetDto.userId);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: updateAssetDto.takenDate,
         returnDate: null,
-        userId: updateAssetDto.userId,
+        user: {_id: updateUser._id, firstName: updateUser.firstName, lastName: updateUser.lastName},
         status: updateAssetDto.status,
       };
       Object.assign(updateAssetDto, {
@@ -121,11 +122,12 @@ export class AssetService {
     ) {
       // make sure to add the returnDate date in the last history entry
       const lastHistoryEntry = existingAsset.history.pop();
+      const user = await this.userModel.findById(lastHistoryEntry.user._id);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: lastHistoryEntry.takenDate,
         returnDate: updateAssetDto.returnDate,
-        userId: lastHistoryEntry.userId,
+        user: lastHistoryEntry.user,
         status: updateAssetDto.status,
       };
       Object.assign(updateAssetDto, {

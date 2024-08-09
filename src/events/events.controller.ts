@@ -20,14 +20,14 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'files', maxCount: 10 }]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
   async create(
     @UploadedFiles()
-    photo: { files: Express.Multer.File[] },
+    files: { photo?: Express.Multer.File[] },
     @Body() createEventDto: CreateEventDto,
   ) {
-    console.log('files', photo);
-    return await this.eventsService.create([], createEventDto);
+    const photo = files?.photo || [];
+    return await this.eventsService.create(photo, createEventDto);
   }
 
   @Get()
