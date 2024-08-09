@@ -39,10 +39,10 @@ export class User {
   @Prop({ required: true, unique: true, ref: 'Auth' })
   auth: Types.ObjectId;
 
-  @Prop({ required: false, enum: Role, type: String })
+  @Prop({ required: false, enum: PositionType, type: String })
   position: PositionType;
 
-  @Prop({ required: false, enum: Role, type: String })
+  @Prop({ required: false, enum: PositionType, type: String })
   grade: GradeType;
 
   @Prop({ default: false, type: Boolean })

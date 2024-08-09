@@ -8,12 +8,14 @@ import {
   Patch,
   UseInterceptors,
   UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VoteDto } from './dto/vote.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {addVote,removeVote,getEventPollResults,geOtptionThatUserVotedFor} from './events.poll'
 
 @Controller('event')
 export class EventsController {
@@ -31,20 +33,23 @@ export class EventsController {
   }
 
   @Get()
-  findAll() {
-    return this.eventsService.findAll();
+  findAll(
+    @Query('search') search: string = '',
+  ) {
+    return this.eventsService.findAll(search);
   }
   @Get('poll/:id')
   getEventPollResults(@Param('id') id: string) {
-    return this.eventsService.getEventPollResults(id);
+    return getEventPollResults(id);
   }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
   }
   @Get(':id/user/:userId')
   getEventsByUser(@Param('id') id: string, @Param('userId') userId: string) {
-    return this.eventsService.geOtptionThatUserVotedFor(id, userId);
+    return geOtptionThatUserVotedFor(id, userId);
   }
   @Patch(':id')
   partialUpdate(
@@ -61,11 +66,11 @@ export class EventsController {
 
   @Post(':id/vote')
   addVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
-    return this.eventsService.addVote(id, voteDto);
+    return addVote(id, voteDto);
   }
 
   @Delete(':id/vote')
   removeVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
-    return this.eventsService.removeVote(id, voteDto);
+    return removeVote(id, voteDto);
   }
 }
