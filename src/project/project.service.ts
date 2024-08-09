@@ -113,7 +113,6 @@ export class ProjectService {
   }
 
   async validateUserIds(userIds: Types.ObjectId[]) {
-    console.log(userIds);
     for (let i = 0; i < userIds.length; i++) {
       const user = await this.userModel.findOne({
         _id: userIds[i],

@@ -31,32 +31,37 @@ export class EventsService {
   ) {}
 
   async create(
-    photos: Express.Multer.File[],
+    files: Express.Multer.File[],
     createEventDto: CreateEventDto,
   ): Promise<Event> {
     try {
-      // console.log(photos);
-      if (photos) {
-        var eventPhotos = await Promise.all(
-          photos.map(async (photo) => {
-            return await this.firebaseService.uploadFile(photo, 'eventPhoto');
+      let eventPhotos: string[] = [];
+      if (files && files.length > 0) {
+        eventPhotos = await Promise.all(
+          files.map(async (file) => {
+            return await this.firebaseService.uploadFile(file, 'eventPhoto');
           }),
         );
       }
-
       const createdEvent = new this.eventModel({
         ...createEventDto,
         photo: eventPhotos,
       });
+
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
-      if(createEventDto.participants.length === 0){
-        createdEvent.participants = await this.userModel.find({}).select('_id') as unknown as Types.ObjectId[];
+
+      if (!createdEvent.participants || createdEvent.participants.length === 0) {
+        createdEvent.participants = await this.populateParticipants();
       }
-      this.validateDate(createdEvent.startDate, createdEvent.endDate);
-      if (createEventDto.poll) {
-        this.validatePollData(createEventDto.poll);
+      if(!createdEvent.endDate){
+        createdEvent.endDate = createdEvent.startDate;
+        this.validateDate(createdEvent.startDate, createdEvent.endDate);
+      }
+
+      if (createdEvent.poll) {
+        this.validatePollData(createdEvent.poll);
         createdEvent.poll.options.forEach((opt) => {
           opt.votes = 0;
           opt.voters = [];
@@ -64,11 +69,19 @@ export class EventsService {
       }
       await this.notificationService.createNotification(
         'Event Created',
-        `Event ${createEventDto.title} has been created`,
+        `Event ${createdEvent.title} has been created`,
         NotificationType.EVENT,
         createdEvent._id as Types.ObjectId,
         new Date(),
       );
+      await this.mailService.sendMail({
+        to: createdEvent.participants,
+        subject: `${createdEvent.title} - ${createdEvent.type}`,
+        template: './event',
+        context: {
+          name: `${createdEvent.description}`,
+        },
+      });
       return await createdEvent.save();
     } catch (error) {
       throw new ConflictException(error);
@@ -77,7 +90,9 @@ export class EventsService {
 
   async findAll(): Promise<Event[]> {
     try {
-      return this.eventModel.find({ isDeleted: false }).populate('participants', 'firstName lastName');
+      return this.eventModel
+        .find({ isDeleted: false })
+        .populate('participants', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -89,16 +104,6 @@ export class EventsService {
       if (!event || event.isDeleted) {
         throw new NotFoundException(`Event with id ${id} not found`);
       }
-      const emails =  await this.getEmailsOfParticipants(event.participants);
-      console.log(emails);
-      await this.mailService.sendMail({
-        to: emails,
-        subject: `${event.title} - ${event.type}`,
-        template: './event',
-        context: {
-          name: `${event.description}`,
-        },
-      });
       return event;
     } catch (error) {
       throw new ConflictException(error);
@@ -195,7 +200,6 @@ export class EventsService {
         var existingVote = option.option;
       }
     }
-    console.log(existingVote);
     if (existingVote && !event.poll.isMultipleVote) {
       await this.eventModel.findOneAndUpdate(
         { _id: id, 'poll.options.option': existingVote },
@@ -370,28 +374,29 @@ export class EventsService {
     }
   }
 
-  async getEmailsOfParticipants(participants: Types.ObjectId[]): Promise<string[]> {
+  private async populateParticipants() {
     let emails: string[] = [];
-    for (const participant of participants) {
+    let users = await this.userModel.find();
+    let userIds = users.map((user) => user._id);
+    for (const userId of userIds) {
       const user = await this.userModel
-        .findById(participant)
+        .findById(userId)
         .populate('auth', 'email')
         .select('auth');
       const auth = await this.authModel.findById(user.auth);
       emails.push(auth.email);
     }
-    console.log(emails);
     return emails;
   }
+  private validateDate(startDate: Date, endDate?: Date): void {
 
- private  validateDate(startDate: Date, endDate?: Date): void {
     if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
-      throw new BadRequestException('End date must be after or same start date');
+      throw new BadRequestException(
+        'End date must be after or same start date',
+      );
     }
     if (compareDates(formatDate(new Date()), formatDate(startDate)) >= 1) {
       throw new BadRequestException('Event date has passed');
     }
   }
-
-
 }
