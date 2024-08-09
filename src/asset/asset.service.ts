@@ -98,43 +98,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-  async validateHistoryData(
-    updateAssetDto: UpdateAssetDto,
-    existingAsset: mongoose.Document<unknown, {}, Asset> &
-      Asset & { _id: mongoose.Types.ObjectId },
-  ) {
-    if (updateAssetDto.status === AssetStatus.ASSIGNED) {
-      const updateUser =await this.userModel.findById(updateAssetDto.userId);
-      const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        takenDate: updateAssetDto.takenDate,
-        returnDate: null,
-        user: {_id: updateUser._id, firstName: updateUser.firstName, lastName: updateUser.lastName},
-        status: updateAssetDto.status,
-      };
-      Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
-      });
-    } else if (
-      (updateAssetDto.status === AssetStatus.AVAILABLE ||
-        updateAssetDto.status === AssetStatus.BROKEN) &&
-      existingAsset.status
-    ) {
-      // make sure to add the returnDate date in the last history entry
-      const lastHistoryEntry = existingAsset.history.pop();
-      const user = await this.userModel.findById(lastHistoryEntry.user._id);
-      const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        takenDate: lastHistoryEntry.takenDate,
-        returnDate: updateAssetDto.returnDate,
-        user: lastHistoryEntry.user,
-        status: updateAssetDto.status,
-      };
-      Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
-      });
-    }
-  }
   async remove(id: string): Promise<Asset> {
     try {
       const asset = await this.assetModel.findByIdAndUpdate(
@@ -156,62 +119,6 @@ export class AssetService {
       throw new NotFoundException(`Asset with id ${id} not found`);
     }
     return asset.history;
-  }
-  private async validateAssetData(
-    assetData: CreateAssetDto | UpdateAssetDto,
-    existingAsset?: Asset,
-  ) {
-    if (assetData.userId) {
-      const userExists = await this.userModel.findById(assetData.userId);
-      if (!userExists) {
-        throw new NotFoundException(
-          `User with id ${assetData.userId} not found`,
-        );
-      }
-    }
-    if (!assetData.userId && assetData.status === AssetStatus.ASSIGNED) {
-      throw new ConflictException(
-        `Asset with status ${assetData.status} must have a user`,
-      );
-    }
-    if (!assetData.status && assetData.userId) {
-      assetData.status = AssetStatus.ASSIGNED;
-    }
-    if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
-      throw new ConflictException(
-        `Asset with user must have status ${AssetStatus.ASSIGNED}`,
-      );
-    }
-    if (assetData.userId && !assetData.takenDate) {
-      throw new ConflictException(`Asset with user must have a takenDate date`);
-    }
-    if (assetData.returnDate && !existingAsset.takenDate) {
-      throw new ConflictException(`Asset must have a takenDate date first`);
-    }
-    if (
-      assetData.returnDate &&
-      compareDates(
-        formatDate(new Date(existingAsset.takenDate)),
-        formatDate(new Date(assetData.returnDate)),
-      ) >= 1
-    ) {
-      throw new ConflictException(
-        `Return date cannot be before the taken date`,
-      );
-    }
-  }
-  private async checkSerialNumber(
-    serialNumber: string,
-    excludeId?: string,
-  ): Promise<void> {
-    const query = { serialNumber };
-    if (excludeId) {
-      Object.assign(query, { _id: { $ne: excludeId } });
-    }
-    const existingAsset = await this.assetModel.findOne(query);
-    if (existingAsset) {
-      throw new ConflictException('Serial number must be unique');
-    }
   }
 
   async getAllUserWithAssets(search: string, users: string): Promise<User[]> {
@@ -347,10 +254,102 @@ export class AssetService {
     return asset;
   }
 
-  async getAvaibleAssets(): Promise<Asset[]> {
-    return await this.assetModel.find({
-      status: AssetStatus.AVAILABLE,
-      isDeleted: false,
-    });
+  async validateHistoryData(
+    updateAssetDto: UpdateAssetDto,
+    existingAsset: mongoose.Document<unknown, {}, Asset> &
+      Asset & { _id: mongoose.Types.ObjectId },
+  ) {
+    if (updateAssetDto.status === AssetStatus.ASSIGNED) {
+      const updateUser = await this.userModel.findById(updateAssetDto.userId);
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: updateAssetDto.takenDate,
+        returnDate: null,
+        user: {
+          _id: updateUser._id,
+          firstName: updateUser.firstName,
+          lastName: updateUser.lastName,
+        },
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
+    } else if (
+      (updateAssetDto.status === AssetStatus.AVAILABLE ||
+        updateAssetDto.status === AssetStatus.BROKEN) &&
+      existingAsset.status
+    ) {
+      const lastHistoryEntry = existingAsset.history.pop();
+      const user = await this.userModel.findById(lastHistoryEntry.user._id);
+      const newHistoryEntry: AssetHistory = {
+        updatedAt: new Date(),
+        takenDate: lastHistoryEntry.takenDate,
+        returnDate: updateAssetDto.returnDate,
+        user: lastHistoryEntry.user,
+        status: updateAssetDto.status,
+      };
+      Object.assign(updateAssetDto, {
+        history: [...existingAsset.history, newHistoryEntry],
+      });
+    }
+  }
+
+  private async validateAssetData(
+    assetData: CreateAssetDto | UpdateAssetDto,
+    existingAsset?: Asset,
+  ) {
+    if (assetData.userId) {
+      const userExists = await this.userModel.findById(assetData.userId);
+      if (!userExists) {
+        throw new NotFoundException(
+          `User with id ${assetData.userId} not found`,
+        );
+      }
+    }
+    if (!assetData.userId && assetData.status === AssetStatus.ASSIGNED) {
+      throw new ConflictException(
+        `Asset with status ${assetData.status} must have a user`,
+      );
+    }
+    if (!assetData.status && assetData.userId) {
+      assetData.status = AssetStatus.ASSIGNED;
+    }
+    if (assetData.userId && assetData.status !== AssetStatus.ASSIGNED) {
+      throw new ConflictException(
+        `Asset with user must have status ${AssetStatus.ASSIGNED}`,
+      );
+    }
+    if (assetData.userId && !assetData.takenDate) {
+      throw new ConflictException(`Asset with user must have a takenDate date`);
+    }
+    if (assetData.returnDate && !existingAsset.takenDate) {
+      throw new ConflictException(`Asset must have a takenDate date first`);
+    }
+    if (
+      assetData.returnDate &&
+      compareDates(
+        formatDate(new Date(existingAsset.takenDate)),
+        formatDate(new Date(assetData.returnDate)),
+      ) >= 1
+    ) {
+      throw new ConflictException(
+        `Return date cannot be before the taken date`,
+      );
+    }
+  }
+
+  private async checkSerialNumber(
+    serialNumber: string,
+    excludeId?: string,
+  ): Promise<void> {
+    const query = { serialNumber };
+    if (excludeId) {
+      Object.assign(query, { _id: { $ne: excludeId } });
+    }
+    const existingAsset = await this.assetModel.findOne(query);
+    if (existingAsset) {
+      throw new ConflictException('Serial number must be unique');
+    }
   }
 }
