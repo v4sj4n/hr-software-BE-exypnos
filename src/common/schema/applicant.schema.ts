@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { ApplicantStatus } from '../enum/applicantStatus.enum';
+import muv from 'mongoose-unique-validator';
 
 export type ApplicantDocument = Applicant & Document;
 
@@ -70,5 +71,6 @@ export class Applicant {
   currentPhase?: string;
 }
 
-export const ApplicantSchema = SchemaFactory.createForClass(Applicant);
-ApplicantSchema.plugin(require('mongoose-unique-validator'));
+const ApplicantSchema = SchemaFactory.createForClass(Applicant);
+ApplicantSchema.plugin(muv);
+export { ApplicantSchema };

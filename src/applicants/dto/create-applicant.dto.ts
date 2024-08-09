@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateApplicantDto {
-@IsOptional()
+  @IsOptional()
   @IsString()
   firstName: string;
 
@@ -36,7 +36,6 @@ export class CreateApplicantDto {
   @IsOptional()
   @IsString()
   technologiesUsed: string;
-
 
   @IsOptional()
   @IsString()

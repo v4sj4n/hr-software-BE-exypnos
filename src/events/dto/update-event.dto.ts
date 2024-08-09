@@ -1,4 +1,11 @@
-import { IsArray, IsDateString, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Types } from 'mongoose';
 import { Poll } from 'src/common/schema/event.schema';
 

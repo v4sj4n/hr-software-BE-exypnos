@@ -1,4 +1,12 @@
-import { IsString, IsDateString, IsOptional, IsEnum, IsArray, IsMongoId, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsMongoId,
+  IsNotEmpty,
+} from 'class-validator';
 import { Poll } from '../../common/schema/event.schema';
 import { EventType } from 'src/common/enum/event.enum';
 import { Types } from 'mongoose';

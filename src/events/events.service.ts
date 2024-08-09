@@ -51,8 +51,10 @@ export class EventsService {
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
-      if(createEventDto.participants.length === 0){
-        createdEvent.participants = await this.userModel.find({}).select('_id') as unknown as Types.ObjectId[];
+      if (createEventDto.participants.length === 0) {
+        createdEvent.participants = (await this.userModel
+          .find({})
+          .select('_id')) as unknown as Types.ObjectId[];
       }
       this.validateDate(createdEvent.startDate, createdEvent.endDate);
       if (createEventDto.poll) {
@@ -77,7 +79,9 @@ export class EventsService {
 
   async findAll(): Promise<Event[]> {
     try {
-      return this.eventModel.find({ isDeleted: false }).populate('participants', 'firstName lastName');
+      return this.eventModel
+        .find({ isDeleted: false })
+        .populate('participants', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -89,7 +93,7 @@ export class EventsService {
       if (!event || event.isDeleted) {
         throw new NotFoundException(`Event with id ${id} not found`);
       }
-      const emails =  await this.getEmailsOfParticipants(event.participants);
+      const emails = await this.getEmailsOfParticipants(event.participants);
       console.log(emails);
       await this.mailService.sendMail({
         to: emails,
@@ -185,7 +189,7 @@ export class EventsService {
     const user = await this.userModel.findById(vote.userId);
 
     for (const option of event.poll.options) {
-      var existingVoter = option.voters.find(
+      const existingVoter = option.voters.find(
         (voter) =>
           voter._id.toString() === user._id.toString() &&
           voter.firstName === user.firstName &&
@@ -370,8 +374,10 @@ export class EventsService {
     }
   }
 
-  async getEmailsOfParticipants(participants: Types.ObjectId[]): Promise<string[]> {
-    let emails: string[] = [];
+  async getEmailsOfParticipants(
+    participants: Types.ObjectId[],
+  ): Promise<string[]> {
+    const emails: string[] = [];
     for (const participant of participants) {
       const user = await this.userModel
         .findById(participant)
@@ -384,14 +390,14 @@ export class EventsService {
     return emails;
   }
 
- private  validateDate(startDate: Date, endDate?: Date): void {
+  private validateDate(startDate: Date, endDate?: Date): void {
     if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
-      throw new BadRequestException('End date must be after or same start date');
+      throw new BadRequestException(
+        'End date must be after or same start date',
+      );
     }
     if (compareDates(formatDate(new Date()), formatDate(startDate)) >= 1) {
       throw new BadRequestException('Event date has passed');
     }
   }
-
-
 }

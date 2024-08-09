@@ -1,4 +1,15 @@
-import { Controller, Get, Query, Param, Patch, Post, Body, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  Patch,
+  Post,
+  Body,
+  Delete,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -18,9 +29,13 @@ export class ApplicantsController {
   async filterByDateRange(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-    @Query('phase') phase?: 'first' | 'second'
+    @Query('phase') phase?: 'first' | 'second',
   ) {
-    return await this.applicantsService.filterByDateRange(startDate, endDate, phase);
+    return await this.applicantsService.filterByDateRange(
+      startDate,
+      endDate,
+      phase,
+    );
   }
 
   @Get()
@@ -48,7 +63,7 @@ export class ApplicantsController {
 
   @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file')) 
+  @UseInterceptors(FileInterceptor('file'))
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
@@ -57,7 +72,10 @@ export class ApplicantsController {
   }
 
   @Patch(':id/interview/note')
-  addInterviewNote(@Param('id') id: string, @Body() addInterviewNoteDto: AddInterviewNoteDto) {
+  addInterviewNote(
+    @Param('id') id: string,
+    @Body() addInterviewNoteDto: AddInterviewNoteDto,
+  ) {
     return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
   }
 

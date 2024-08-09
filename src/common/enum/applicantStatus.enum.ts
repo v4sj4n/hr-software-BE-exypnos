@@ -5,5 +5,5 @@ export enum ApplicantStatus {
   SECOND_INTERVIEW = 'second_interview',
   HIRED = 'hired',
   REJECTED = 'rejected',
-  EMPLOYED = "EMPLOYED",
+  EMPLOYED = 'EMPLOYED',
 }

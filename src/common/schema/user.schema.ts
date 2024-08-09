@@ -9,15 +9,19 @@ import { GradeType, PositionType } from '../enum/position.enum';
 export class User {
   @Prop({ required: true, type: String })
   firstName: string;
+
   @Prop({ required: true, type: String })
   lastName: string;
+
   @Prop({ default: Role.DEV, enum: Role, type: String })
   role: Role;
+
   @Prop({ required: true })
   phone: string;
+
   @Prop({
     default:
-      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpeg?alt=media',
+      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpg?alt=media',
     required: false,
     type: String,
   })
@@ -38,7 +42,7 @@ export class User {
   @Prop({ required: false, enum: Role, type: String })
   position: PositionType;
 
-  @Prop({ required: false, enum: Role, type: String})
+  @Prop({ required: false, enum: Role, type: String })
   grade: GradeType;
 
   @Prop({ default: false, type: Boolean })

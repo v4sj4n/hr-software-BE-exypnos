@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsArray, IsMongoId, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsMongoId,
+  IsDateString,
+  IsOptional,
+} from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateProjectDto {

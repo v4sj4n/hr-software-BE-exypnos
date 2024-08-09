@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { EventType } from '../enum/event.enum';
-import { User } from './user.schema';
 
 export class PollOption {
   @Prop({ required: true, type: String })
