@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -10,9 +14,11 @@ import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
 import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
-import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
+import {
+  Applicant,
+  ApplicantDocument,
+} from 'src/common/schema/applicant.schema';
 import { SendCustomEmailDto } from './dto/send-custom-email.dto';
-import { UpdateApplicantStatusDto } from 'src/applicants/dto/update-applicant-status.dto';
 
 @Injectable()
 export class ApplicantsService {
@@ -41,7 +47,7 @@ export class ApplicantsService {
   async filterByDateRange(
     startDate: string,
     endDate: string,
-    phase?: 'first' | 'second'
+    phase?: 'first' | 'second',
   ): Promise<Applicant[]> {
     const query: any = {
       isDeleted: false,
@@ -50,9 +56,15 @@ export class ApplicantsService {
 
     if (phase) {
       if (phase === 'first') {
-        query.firstInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        query.firstInterviewDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        };
       } else if (phase === 'second') {
-        query.secondInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        query.secondInterviewDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        };
       }
     }
 
@@ -68,10 +80,10 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING, 
+        status: ApplicantStatus.PENDING,
       });
       await this.mailService.sendMail({
-        to: createApplicantDto.email, 
+        to: createApplicantDto.email,
         subject: 'Aplikimi u mor me sukses',
         template: './successfulApplication',
         context: {
@@ -98,14 +110,18 @@ export class ApplicantsService {
         updateApplicantDto.interviewDate = null;
         await this.sendRejectEmail(applicationToUpdate);
       } else if (applicationToUpdate.interviewDate) {
-        const oldDate = new Date(applicationToUpdate.interviewDate).toLocaleString('sq', {
+        const oldDate = new Date(
+          applicationToUpdate.interviewDate,
+        ).toLocaleString('sq', {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
         });
-        const newDate = new Date(updateApplicantDto.interviewDate).toLocaleString('sq', {
+        const newDate = new Date(
+          updateApplicantDto.interviewDate,
+        ).toLocaleString('sq', {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
@@ -125,7 +141,9 @@ export class ApplicantsService {
         });
       } else if (updateApplicantDto.interviewDate) {
         updateApplicantDto.status = ApplicantStatus.ACCEPTED;
-        const interviewDate = new Date(updateApplicantDto.interviewDate).toLocaleString('sq', {
+        const interviewDate = new Date(
+          updateApplicantDto.interviewDate,
+        ).toLocaleString('sq', {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
@@ -134,7 +152,7 @@ export class ApplicantsService {
         });
 
         await this.mailService.sendMail({
-          to: applicationToUpdate.email, 
+          to: applicationToUpdate.email,
           subject: 'Intervista',
           template: './interview',
           context: {
@@ -324,7 +342,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject: 'Second Interview Scheduled',
-      template: './second-interview', 
+      template: './second-interview',
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -345,7 +363,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject: 'Application Rejected',
-      template: './reject', 
+      template: './reject',
       context: {
         firstName: applicant.firstName,
         lastName: applicant.lastName,
@@ -367,7 +385,7 @@ export class ApplicantsService {
     await this.mailService.sendMail({
       to: applicant.email,
       subject,
-      html: `<p>${message}</p>`, 
+      html: `<p>${message}</p>`,
     });
   }
 }

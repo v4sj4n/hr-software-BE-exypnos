@@ -12,7 +12,6 @@ import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
 
-
 @Injectable()
 export class AssetService {
   constructor(
@@ -36,7 +35,7 @@ export class AssetService {
 
       const initialHistory: AssetHistory = {
         updatedAt: new Date(),
-        status: createdAsset.status
+        status: createdAsset.status,
       };
       createdAsset.history = [initialHistory];
       return await createdAsset.save();
@@ -189,7 +188,13 @@ export class AssetService {
     if (assetData.returnDate && !existingAsset.takenDate) {
       throw new ConflictException(`Asset must have a takenDate date first`);
     }
-    if (assetData.returnDate && compareDates(formatDate(new Date(existingAsset.takenDate)), formatDate(new Date(assetData.returnDate))) >= 1) {
+    if (
+      assetData.returnDate &&
+      compareDates(
+        formatDate(new Date(existingAsset.takenDate)),
+        formatDate(new Date(assetData.returnDate)),
+      ) >= 1
+    ) {
       throw new ConflictException(
         `Return date cannot be before the taken date`,
       );
@@ -260,6 +265,7 @@ export class AssetService {
             imageUrl: 1,
             phone: 1,
             assets: 1,
+            role: 1,
           },
         },
       ]);

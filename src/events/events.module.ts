@@ -9,7 +9,6 @@ import { MailModule } from 'src/mail/mail.module';
 import { FirebaseModule } from 'src/firebase/firebase.module';
 import { Auth, AuthSchema } from 'src/common/schema/auth.schema';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),

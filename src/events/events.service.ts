@@ -93,6 +93,9 @@ export class EventsService {
       return this.eventModel
         .find({ isDeleted: false })
         .populate('participants', 'firstName lastName');
+      return this.eventModel
+        .find({ isDeleted: false })
+        .populate('participants', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -190,7 +193,7 @@ export class EventsService {
     const user = await this.userModel.findById(vote.userId);
 
     for (const option of event.poll.options) {
-      var existingVoter = option.voters.find(
+      const existingVoter = option.voters.find(
         (voter) =>
           voter._id.toString() === user._id.toString() &&
           voter.firstName === user.firstName &&
@@ -391,6 +394,9 @@ export class EventsService {
   private validateDate(startDate: Date, endDate?: Date): void {
 
     if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
+      throw new BadRequestException(
+        'End date must be after or same start date',
+      );
       throw new BadRequestException(
         'End date must be after or same start date',
       );
