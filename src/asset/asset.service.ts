@@ -33,20 +33,22 @@ export class AssetService {
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
         : null;
 
-      const initialHistory: AssetHistory = {
-        updatedAt: new Date(),
-        status: createdAsset.status,
-      };
-      createdAsset.history = [initialHistory];
+      createdAsset.history = [];
       return await createdAsset.save();
     } catch (error) {
       throw new ConflictException(error);
     }
   }
-  async findAll(): Promise<Asset[]> {
+  async findAll(availability: string): Promise<Asset[]> {
+    const filter: FilterQuery<Asset> = {
+      isDeleted: false,
+    };
+    if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
+      filter.status = availability;
+    }
     try {
       return await this.assetModel
-        .find({ isDeleted: false })
+        .find(filter)
         .populate('userId', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
@@ -100,16 +102,20 @@ export class AssetService {
   }
   async validateHistoryData(
     updateAssetDto: UpdateAssetDto,
-    existingAsset: mongoose.Document<unknown, {}, Asset> &
+    existingAsset: mongoose.Document<unknown, object, Asset> &
       Asset & { _id: mongoose.Types.ObjectId },
   ) {
     if (updateAssetDto.status === AssetStatus.ASSIGNED) {
-      const updateUser =await this.userModel.findById(updateAssetDto.userId);
+      const updateUser = await this.userModel.findById(updateAssetDto.userId);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: updateAssetDto.takenDate,
         returnDate: null,
-        user: {_id: updateUser._id, firstName: updateUser.firstName, lastName: updateUser.lastName},
+        user: {
+          _id: updateUser._id,
+          firstName: updateUser.firstName,
+          lastName: updateUser.lastName,
+        },
         status: updateAssetDto.status,
       };
       Object.assign(updateAssetDto, {

@@ -22,8 +22,8 @@ export class AssetController {
   }
 
   @Get()
-  findAll() {
-    return this.assetService.findAll();
+  findAll(@Query('availability') availability: string = '') {
+    return this.assetService.findAll(availability);
   }
 
   @Get('avaible')
