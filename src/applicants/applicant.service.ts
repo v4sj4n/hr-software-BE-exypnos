@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
+import { ApplicantStatus } from 'src/common/enum/applicant.enum';
 import { MailService } from 'src/mail/mail.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
@@ -17,7 +17,7 @@ import { UpdateApplicantStatusDto } from 'src/applicants/dto/update-applicant-st
 @Injectable()
 export class ApplicantsService {
   deleteApplicant(id: string) {
-    throw new Error('Method not implemented.');
+    throw new Error('Method not implemented.');   
   }
   constructor(
     @InjectModel(Applicant.name)
@@ -114,7 +114,7 @@ export class ApplicantsService {
         });
 
         await this.mailService.sendMail({
-          to: applicationToUpdate.email, // Applicant's email address
+          to: applicationToUpdate.email, 
           subject: 'Ndryshim planesh',
           template: './scheduleApplicantInterviewChange',
           context: {
@@ -371,3 +371,6 @@ export class ApplicantsService {
     });
   }
 }
+
+
+//1  theerit update aplicant .nqs nuk e ke krijoje per te  ber update nots dhe status dhe cdo hje tjeter

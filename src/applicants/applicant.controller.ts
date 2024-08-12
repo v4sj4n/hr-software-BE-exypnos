@@ -8,7 +8,7 @@ import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { SendCustomEmailDto } from './dto/send-custom-email.dto';
-import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
+import { ApplicantStatus } from 'src/common/enum/applicant.enum';
 
 @Controller('applicant')
 export class ApplicantsController {

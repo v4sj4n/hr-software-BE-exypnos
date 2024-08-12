@@ -1,23 +1,53 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
-import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
+import { IsOptional } from "class-validator";
 
 export class UpdateApplicantDto {
-  static interviewDate(interviewDate: any) {
-    throw new Error('Method not implemented.');
-  }
-  @IsOptional()
-  @IsEnum(ApplicantStatus)
-  status?: ApplicantStatus;
+@IsOptional()
+  firstName: string;
 
-  @IsOptional()
-  @IsString()
-  interviewDate?: string;
+@IsOptional()
+lastName: string;
 
-  @IsOptional()
-  @IsString()
-  notes?: string;
+@IsOptional()
+  experience: string;
 
-  @IsOptional()
-  @IsString()
-  message?: string;
+@IsOptional()
+  applicationMethod: string;
+
+@IsOptional()
+
+  dob: Date;
+
+@IsOptional()
+
+  phoneNumber: string;
+
+@IsOptional()
+email: string;
+
+@IsOptional()
+
+positionApplied: string;
+@IsOptional()
+
+technologiesUsed: string;
+@IsOptional()
+
+firstInterviewDate?: Date;
+@IsOptional()
+
+secondInterviewDate?: Date;
+@IsOptional()
+notes: string;
+
+@IsOptional()
+salaryExpectations: string;
+
+@IsOptional()
+cvAttachment?: string;
+
+@IsOptional()
+status: string;
+
+@IsOptional()
+currentPhase?: string;
 }

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { ApplicantStatus } from '../enum/applicantStatus.enum';
+import { ApplicantPhase, ApplicantStatus } from '../enum/applicant.enum';
 
 export type ApplicantDocument = Applicant & Document;
 
@@ -18,8 +18,8 @@ export class Applicant {
   @Prop({ required: true })
   applicationMethod: string;
 
-  @Prop({ required: true })
-  age: string;
+  @Prop({ type:Date ,required: true }) //bd
+  dob: Date;
 
   @Prop({ required: true })
   phoneNumber: string;
@@ -51,22 +51,22 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: false, enum: ApplicantStatus, default: 'pending' })
+  @Prop({ required: false,  default: ApplicantStatus.PENDING,enum:ApplicantStatus})
   status: string;
 
-  @Prop({ required: false })
-  interviewNotes?: string;
+  // @Prop({ required: false })
+  // interviewNotes?: string;
 
-  @Prop({ required: false })
-  rejectionNotes?: string;
+  // @Prop({ required: false })
+  // rejectionNotes?: string;
 
-  @Prop({ type: Date, default: null })
-  interviewDate: Date;
+  // @Prop({ type: Date, default: null })
+  // interviewDate: Date;
 
   @Prop({ default: false })
   isDeleted: boolean;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: ApplicantPhase.APPLICANT, enum:ApplicantPhase})
   currentPhase?: string;
 }
 
