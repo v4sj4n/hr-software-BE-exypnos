@@ -23,6 +23,12 @@ import {
   populateParticipants,
   validateDate,
 } from './events.utils';
+import {
+  addVote,
+  removeVote,
+  getEventPollResults,
+  getOptionThatUserVotedFor,
+} from './events.poll';
 
 @Injectable()
 export class EventsService {
@@ -61,7 +67,7 @@ export class EventsService {
         !createdEvent.participants ||
         createdEvent.participants.length === 0
       ) {
-        createdEvent.participants = await populateParticipants();
+        createdEvent.participants = await populateParticipants(this.userModel, this.authModel);
       }
       if (!createdEvent.endDate) {
         createdEvent.endDate = createdEvent.startDate;
@@ -96,9 +102,9 @@ export class EventsService {
     }
   }
 
-  async findAll(search:string): Promise<Event[]> {
-    const filter : FilterQuery<Event> = {};
-    if(search){
+  async findAll(search: string): Promise<Event[]> {
+    const filter: FilterQuery<Event> = {};
+    if (search) {
       filter.title = { $regex: search, $options: 'i' };
     }
     try {
@@ -127,7 +133,7 @@ export class EventsService {
   ): Promise<Event> {
     try {
       let eventPhotos: string[] = [];
-      if (photos) {
+      if (photos && photos.length > 0) {
         eventPhotos = await Promise.all(
           photos.map(async (photo) => {
             return await this.firebaseService.uploadFile(photo, 'eventPhoto');
@@ -152,7 +158,7 @@ export class EventsService {
 
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
-        { ...updateEventDto, photo: eventPhotos },
+        { ...updateEventDto, photo: eventPhotos.length > 0 ? eventPhotos : existingEvent.photo },
         { new: true, runValidators: true },
       );
 
@@ -170,6 +176,7 @@ export class EventsService {
       throw new ConflictException(error);
     }
   }
+
   async remove(id: string): Promise<void> {
     try {
       const result = await this.eventModel.findById(id);
@@ -191,5 +198,21 @@ export class EventsService {
     } catch (error) {
       throw new ConflictException(error);
     }
+  }
+
+  async addVote(id: string, vote: VoteDto): Promise<Event> {
+    return addVote(this.eventModel, this.userModel, id, vote);
+  }
+
+  async removeVote(id: string, vote: VoteDto): Promise<Event> {
+    return removeVote(this.eventModel, this.userModel, id, vote);
+  }
+
+  async getEventPollResults(id: string): Promise<PollOption[]> {
+    return getEventPollResults(this.eventModel, id);
+  }
+
+  async getOptionThatUserVotedFor(id: string, userId: string): Promise<number> {
+    return getOptionThatUserVotedFor(this.eventModel, this.userModel, id, userId);
   }
 }

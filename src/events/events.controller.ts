@@ -15,7 +15,6 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VoteDto } from './dto/vote.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import {addVote,removeVote,getEventPollResults,geOtptionThatUserVotedFor} from './events.poll'
 
 @Controller('event')
 export class EventsController {
@@ -33,30 +32,35 @@ export class EventsController {
   }
 
   @Get()
-  findAll(
-    @Query('search') search: string = '',
-  ) {
+  findAll(@Query('search') search: string = '') {
     return this.eventsService.findAll(search);
   }
+
   @Get('poll/:id')
   getEventPollResults(@Param('id') id: string) {
-    return getEventPollResults(id);
+    return this.eventsService.getEventPollResults(id);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
   }
+
   @Get(':id/user/:userId')
   getEventsByUser(@Param('id') id: string, @Param('userId') userId: string) {
-    return geOtptionThatUserVotedFor(id, userId);
+    return this.eventsService.getOptionThatUserVotedFor(id, userId);
   }
+
   @Patch(':id')
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
   partialUpdate(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
+    @UploadedFiles()
+    files: { photo?: Express.Multer.File[] },
   ) {
-    return this.eventsService.update(id, updateEventDto);
+    const photo = files?.photo || [];
+    return this.eventsService.update(id, updateEventDto, photo);
   }
 
   @Delete(':id')
@@ -66,11 +70,11 @@ export class EventsController {
 
   @Post(':id/vote')
   addVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
-    return addVote(id, voteDto);
+    return this.eventsService.addVote(id, voteDto);
   }
 
   @Delete(':id/vote')
   removeVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
-    return removeVote(id, voteDto);
+    return this.eventsService.removeVote(id, voteDto);
   }
 }
