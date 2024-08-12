@@ -18,7 +18,7 @@ export class Applicant {
   @Prop({ required: true })
   applicationMethod: string;
 
-  @Prop({ type:Date ,required: true }) //bd
+  @Prop({ type: Date, required: true }) //bd
   dob: Date;
 
   @Prop({ required: true })
@@ -42,7 +42,10 @@ export class Applicant {
   @Prop({ type: Date, default: null })
   secondInterviewDate?: Date;
 
-  @Prop({ required: false })
+  @Prop({
+    required: false,
+    default: 'applicant first_interview second_interview',
+  }) 
   notes: string;
 
   @Prop({ required: true })
@@ -51,7 +54,11 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: false,  default: ApplicantStatus.PENDING,enum:ApplicantStatus})
+  @Prop({
+    required: false,
+    default: ApplicantStatus.PENDING,
+    enum: ApplicantStatus,
+  })
   status: string;
 
   // @Prop({ required: false })
@@ -66,7 +73,11 @@ export class Applicant {
   @Prop({ default: false })
   isDeleted: boolean;
 
-  @Prop({ required: false, default: ApplicantPhase.APPLICANT, enum:ApplicantPhase})
+  @Prop({
+    required: false,
+    default: ApplicantPhase.APPLICANT,
+    enum: ApplicantPhase,
+  })
   currentPhase?: string;
 }
 

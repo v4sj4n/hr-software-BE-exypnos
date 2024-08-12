@@ -1,53 +1,67 @@
-import { IsOptional } from "class-validator";
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateApplicantDto {
-@IsOptional()
+  @IsOptional()
+  @IsString()
   firstName: string;
 
-@IsOptional()
-lastName: string;
+  @IsOptional()
+  @IsString()
+  lastName: string;
 
-@IsOptional()
+  @IsOptional()
+  @IsString()
   experience: string;
 
-@IsOptional()
+  @IsOptional()
+  @IsString()
   applicationMethod: string;
 
-@IsOptional()
-
+  @IsOptional()
+  @IsDateString()
   dob: Date;
 
-@IsOptional()
-
+  @IsOptional()
+  @IsString()
   phoneNumber: string;
 
-@IsOptional()
-email: string;
+  @IsOptional()
+  @IsString()
+  email: string;
 
-@IsOptional()
+  @IsOptional()
+  @IsString()
+  positionApplied: string;
 
-positionApplied: string;
-@IsOptional()
+  @IsOptional()
+  @IsString()
+  technologiesUsed: string;
 
-technologiesUsed: string;
-@IsOptional()
+  @IsOptional()
+  @IsDateString()
+  firstInterviewDate?: Date;
 
-firstInterviewDate?: Date;
-@IsOptional()
+  @IsOptional()
+  @IsDateString()
+  secondInterviewDate?: Date;
 
-secondInterviewDate?: Date;
-@IsOptional()
-notes: string;
+  @IsOptional()
+  @IsString()
+  notes: string;
 
-@IsOptional()
-salaryExpectations: string;
+  @IsOptional()
+  @IsString()
+  salaryExpectations: string;
 
-@IsOptional()
-cvAttachment?: string;
+  @IsOptional()
+  @IsString()
+  cvAttachment?: string;
 
-@IsOptional()
-status: string;
+  @IsOptional()
+  @IsString()
+  status: string;
 
-@IsOptional()
-currentPhase?: string;
+  @IsOptional()
+  @IsString()
+  currentPhase?: string;
 }

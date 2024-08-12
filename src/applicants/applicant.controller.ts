@@ -14,14 +14,14 @@ import { ApplicantStatus } from 'src/common/enum/applicant.enum';
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  @Get('filter')
-  async filterByDateRange(
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-    @Query('phase') phase?: 'first' | 'second'
-  ) {
-    return await this.applicantsService.filterByDateRange(startDate, endDate, phase);
-  }
+  // @Get('filter')
+  // async filterByDateRange(
+  //   @Query('startDate') startDate: string,
+  //   @Query('endDate') endDate: string,
+  //   @Query('phase') phase?: 'first' | 'second'
+  // ) {
+  //   return await this.applicantsService.filterByDateRange(startDate, endDate, phase);
+  // }
 
   @Get()
   async findAll() {
@@ -41,10 +41,10 @@ export class ApplicantsController {
     return await this.applicantsService.update(id, updateApplicantDto);
   }
 
-  @Delete(':id')
-  deleteApplicant(@Param('id') id: string) {
-    return this.applicantsService.deleteApplicant(id);
-  }
+  // @Delete(':id')
+  // deleteApplicant(@Param('id') id: string) {
+  //   return this.applicantsService.deleteApplicant(id);
+  // }
 
   @Public()
   @Post()
@@ -56,46 +56,46 @@ export class ApplicantsController {
     return await this.applicantsService.createApplicant(file, formData);
   }
 
-  @Patch(':id/interview/note')
-  addInterviewNote(@Param('id') id: string, @Body() addInterviewNoteDto: AddInterviewNoteDto) {
-    return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
-  }
+  // @Patch(':id/interview/note')
+  // addInterviewNote(@Param('id') id: string, @Body() addInterviewNoteDto: AddInterviewNoteDto) {
+  //   return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
+  // }
 
-  @Patch(':id/interview/schedule')
-  async scheduleInterview(
-    @Param('id') id: string,
-    @Body() scheduleInterviewDto: ScheduleInterviewDto,
-  ) {
-    return await this.applicantsService.scheduleInterview(
-      id,
-      scheduleInterviewDto,
-    );
-  }
+  // @Patch(':id/interview/schedule')
+  // async scheduleInterview(
+  //   @Param('id') id: string,
+  //   @Body() scheduleInterviewDto: ScheduleInterviewDto,
+  // ) {
+  //   return await this.applicantsService.scheduleInterview(
+  //     id,
+  //     scheduleInterviewDto,
+  //   );
+  // }
 
-  @Patch(':id/interview/reschedule')
-  async rescheduleInterview(
-    @Param('id') id: string,
-    @Body() rescheduleInterviewDto: RescheduleInterviewDto,
-  ) {
-    return await this.applicantsService.rescheduleInterview(
-      id,
-      rescheduleInterviewDto,
-    );
-  }
+  // @Patch(':id/interview/reschedule')
+  // async rescheduleInterview(
+  //   @Param('id') id: string,
+  //   @Body() rescheduleInterviewDto: RescheduleInterviewDto,
+  // ) {
+  //   return await this.applicantsService.rescheduleInterview(
+  //     id,
+  //     rescheduleInterviewDto,
+  //   );
+  // }
 
-  @Post(':id/send-email')
-  async sendCustomEmail(
-    @Param('id') id: string,
-    @Body() sendCustomEmailDto: SendCustomEmailDto,
-  ) {
-    return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
-  }
+  // @Post(':id/send-email')
+  // async sendCustomEmail(
+  //   @Param('id') id: string,
+  //   @Body() sendCustomEmailDto: SendCustomEmailDto,
+  // ) {
+  //   return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
+  // }
 
-  @Patch(':id/status')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body('status') status: ApplicantStatus,
-  ) {
-    return await this.applicantsService.updateApplicantStatus(id, status);
-  }
+  // @Patch(':id/status')
+  // async updateStatus(
+  //   @Param('id') id: string,
+  //   @Body('status') status: ApplicantStatus,
+  // ) {
+  //   return await this.applicantsService.updateApplicantStatus(id, status);
+  // }
 }

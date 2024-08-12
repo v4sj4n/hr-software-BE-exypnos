@@ -33,9 +33,6 @@ technologiesUsed: string;
 @IsNotEmpty()
 salaryExpectations: string;
 
-@IsNotEmpty()
-cvAttachment?: string;
-
 @IsOptional()
 currentPhase?: string;
 
