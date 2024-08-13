@@ -38,7 +38,7 @@ export class Event {
   @Prop({ required: false, type: String, enum: EventType,default: EventType.OTHER })
   type: EventType;
 
-  @Prop({ required: true, type: Date })
+  @Prop({ required: false, type: Date })
   startDate: Date;
 
   @Prop({ required: false, type: Date})
