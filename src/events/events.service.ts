@@ -54,11 +54,13 @@ export class EventsService {
           }),
         );
       }
+      console.log(createEventDto);
       const createdEvent = new this.eventModel({
         ...createEventDto,
         photo: eventPhotos,
       });
 
+      console.log("selma",createdEvent);
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
@@ -69,7 +71,7 @@ export class EventsService {
       ) {
         createdEvent.participants = await populateParticipants(this.userModel, this.authModel);
       }
-      if (!createdEvent.endDate) {
+      if (!createdEvent.endDate && createdEvent.startDate) {
         createdEvent.endDate = createdEvent.startDate;
         validateDate(createdEvent.startDate, createdEvent.endDate);
       }
@@ -98,14 +100,20 @@ export class EventsService {
       });
       return await createdEvent.save();
     } catch (error) {
+      console.log("selma3",error);
       throw new ConflictException(error);
     }
   }
 
-  async findAll(search: string): Promise<Event[]> {
+  async findAll(search: string, type:string): Promise<Event[]> {
     const filter: FilterQuery<Event> = {};
     if (search) {
       filter.title = { $regex: search, $options: 'i' };
+    }
+    if (type) {
+      filter.type = type;
+    }else{
+      filter.type = { $ne: 'career' };
     }
     try {
       return this.eventModel.find(filter).where('isDeleted').equals(false);
