@@ -5,13 +5,25 @@ import { User } from './user.schema';
 @Schema({ timestamps: true })
 export class Salary {
   @Prop({ required: true, type: 'number' })
-  amount: number;
+  netSalary: number;
+
+  @Prop({ required: true, type: 'number' })
+  workingDays: number;
 
   @Prop({ default: 'ALL', type: String })
   currency: string;
 
   @Prop({ default: 0, type: 'number' })
   bonus: number;
+
+  @Prop({ default: 0, type: 'number' })
+  socialSecurity: number;
+
+  @Prop({ default: 0, type: 'number' })
+  healthInsurance: number;
+
+  @Prop({ default: 0, type: 'number' })
+  grossSalary: number;
 
   @Prop({ default: 0, type: 'number' })
   month: number;
@@ -31,3 +43,4 @@ export class Salary {
 }
 
 export const SalarySchema = SchemaFactory.createForClass(Salary);
+

@@ -1,15 +1,17 @@
-import {
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { Types, Model } from 'mongoose';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { Types, Model, ObjectId } from 'mongoose';
 import { Poll, Event } from '../common/schema/event.schema';
 import { VoteDto } from './dto/vote.dto';
 import { User } from '../common/schema/user.schema';
 import { Auth } from '../common/schema/auth.schema';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
 
-async function validateData(eventModel: Model<Event>, userModel: Model<User>, id: string, vote: VoteDto): Promise<void> {
+async function validateData(
+  eventModel: Model<Event>,
+  userModel: Model<User>,
+  id: string,
+  vote: VoteDto,
+): Promise<void> {
   const event = await eventModel.findById(id as unknown as Types.ObjectId);
 
   if (!event) {
@@ -43,7 +45,9 @@ function validatePollData(poll: Poll) {
     throw new BadRequestException('Poll options must be 3 or 2');
   }
   if (poll.options.some((opt) => opt.option.length <= 1)) {
-    throw new BadRequestException('Poll option cannot be less than 1 character');
+    throw new BadRequestException(
+      'Poll option cannot be less than 1 character',
+    );
   }
   for (let i = 0; i < poll.options.length; i++) {
     for (let j = i + 1; j < poll.options.length; j++) {
@@ -54,7 +58,10 @@ function validatePollData(poll: Poll) {
   }
 }
 
-async function populateParticipants(userModel: Model<User>, authModel: Model<Auth>) {
+async function getAllParticipants(
+  userModel: Model<User>,
+  authModel: Model<Auth>,
+) {
   let emails: string[] = [];
   let users = await userModel.find();
   let userIds = users.map((user) => user._id);
@@ -78,4 +85,29 @@ function validateDate(startDate: Date, endDate?: Date): void {
   }
 }
 
-export { validateData, validatePollData, populateParticipants, validateDate };
+async function getParticipantsByUserId(
+  userModel: Model<User>,
+  authModel: Model<Auth>,
+  participants: string[],
+): Promise<Types.ObjectId[]> {
+  let userIds: Types.ObjectId[] = [];
+  for (let i = 0; i < participants.length; i++) {
+    const auth = await authModel.findOne({ email: participants[i] });
+    const user = await userModel.findOne({ auth: auth._id });
+    if (!user) {
+      throw new NotFoundException(
+        `User with email ${participants[i]} not found`,
+      );
+    }
+    userIds.push(user._id);
+  }
+  return userIds;
+}
+
+export {
+  validateData,
+  validatePollData,
+  getAllParticipants,
+  validateDate,
+  getParticipantsByUserId,
+};
