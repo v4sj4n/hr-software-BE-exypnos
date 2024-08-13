@@ -54,13 +54,11 @@ export class EventsService {
           }),
         );
       }
-      console.log(createEventDto);
       const createdEvent = new this.eventModel({
         ...createEventDto,
         photo: eventPhotos,
       });
 
-      console.log("selma",createdEvent);
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
@@ -100,7 +98,6 @@ export class EventsService {
       });
       return await createdEvent.save();
     } catch (error) {
-      console.log("selma3",error);
       throw new ConflictException(error);
     }
   }
