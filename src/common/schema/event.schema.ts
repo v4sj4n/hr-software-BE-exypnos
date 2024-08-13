@@ -47,8 +47,8 @@ export class Event {
   @Prop({ type: String,required: false, default: 'Tirana' })
   location: string;
 
-  @Prop({ type: [String], required: false, default: [] })
-  participants: string[];
+  @Prop({ type: [Types.ObjectId], required: false, default: [] })
+  participants: Types.ObjectId[] ;
 
   @Prop({ type: [String], required: false })
   photo?: [string];
