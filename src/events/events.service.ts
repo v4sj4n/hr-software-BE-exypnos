@@ -3,7 +3,6 @@ import {
   NotFoundException,
   InternalServerErrorException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
@@ -18,10 +17,10 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { Auth } from 'src/common/schema/auth.schema';
 import { MailService } from 'src/mail/mail.service';
 import {
-  validateData,
   validatePollData,
-  populateParticipants,
   validateDate,
+  getAllParticipants,
+  getParticipantsByUserId,
 } from './events.utils';
 import {
   addVote,
@@ -58,16 +57,22 @@ export class EventsService {
         ...createEventDto,
         photo: eventPhotos,
       });
-
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
-
       if (
-        !createdEvent.participants ||
-        createdEvent.participants.length === 0
+        createEventDto.participants &&
+        createEventDto.participants.length > 0
       ) {
-        createdEvent.participants = await populateParticipants(this.userModel, this.authModel);
+        var participants = await getParticipantsByUserId(
+          this.userModel,
+          this.authModel,
+          createEventDto.participants,
+        );
+        createdEvent.participants = participants;
+        if (participants.length !== createEventDto.participants.length) {
+          throw new NotFoundException('Some participants not found');
+        }
       }
       if (!createdEvent.endDate && createdEvent.startDate) {
         createdEvent.endDate = createdEvent.startDate;
@@ -89,7 +94,11 @@ export class EventsService {
         new Date(),
       );
       await this.mailService.sendMail({
-        to: createdEvent.participants,
+        to:
+          createEventDto.participants?.length === 0 ||
+          !createEventDto.participants
+            ? await getAllParticipants(this.userModel, this.authModel)
+            : createEventDto.participants,
         subject: `${createdEvent.title} - ${createdEvent.type}`,
         template: './event',
         context: {
@@ -104,6 +113,7 @@ export class EventsService {
 
   async findAll(search: string, type:string): Promise<Event[]> {
     const filter: FilterQuery<Event> = {};
+
     if (search) {
       filter.title = { $regex: search, $options: 'i' };
     }
@@ -163,7 +173,10 @@ export class EventsService {
 
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
-        { ...updateEventDto, photo: eventPhotos.length > 0 ? eventPhotos : existingEvent.photo },
+        {
+          ...updateEventDto,
+          photo: eventPhotos.length > 0 ? eventPhotos : existingEvent.photo,
+        },
         { new: true, runValidators: true },
       );
 
@@ -218,6 +231,11 @@ export class EventsService {
   }
 
   async getOptionThatUserVotedFor(id: string, userId: string): Promise<number> {
-    return getOptionThatUserVotedFor(this.eventModel, this.userModel, id, userId);
+    return getOptionThatUserVotedFor(
+      this.eventModel,
+      this.userModel,
+      id,
+      userId,
+    );
   }
 }
