@@ -74,8 +74,7 @@ export class EventsService {
           throw new NotFoundException('Some participants not found');
         }
       }
-
-      if (!createdEvent.endDate) {
+      if (!createdEvent.endDate && createdEvent.startDate) {
         createdEvent.endDate = createdEvent.startDate;
         validateDate(createdEvent.startDate, createdEvent.endDate);
       }
@@ -112,11 +111,16 @@ export class EventsService {
     }
   }
 
-  async findAll(search: string): Promise<Event[]> {
+  async findAll(search: string, type:string): Promise<Event[]> {
     const filter: FilterQuery<Event> = {};
 
     if (search) {
       filter.title = { $regex: search, $options: 'i' };
+    }
+    if (type) {
+      filter.type = type;
+    }else{
+      filter.type = { $ne: 'career' };
     }
     try {
       return this.eventModel.find(filter).where('isDeleted').equals(false);

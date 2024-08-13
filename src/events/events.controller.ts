@@ -32,8 +32,11 @@ export class EventsController {
   }
 
   @Get()
-  findAll(@Query('search') search: string = '') {
-    return this.eventsService.findAll(search);
+  findAll(
+    @Query('search') search: string = '',
+    @Query('type') type: string = '',
+  ) {
+    return this.eventsService.findAll(search,type);
   }
 
   @Get('poll/:id')

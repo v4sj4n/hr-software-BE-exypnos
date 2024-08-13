@@ -1,6 +1,6 @@
 export enum EventType {
   SPORTS = 'sports',
-  CARIER = 'carier',
+  CARIER = 'career',
   TRAINING = 'training',
   TEAMBUILDING = 'teambuilding',
   OTHER = 'other',

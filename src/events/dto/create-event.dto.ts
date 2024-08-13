@@ -4,8 +4,6 @@ import {
   IsOptional,
   IsEnum,
   IsArray,
-  IsMongoId,
-  IsNotEmpty,
 } from 'class-validator';
 import { Poll } from '../../common/schema/event.schema';
 import { EventType } from 'src/common/enum/event.enum';
@@ -21,6 +19,7 @@ export class CreateEventDto {
   @IsEnum(EventType)
   type: string;
 
+  @IsOptional()
   @IsDateString()
   startDate: Date;
 
