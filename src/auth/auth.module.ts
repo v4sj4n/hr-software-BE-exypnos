@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { RolesGuard } from 'src/common/guard/role.guard';
 import { AuthSchema } from 'src/common/schema/auth.schema';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthSchema } from 'src/common/schema/auth.schema';
     }),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
     MongooseModule.forFeature([{ name: 'Auth', schema: AuthSchema }]),
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [
