@@ -37,5 +37,6 @@ import { AuthSchema } from 'src/common/schema/auth.schema';
       useClass: RolesGuard,
     },
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}
