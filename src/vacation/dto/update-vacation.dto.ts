@@ -1,6 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
-import { VacationType } from 'src/common/enum/vacation.enum';
+import {IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { VacationStatus, VacationType } from 'src/common/enum/vacation.enum';
 import { Types } from 'mongoose';
 
 export class UpdateVacationDto {
@@ -12,17 +11,17 @@ export class UpdateVacationDto {
   @IsOptional()
   description: string;
 
-  @Type(() => Date)
+  @IsDateString()
   @IsOptional()
   startDate: Date;
 
-  @Type(() => Date)
+  @IsDateString()
   @IsOptional()
   endDate?: Date;
 
-  @IsString()
+  @IsEnum(VacationStatus)
   @IsOptional()
-  status?: string;
+  status?: VacationStatus;
 
   @IsString()
   @IsOptional()
