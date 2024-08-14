@@ -1,34 +1,46 @@
-import {
-  IsNumber,
-  IsString,
-  IsOptional,
-  Min,
-  IsNotEmpty,
-} from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsMongoId, Min, Max } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateSalaryDto {
   @IsNumber()
-  @Min(40000)
-  amount: number;
+  netSalary: number;
 
-  @IsString()
+  @IsNumber()
+  workingDays: number;
+
   @IsOptional()
+  @IsString()
   currency?: string;
 
-  @IsNumber()
   @IsOptional()
-  @Min(0)
+  @IsNumber()
   bonus?: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
+  socialSecurity?: number;
+
+  @IsOptional()
+  @IsNumber()
+  healthInsurance?: number;
+
+  @IsOptional()
+  @IsNumber()
+  grossSalary?: number;
+
+  @IsNumber()
+  @Min(1)
+  @Max(12)
   month: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @Min(2000)
   year: number;
 
-  @IsNotEmpty()
+  @IsMongoId()
   userId: Types.ObjectId;
+
+  @IsOptional()
+  @IsString()
+  uniqueId?: string;
 }

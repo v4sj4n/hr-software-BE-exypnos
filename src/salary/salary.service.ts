@@ -104,8 +104,8 @@ export class SalaryService {
   private async validateSalaryData(
     salaryData: CreateSalaryDto | UpdateSalaryDto,
   ) {
-    if (salaryData.amount && salaryData.amount < 0) {
-      throw new ConflictException('Salary amount cannot be negative');
+    if (salaryData.netSalary && salaryData.netSalary < 0) {
+      throw new ConflictException('Net salary cannot be negative');
     }
     if (salaryData.bonus && salaryData.bonus < 0) {
       throw new ConflictException('Bonus amount cannot be negative');
