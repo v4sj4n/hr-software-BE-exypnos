@@ -15,7 +15,8 @@ import { User } from 'src/common/schema/user.schema';
 import { VoteDto } from './dto/vote.dto';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { Auth } from 'src/common/schema/auth.schema';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from 
+'src/mail/mail.service';
 import {
   validatePollData,
   validateDate,

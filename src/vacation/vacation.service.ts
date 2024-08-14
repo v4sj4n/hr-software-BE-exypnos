@@ -11,11 +11,7 @@ import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
-import {
-  compareDates,
-  formatDate,
-  isDateRangeOverlapping,
-} from '../common/util/dateUtil';
+import { checkUserId, checkDatesforUpdate, checkDatesforCreate } from './vacation.utils';
 
 @Injectable()
 export class VacationService {
@@ -27,8 +23,12 @@ export class VacationService {
 
   async create(createVacationDto: CreateVacationDto) {
     try {
-      await this.checkUserId(createVacationDto.userId);
-      await this.checkDatesforCreate(createVacationDto);
+      await checkUserId(
+        this.userModel,
+        createVacationDto.userId);
+      await checkDatesforCreate(
+        this.vacationModel,
+        createVacationDto);
       const createdVacation = new this.vacationModel(createVacationDto);
       createdVacation.userId = new mongoose.Types.ObjectId(
         createVacationDto.userId,
@@ -49,46 +49,76 @@ export class VacationService {
   async findAll(type: string, status: string, period: string) {
     try {
       if (type) {
-        return await this.vacationModel.find({ type: type });
+        return await this.vacationModel
+          .find({ isDeleted: false }, { type: type })
+          .populate('userId', 'firstName lastName');
       }
       if (status) {
-        return await this.vacationModel.find({ status: status });
+        return await this.vacationModel
+          .find({ isDeleted: false }, { status: status })
+          .populate('userId', 'firstName lastName');
       }
       if (period) {
         if (period === 'OneMonth') {
-          return await this.vacationModel.find({
-            startDate: {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-              $lte: new Date(),
-            },
-          });
+          return await this.vacationModel
+            .find(
+              { isDeleted: false },
+              {
+                startDate: {
+                  $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+                  $lte: new Date(),
+                },
+              },
+            )
+            .populate('userId', 'firstName lastName');
         }
         if (period === 'ThreeMonth') {
-          return await this.vacationModel.find({
-            startDate: {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 90)),
-              $lte: new Date(),
-            },
-          });
+          return await this.vacationModel
+            .find(
+              { isDeleted: false },
+              {
+                startDate: {
+                  $gte: new Date(new Date().setDate(new Date().getDate() - 90)),
+                  $lte: new Date(),
+                },
+              },
+            )
+            .populate('userId', 'firstName lastName');
         }
         if (period === 'SixMonth') {
-          return await this.vacationModel.find({
-            startDate: {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 180)),
-              $lte: new Date(),
-            },
-          });
+          return await this.vacationModel
+            .find(
+              { isDeleted: false },
+              {
+                startDate: {
+                  $gte: new Date(
+                    new Date().setDate(new Date().getDate() - 180),
+                  ),
+                  $lte: new Date(),
+                },
+              },
+            )
+            .populate('userId', 'firstName lastName');
         }
         if (period === 'OneYear') {
-          return await this.vacationModel.find({
-            startDate: {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 365)),
-              $lte: new Date(),
-            },
-          });
+          return await this.vacationModel
+            .find(
+              { isDeleted: false },
+              {
+                startDate: {
+                  $gte: new Date(
+                    new Date().setDate(new Date().getDate() - 365),
+                  ),
+                  $lte: new Date(),
+                },
+              },
+            )
+            .populate('userId', 'firstName lastName');
         }
       }
-      return await this.vacationModel.find();
+      return await this.vacationModel
+        .find({ isDeleted: false })
+        .populate('userId', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -115,10 +145,14 @@ export class VacationService {
         throw new NotFoundException(`Vacation with id ${id} not found`);
       }
       if (updateVacationDto.userId) {
-        await this.checkUserId(updateVacationDto.userId);
+        await checkUserId(
+          this.userModel,
+          updateVacationDto.userId);
       }
       if (updateVacationDto.startDate || updateVacationDto.endDate) {
-        await this.checkDatesforUpdate(updateVacationDto, id);
+        await checkDatesforUpdate(
+          this.vacationModel,
+          updateVacationDto, id);
       }
       const updatedVacation = await this.vacationModel.findByIdAndUpdate(
         id,
@@ -162,6 +196,7 @@ export class VacationService {
       throw new ConflictException(error);
     }
   }
+
   async getAllUserVacation(search: string, users: string): Promise<User[]> {
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
@@ -295,107 +330,6 @@ export class VacationService {
       return userWithVacation[0];
     } catch (err) {
       throw new ConflictException(err);
-    }
-  }
-  private async checkUserId(userId: Types.ObjectId) {
-    const userExists = await this.userModel.findById(userId);
-    if (!userExists) {
-      throw new NotFoundException(`User with id ${userId} not found`);
-    }
-  }
-  private async checkDatesforUpdate(
-    updateVacationDto: UpdateVacationDto,
-    id: string,
-  ) {
-    const existingVacation = await this.vacationModel.findById(id);
-    if (!existingVacation) {
-      throw new NotFoundException(`Vacation with id ${id} not found`);
-    }
-
-    const startDate = updateVacationDto.startDate
-      ? formatDate(new Date(updateVacationDto.startDate))
-      : formatDate(new Date(existingVacation.startDate));
-    const endDate = updateVacationDto.endDate
-      ? formatDate(new Date(updateVacationDto.endDate))
-      : formatDate(new Date(existingVacation.endDate));
-    const today = formatDate(new Date());
-
-    if (compareDates(startDate, today) <= 0) {
-      throw new ConflictException(
-        `Start date ${startDate} must be greater than today ${today}`,
-      );
-    }
-
-    if (compareDates(endDate, startDate) < 0) {
-      throw new ConflictException(
-        `End date ${endDate} must be greater than start date ${startDate}`,
-      );
-    }
-
-    const conflictingVacation = await this.vacationModel.aggregate([
-      {
-        $match: {
-          userId: existingVacation.userId,
-          endDate: { $gt: new Date() },
-        },
-      },
-      {
-        $sort: { endDate: -1 },
-      },
-    ]);
-
-    for (const vacation of conflictingVacation) {
-      const vacationStart = formatDate(new Date(vacation.startDate));
-      const vacationEnd = formatDate(new Date(vacation.endDate));
-
-      if (
-        vacation._id.toString() !== id &&
-        isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
-      ) {
-        throw new ConflictException(
-          `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
-        );
-      }
-    }
-  }
-  private async checkDatesforCreate(
-    vacationData: CreateVacationDto | UpdateVacationDto,
-  ) {
-    const startDate = formatDate(new Date(vacationData.startDate));
-    const endDate = formatDate(new Date(vacationData.endDate));
-    const today = formatDate(new Date());
-
-    if (compareDates(startDate, today) <= 0) {
-      throw new ConflictException(
-        `Start date ${startDate} must be greater than today ${today}`,
-      );
-    }
-
-    if (compareDates(endDate, startDate) < 0) {
-      throw new ConflictException(
-        `End date ${endDate} must be greater than start date ${startDate}`,
-      );
-    }
-
-    const conflictingVacation = await this.vacationModel.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(vacationData.userId),
-        },
-      },
-    ]);
-
-    for (const vacation of conflictingVacation) {
-      const vacationStart = formatDate(new Date(vacation.startDate));
-      const vacationEnd = formatDate(new Date(vacation.endDate));
-
-      if (
-        isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
-      ) {
-        throw new ConflictException(
-          `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
-        );
-      }
     }
   }
 }
