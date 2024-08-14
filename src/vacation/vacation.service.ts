@@ -11,7 +11,11 @@ import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
-import { checkUserId, checkDatesforUpdate, checkDatesforCreate } from './vacation.utils';
+import {
+  checkUserId,
+  checkDatesforUpdate,
+  checkDatesforCreate,
+} from './vacation.utils';
 
 @Injectable()
 export class VacationService {
@@ -23,12 +27,8 @@ export class VacationService {
 
   async create(createVacationDto: CreateVacationDto) {
     try {
-      await checkUserId(
-        this.userModel,
-        createVacationDto.userId);
-      await checkDatesforCreate(
-        this.vacationModel,
-        createVacationDto);
+      await checkUserId(this.userModel, createVacationDto.userId);
+      await checkDatesforCreate(this.vacationModel, createVacationDto);
       const createdVacation = new this.vacationModel(createVacationDto);
       createdVacation.userId = new mongoose.Types.ObjectId(
         createVacationDto.userId,
@@ -50,70 +50,57 @@ export class VacationService {
     try {
       if (type) {
         return await this.vacationModel
-          .find({ isDeleted: false }, { type: type })
+          .find({ isDeleted: false, type: type })
           .populate('userId', 'firstName lastName');
       }
       if (status) {
         return await this.vacationModel
-          .find({ isDeleted: false }, { status: status })
+          .find({ isDeleted: false, status: status })
           .populate('userId', 'firstName lastName');
       }
       if (period) {
-        if (period === 'OneMonth') {
-          return await this.vacationModel
-            .find(
-              { isDeleted: false },
-              {
+        switch (period) {
+          case 'OneMouth':
+            return await this.vacationModel
+              .find({
+                isDeleted: false,
                 startDate: {
                   $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-                  $lte: new Date(),
                 },
-              },
-            )
-            .populate('userId', 'firstName lastName');
-        }
-        if (period === 'ThreeMonth') {
-          return await this.vacationModel
-            .find(
-              { isDeleted: false },
-              {
+              })
+              .populate('userId', 'firstName lastName');
+
+          case 'ThreeMouth':
+            return await this.vacationModel
+              .find({
+                isDeleted: false,
                 startDate: {
                   $gte: new Date(new Date().setDate(new Date().getDate() - 90)),
-                  $lte: new Date(),
                 },
-              },
-            )
-            .populate('userId', 'firstName lastName');
-        }
-        if (period === 'SixMonth') {
-          return await this.vacationModel
-            .find(
-              { isDeleted: false },
-              {
+              })
+              .populate('userId', 'firstName lastName');
+          case 'SixMouth':
+            return await this.vacationModel
+              .find({
+                isDeleted: false,
                 startDate: {
                   $gte: new Date(
                     new Date().setDate(new Date().getDate() - 180),
                   ),
-                  $lte: new Date(),
                 },
-              },
-            )
-            .populate('userId', 'firstName lastName');
-        }
-        if (period === 'OneYear') {
-          return await this.vacationModel
-            .find(
-              { isDeleted: false },
-              {
+              })
+              .populate('userId', 'firstName lastName');
+          case 'OneYear':
+            return await this.vacationModel
+              .find({
+                isDeleted: false,
                 startDate: {
                   $gte: new Date(
                     new Date().setDate(new Date().getDate() - 365),
                   ),
-                  $lte: new Date(),
                 },
-              },
-            )
-            .populate('userId', 'firstName lastName');
+              })
+              .populate('userId', 'firstName lastName');
         }
       }
       return await this.vacationModel
@@ -129,9 +116,6 @@ export class VacationService {
       const vacation = await this.vacationModel
         .findById(id)
         .populate('userId', 'firstName lastName');
-      if (!vacation || vacation.isDeleted) {
-        throw new NotFoundException(`Vacation with id ${id} not found`);
-      }
       return vacation;
     } catch (error) {
       throw new ConflictException(error);
@@ -145,14 +129,10 @@ export class VacationService {
         throw new NotFoundException(`Vacation with id ${id} not found`);
       }
       if (updateVacationDto.userId) {
-        await checkUserId(
-          this.userModel,
-          updateVacationDto.userId);
+        await checkUserId(this.userModel, updateVacationDto.userId);
       }
       if (updateVacationDto.startDate || updateVacationDto.endDate) {
-        await checkDatesforUpdate(
-          this.vacationModel,
-          updateVacationDto, id);
+        await checkDatesforUpdate(this.vacationModel, updateVacationDto, id);
       }
       const updatedVacation = await this.vacationModel.findByIdAndUpdate(
         id,

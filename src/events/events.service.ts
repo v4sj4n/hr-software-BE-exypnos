@@ -15,8 +15,7 @@ import { User } from 'src/common/schema/user.schema';
 import { VoteDto } from './dto/vote.dto';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { Auth } from 'src/common/schema/auth.schema';
-import { MailService } from 
-'src/mail/mail.service';
+import { MailService } from 'src/mail/mail.service';
 import {
   validatePollData,
   validateDate,
@@ -29,6 +28,7 @@ import {
   getEventPollResults,
   getOptionThatUserVotedFor,
 } from './events.poll';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class EventsService {
@@ -112,19 +112,24 @@ export class EventsService {
     }
   }
 
-  async findAll(search: string, type: string): Promise<Event[]> {
-    const filter: FilterQuery<Event> = {};
-
-    if (search) {
-      filter.title = { $regex: search, $options: 'i' };
-    }
-    if (type) {
-      filter.type = type;
-    } else {
-      filter.type = { $ne: 'career' };
-    }
+  async findAll(
+    search: string,
+    type: string,
+    page: number,
+    limit: number,
+  ): Promise<Event[]> {
     try {
-      return this.eventModel.find(filter).where('isDeleted').equals(false);
+      const filter: FilterQuery<Event> = {};
+      filter.isDeleted = false;
+      if (search) {
+        filter.title = { $regex: search, $options: 'i' };
+      }
+      if (type) {
+        filter.type = type;
+      } else {
+        filter.type = { $ne: 'career' };
+      }
+      return await paginate(page, limit, this.eventModel, filter );
     } catch (error) {
       throw new ConflictException(error);
     }
