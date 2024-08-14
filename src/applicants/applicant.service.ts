@@ -3,29 +3,75 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { ApplicantStatus } from 'src/common/enum/applicant.enum';
+import { ApplicantPhase, ApplicantStatus, EmailType } from 'src/common/enum/applicant.enum';
 import { MailService } from 'src/mail/mail.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
-import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
-import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
-import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
 import { Applicant, ApplicantDocument } from 'src/common/schema/applicant.schema';
-import { SendCustomEmailDto } from './dto/send-custom-email.dto';
+import { Public } from 'src/common/decorator/public.decorator';
+import { AuthService } from 'src/auth/auth.service';
+import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 
 @Injectable()
-export class ApplicantsService {
-  constructor( 
-    @InjectModel(Applicant.name) private applicantModel: Model<Applicant>,
+export class ApplicantsService {  
+  update: any;
+  constructor(
+    @InjectModel(Applicant.name) private applicantModel: Model<ApplicantDocument>,
+    private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async findAll(): Promise<Applicant[]> {
-    return await this.applicantModel.find({ isDeleted: false }).exec();
+  async deleteApplicant(id: string): Promise<void> {
+    const applicant = await this.findOne(id);
+    if (!applicant) {
+        throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    applicant.isDeleted = true;
+    await applicant.save();
   }
+  async findAll(
+    currentPhase?: string,
+    status?: string,
+    dateFilter?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<Applicant[]> {
+    try {
+      const filter: any = {};
+  
+      if (currentPhase) {
+        filter.currentPhase = currentPhase;
+      }
+  
+      if (status) {
+        filter.status = status;
+      }
+      if (startDate && endDate) {
+        switch (dateFilter) {
+          case "firstInterviewDate":
+            filter.firstInterviewDate = { $ne: null, $gte: startDate, $lte: endDate };
+            break;
+          case "secondInterviewDate":
+            filter.secondInterviewDate = { $ne: null, $gte: startDate, $lte: endDate };
+            break;
+          case "createdAt":
+            filter.createdAt = { $gte: startDate, $lte: endDate };
+            filter.firstInterviewDate = null;  
+            filter.secondInterviewDate = null; 
+            break;
+        }
+      }
+  
+    
+      return await this.applicantModel.find(filter).exec();
+    } catch (error) {
+    
+      throw new Error('Failed to filter applicants');
+    }
+  }
+  
 
-  async findOne(id: string): Promise<Applicant> {
+  async findOne(id: string): Promise<ApplicantDocument> {
     const applicant = await this.applicantModel.findById(id).exec();
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
@@ -34,6 +80,8 @@ export class ApplicantsService {
   }
 
 
+
+  @Public()
   async createApplicant(
     file: Express.Multer.File,
     createApplicantDto: CreateApplicantDto,
@@ -43,16 +91,18 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING, 
+        status: ApplicantStatus.PENDING,
       });
       await this.mailService.sendMail({
-        to: createApplicantDto.email, 
-        subject: 'Aplikimi u mor me sukses',
-        template: './successfulApplication',
+        to: createApplicantDto.email,
+        subject: 'Bonjour madame',
+        template: 'successfulApplication',
         context: {
-          name: `${createApplicantDto.firstName} ${createApplicantDto.lastName}`,
+            name: createApplicantDto.firstName,
+            positionApplied: createApplicantDto.positionApplied
         },
       });
+
       return applicant;
     } catch (err) {
       console.error('Error uploading file:', err);
@@ -60,262 +110,200 @@ export class ApplicantsService {
     }
   }
 
-  async update(
+  async updateApplicant(
     id: string,
     updateApplicantDto: UpdateApplicantDto,
-  ): Promise<Applicant> {
-    try {
-      const existingAplicant = await this.applicantModel.findById(id);
-      if (!existingAplicant) {
-        throw new NotFoundException(`Applicant with id ${id} not found`);
-      }
-      //updateApplicantDto.notes sould be bettween current phase and next pghase
-      updateApplicantDto.notes = `${existingAplicant.notes} ${updateApplicantDto.notes}`;
-      const updatedApplicant = await this.applicantModel.findByIdAndUpdate(id, {...updateApplicantDto}, { new: true })
-
-      return updatedApplicant;
-
-    } catch (err) {
-      console.error(err);
-      throw new ConflictException(err);
+  ): Promise<ApplicantDocument> {
+    const applicant = await this.findOne(id);
+  
+    if (updateApplicantDto.firstInterviewDate) {
+      applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
+      applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.FIRST_INTERVIEW);
     }
+  
+    if (updateApplicantDto.secondInterviewDate) {
+      applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
+      applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.SECOND_INTERVIEW);
+    }
+  
+    if (updateApplicantDto.status) {
+      applicant.status = updateApplicantDto.status;
+     if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
+        await this.sendEmail(applicant, EmailType.REJECTED_APPLICATION);
+      }
+    }
+  
+    if (updateApplicantDto.notes) {
+      applicant.notes = updateApplicantDto.notes;
+    }
+    if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {
+      const createUserDto: CreateUserDto = {
+        firstName: applicant.firstName,
+        lastName: applicant.lastName,
+        email: applicant.email,
+        phone: applicant.phoneNumber
+      };
+      
+      await this.authService.signUp(createUserDto);
+    }
+    Object.assign(applicant, updateApplicantDto);
+    return await applicant.save();
+  }
+  
+
+  private async sendEmail(
+    applicant: ApplicantDocument,
+    emailType: EmailType,
+    customSubject?: string,
+    customMessage?: string,
+    isReschedule: boolean = false,  
+  ): Promise<void> {
+    let subject: string;
+    let template: string;
+    const context: any = {
+      name: `${applicant.firstName} ${applicant.lastName}`, 
+      firstName: applicant.firstName,
+      lastName: applicant.lastName,
+      positionApplied: applicant.positionApplied,
+    };
+  
+    switch (emailType) {
+      case EmailType.FIRST_INTERVIEW:
+        subject = isReschedule ? 'Interview Rescheduled - First Phase' : 'Interview Scheduled - First Phase';
+        template = isReschedule ? 'interview-rescheduled' : 'interview-scheduled';
+        context.interviewDate = applicant.firstInterviewDate.toLocaleString('sq', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        context.phase = 'first';
+        break;
+  
+      case EmailType.SECOND_INTERVIEW:
+        subject = isReschedule ? 'Interview Rescheduled - Second Phase' : 'Interview Scheduled - Second Phase';
+        template = isReschedule ? 'interview-rescheduled' : 'interview-scheduled'; 
+        context.interviewDate = applicant.secondInterviewDate.toLocaleString('sq', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        context.phase = 'second';
+        break;
+  
+      case EmailType.SUCCESSFUL_APPLICATION:
+        subject = 'Application Received Successfully';
+        template = 'successfulApplication';
+        break;
+  
+      case EmailType.REJECTED_APPLICATION:
+        subject = 'Application Status - Rejected';
+        template = 'application-rejected';
+        break;
+  
+      case EmailType.CUSTOM:
+        if (!customSubject || !customMessage) {
+          throw new ConflictException('Custom subject and message are required for a custom email.');
+        }
+        subject = customSubject;
+        template = 'custom-email';
+        context.customMessage = customMessage;
+        break;
+  
+      default:
+        throw new ConflictException('Invalid email type');
+    }
+  
+    context.subject = subject; 
+  
+    await this.mailService.sendMail({
+      to: applicant.email,
+      subject: subject,
+      template: template,
+      context: context,
+    });
+  }
+  async scheduleInterview(
+    id: string,
+    updateApplicantDto: UpdateApplicantDto,
+  ): Promise<ApplicantDocument> {
+    const applicant = await this.findOne(id);
+  
+    if (updateApplicantDto.firstInterviewDate) {
+      applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
+      applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.FIRST_INTERVIEW, undefined, undefined, false);
+    } else if (updateApplicantDto.secondInterviewDate) {
+      applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
+      applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.SECOND_INTERVIEW, undefined, undefined, false);
+    }
+  
+    return await applicant.save();
+  }
+  
+  async rescheduleInterview(
+    id: string,
+    updateApplicantDto: UpdateApplicantDto,
+  ): Promise<ApplicantDocument> {
+    const applicant = await this.findOne(id);
+  
+    if (updateApplicantDto.firstInterviewDate) {
+      applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
+      applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.FIRST_INTERVIEW, undefined, undefined, true);
+    } else if (updateApplicantDto.secondInterviewDate) {
+      applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
+      applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+      await this.sendEmail(applicant, EmailType.SECOND_INTERVIEW, undefined, undefined, true);
+    }
+  
+    return await applicant.save();
+  }
+  
+  async sendCustomEmail(
+    id: string,
+    customSubject: string,
+    customMessage: string,
+  ): Promise<void> {
+    const applicant = await this.findOne(id);
+    await this.sendEmail(applicant, EmailType.CUSTOM, customSubject, customMessage);
+  }
+  async filterApplicants(
+    phase?: ApplicantPhase,
+    status?: ApplicantStatus,
+    startDate?: string,   
+    endDate?: string,     
+  ): Promise<Applicant[]> {
+    const filter: any = {
+      isDeleted: false,
+    };
+  
+    if (phase) {
+      filter.currentPhase = phase;
+    }
+  
+    if (status) {
+      filter.status = status;
+    }
+  
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+  
+    return await this.applicantModel.find(filter).exec();
   }
 
-  // async addInterviewNote(
-  //   id: string,
-  //   addInterviewNoteDto: AddInterviewNoteDto,
-  // ): Promise<ApplicantDocument> {
-  //   const { phase, note } = addInterviewNoteDto;
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant.notes) {
-  //     applicant.notes = '';
-  //   }
-  //   applicant.notes += `\n${phase} phase note: ${note}`;
-  //   await applicant.save();
-  //   return applicant;
-  // }
-
-  // async updateInterviewStatus(
-  //   id: string,
-  //   updateInterviewStatusDto: UpdateInterviewStatusDto,
-  // ): Promise<ApplicantDocument> {
-  //   const { phase, status, interviewDate } = updateInterviewStatusDto;
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant.notes) {
-  //     applicant.notes = '';
-  //   }
-
-  //   if (status === 'accepted') {
-  //     applicant.notes += `\n${phase} phase accepted`;
-  //     if (interviewDate) {
-  //       if (phase === 'first') {
-  //         applicant.firstInterviewDate = new Date(interviewDate);
-  //       } else if (phase === 'second') {
-  //         applicant.secondInterviewDate = new Date(interviewDate);
-  //       }
-  //     }
-  //     if (phase === 'first') {
-  //       await this.sendSecondInterviewEmail(applicant, new Date(interviewDate));
-  //     }
-  //   } else if (status === 'rejected') {
-  //     applicant.notes += `\n${phase} phase rejected`;
-  //     if (phase === 'first') {
-  //       await this.sendRejectEmail(applicant);
-  //     }
-  //   }
-
-  //   await applicant.save();
-  //   return applicant;
-  // }
-
-  // async scheduleInterview(
-  //   id: string,
-  //   scheduleInterviewDto: ScheduleInterviewDto,
-  // ): Promise<ApplicantDocument> {
-  //   const { phase, interviewDate, notes } = scheduleInterviewDto;
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant) {
-  //     throw new NotFoundException(`Applicant with id ${id} not found`);
-  //   }
-
-  //   if (phase === 'applicant') {
-  //     applicant.interviewDate = new Date(interviewDate);
-  //     applicant.currentPhase = 'applicant';
-  //   } else if (phase === 'first') {
-  //     applicant.firstInterviewDate = new Date(interviewDate);
-  //     applicant.currentPhase = 'first';
-  //   } else if (phase === 'second') {
-  //     applicant.secondInterviewDate = new Date(interviewDate);
-  //     applicant.currentPhase = 'second';
-  //   } else {
-  //     throw new ConflictException('Invalid phase provided for scheduling.');
-  //   }
-
-  //   if (notes) {
-  //     if (!applicant.notes) {
-  //       applicant.notes = '';
-  //     }
-  //     applicant.notes += `\n${phase} phase note: ${notes}`;
-  //   }
-
-  //   await this.mailService.sendMail({
-  //     to: applicant.email,
-  //     subject: `Interview Scheduled - ${phase} phase`,
-  //     template: './interview-scheduled',
-  //     context: {
-  //       firstName: applicant.firstName,
-  //       lastName: applicant.lastName,
-  //       interviewDate: new Date(interviewDate).toLocaleString('sq', {
-  //         day: '2-digit',
-  //         month: 'long',
-  //         year: 'numeric',
-  //         hour: '2-digit',
-  //         minute: '2-digit',
-  //       }),
-  //       phase,
-  //     },
-  //   });
-
-  //   await applicant.save();
-  //   return applicant;
-  // }
-
-  // async rescheduleInterview(
-  //   id: string,
-  //   rescheduleInterviewDto: RescheduleInterviewDto,
-  // ): Promise<ApplicantDocument> {
-  //   const { phase, newInterviewDate } = rescheduleInterviewDto;
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant) {
-  //     throw new NotFoundException(`Applicant with id ${id} not found`);
-  //   }
-
-  //   if (phase === 'applicant') {
-  //     applicant.interviewDate = new Date(newInterviewDate);
-  //     applicant.currentPhase = 'applicant';
-  //   } else if (phase === 'first') {
-  //     applicant.firstInterviewDate = new Date(newInterviewDate);
-  //     applicant.currentPhase = 'first';
-  //   } else if (phase === 'second') {
-  //     applicant.secondInterviewDate = new Date(newInterviewDate);
-  //     applicant.currentPhase = 'second';
-  //   } else {
-  //     throw new ConflictException('Invalid phase provided for rescheduling.');
-  //   }
-
-  //   await this.mailService.sendMail({
-  //     to: applicant.email,
-  //     subject: `Interview Rescheduled - ${phase} phase`,
-  //     template: './interview-rescheduled',
-  //     context: {
-  //       firstName: applicant.firstName,
-  //       lastName: applicant.lastName,
-  //       newInterviewDate: new Date(newInterviewDate).toLocaleString('sq', {
-  //         day: '2-digit',
-  //         month: 'long',
-  //         year: 'numeric',
-  //         hour: '2-digit',
-  //         minute: '2-digit',
-  //       }),
-  //       phase,
-  //     },
-  //   });
-
-  //   await applicant.save();
-  //   return applicant;
-  // }
-
-  // async updateApplicantStatus(
-  //   id: string,
-  //   status: ApplicantStatus,
-  // ): Promise<ApplicantDocument> {
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant) {
-  //     throw new NotFoundException(`Applicant with id ${id} not found`);
-  //   }
-
-  //   applicant.status = status;
-  //   await applicant.save();
-  //   return applicant;
-  // }
-
-  // private async sendSecondInterviewEmail(
-  //   applicant: ApplicantDocument,
-  //   interviewDate?: Date,
-  // ): Promise<void> {
-  //   await this.mailService.sendMail({
-  //     to: applicant.email,
-  //     subject: 'Second Interview Scheduled',
-  //     template: './second-interview', 
-  //     context: {
-  //       firstName: applicant.firstName,
-  //       lastName: applicant.lastName,
-  //       interviewDate: interviewDate
-  //         ? new Date(interviewDate).toLocaleString('sq', {
-  //             day: '2-digit',
-  //             month: 'long',
-  //             year: 'numeric',
-  //             hour: '2-digit',
-  //             minute: '2-digit',
-  //           })
-  //         : null,
-  //     },
-  //   });
-  // }
-
-  // private async sendRejectEmail(applicant: ApplicantDocument): Promise<void> {
-  //   await this.mailService.sendMail({
-  //     to: applicant.email,
-  //     subject: 'Application Rejected',
-  //     template: './reject', 
-  //     context: {
-  //       firstName: applicant.firstName,
-  //       lastName: applicant.lastName,
-  //     },
-  //   });
-  // }
-
-  // async sendCustomEmail(
-  //   id: string,
-  //   sendCustomEmailDto: SendCustomEmailDto,
-  // ): Promise<void> {
-  //   const applicant = await this.findOne(id);
-  //   if (!applicant) {
-  //     throw new NotFoundException(`Applicant with id ${id} not found`);
-  //   }
-
-  //   const { subject, message } = sendCustomEmailDto;
-
-  //   await this.mailService.sendMail({
-  //     to: applicant.email,
-  //     subject,
-  //     html: `<p>${message}</p>`, 
-  //   });
-  // }
-
   
-  // async filterByDateRange(
-  //   startDate: string,
-  //   endDate: string,
-  //   phase?: 'first' | 'second'
-  // ): Promise<Applicant[]> {
-  //   const query: any = {
-  //     isDeleted: false,
-  //     createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-  //   };
-
-  //   if (phase) {
-  //     if (phase === 'first') {
-  //       query.firstInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-  //     } else if (phase === 'second') {
-  //       query.secondInterviewDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-  //     }
-  //   }
-
-  //   return await this.applicantModel.find(query).exec();
-  // }
-}
-
-
-
-//1  theerit update aplicant .nqs nuk e ke krijoje per te  ber update nots dhe status dhe cdo hje tjeter
+}  

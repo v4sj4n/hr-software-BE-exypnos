@@ -1,31 +1,34 @@
-import { Controller, Get, Query, Param, Patch, Post, Body, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { ApplicantsService } from './applicant.service';
-import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
-import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
-import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
-import { SendCustomEmailDto } from './dto/send-custom-email.dto';
-import { ApplicantStatus } from 'src/common/enum/applicant.enum';
+import { ApplicantsService } from './/applicant.service';
 
 @Controller('applicant')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  // @Get('filter')
-  // async filterByDateRange(
-  //   @Query('startDate') startDate: string,
-  //   @Query('endDate') endDate: string,
-  //   @Query('phase') phase?: 'first' | 'second'
-  // ) {
-  //   return await this.applicantsService.filterByDateRange(startDate, endDate, phase);
-  // }
-
   @Get()
-  async findAll() {
-    return await this.applicantsService.findAll();
+  async findAll(
+  @Query('currentPhase') currentPhase: string,
+  @Query('status') status: string,
+  @Query('dateFilter') dateFilter: string,
+  @Query('startDate') startDate?: Date,
+  @Query('endDate') endDate?: Date,
+) 
+  {
+    return await this.applicantsService.findAll(currentPhase, status,dateFilter, startDate, endDate);
   }
 
   @Get(':id')
@@ -38,17 +41,17 @@ export class ApplicantsController {
     @Param('id') id: string,
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    return await this.applicantsService.update(id, updateApplicantDto);
+    return await this.applicantsService.updateApplicant(id, updateApplicantDto);
   }
 
-  // @Delete(':id')
-  // deleteApplicant(@Param('id') id: string) {
-  //   return this.applicantsService.deleteApplicant(id);
-  // }
+  @Delete(':id')
+  async deleteApplicant(@Param('id') id: string) {
+    await this.applicantsService.deleteApplicant(id);
+    return { message: 'Applicant deleted successfully' };
+  }
 
-  @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file')) 
+  @UseInterceptors(FileInterceptor('file'))
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
@@ -56,46 +59,23 @@ export class ApplicantsController {
     return await this.applicantsService.createApplicant(file, formData);
   }
 
-  // @Patch(':id/interview/note')
-  // addInterviewNote(@Param('id') id: string, @Body() addInterviewNoteDto: AddInterviewNoteDto) {
-  //   return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
-  // }
+  @Patch(':id/send-custom-email')
+  async sendCustomEmail(
+    @Param('id') id: string,
+    @Body('customSubject') customSubject: string,
+    @Body('customMessage') customMessage: string,
+  ) {
+    await this.applicantsService.sendCustomEmail(id, customSubject, customMessage);
+    return { message: 'Custom email sent successfully' };
+  }
 
-  // @Patch(':id/interview/schedule')
-  // async scheduleInterview(
-  //   @Param('id') id: string,
-  //   @Body() scheduleInterviewDto: ScheduleInterviewDto,
-  // ) {
-  //   return await this.applicantsService.scheduleInterview(
-  //     id,
-  //     scheduleInterviewDto,
-  //   );
-  // }
 
-  // @Patch(':id/interview/reschedule')
-  // async rescheduleInterview(
-  //   @Param('id') id: string,
-  //   @Body() rescheduleInterviewDto: RescheduleInterviewDto,
-  // ) {
-  //   return await this.applicantsService.rescheduleInterview(
-  //     id,
-  //     rescheduleInterviewDto,
-  //   );
-  // }
-
-  // @Post(':id/send-email')
-  // async sendCustomEmail(
-  //   @Param('id') id: string,
-  //   @Body() sendCustomEmailDto: SendCustomEmailDto,
-  // ) {
-  //   return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
-  // }
-
-  // @Patch(':id/status')
-  // async updateStatus(
-  //   @Param('id') id: string,
-  //   @Body('status') status: ApplicantStatus,
-  // ) {
-  //   return await this.applicantsService.updateApplicantStatus(id, status);
-  // }
+  @Patch(':id/reschedule-interview')
+  async rescheduleInterview(
+    @Param('id') id: string,
+    @Body() updateApplicantDto: UpdateApplicantDto,
+  ) {
+    const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
+    return { message: 'Interview rescheduled successfully', applicant: updatedApplicant };
+  }
 }
