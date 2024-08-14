@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, Types } from 'mongoose';
+import mongoose, { FilterQuery, Model, Types } from 'mongoose';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
@@ -16,6 +16,7 @@ import {
   formatDate,
   isDateRangeOverlapping,
 } from '../common/util/dateUtil';
+import { IsEmail } from 'class-validator';
 
 @Injectable()
 export class VacationService {
@@ -46,11 +47,49 @@ export class VacationService {
     }
   }
 
-  async findAll() {
+  async findAll(type: string, status: string, period: string) {
     try {
-      return await this.vacationModel
-        .find({ isDeleted: false })
-        .populate('userId', 'firstName lastName');
+      if (type) {
+        return await this.vacationModel.find({ type: type });
+      }
+      if (status) {
+        return await this.vacationModel.find({ status: status });
+      }
+      if (period) {
+        if (period === 'OneMonth') {
+          return await this.vacationModel.find({
+            startDate: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+              $lte: new Date(),
+            },
+          });
+        }
+        if (period === 'ThreeMonth') {
+          return await this.vacationModel.find({
+            startDate: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 90)),
+              $lte: new Date(),
+            },
+          });
+        }
+        if (period === 'SixMonth') {
+          return await this.vacationModel.find({
+            startDate: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 180)),
+              $lte: new Date(),
+            },
+          });
+        }
+        if (period === 'OneYear') {
+          return await this.vacationModel.find({
+            startDate: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 365)),
+              $lte: new Date(),
+            },
+          });
+        }
+      }
+      return await this.vacationModel.find();
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -124,7 +163,140 @@ export class VacationService {
       throw new ConflictException(error);
     }
   }
+  async getAllUserVacation(search: string, users: string): Promise<User[]> {
+    let objectToPassToMatch: FilterQuery<any> =
+      users === 'with'
+        ? {
+            vacations: { $ne: [] },
+          }
+        : users === 'without'
+          ? {
+            vacations: { $eq: [] },
+            }
+          : {};
 
+    if (search) {
+      objectToPassToMatch = {
+        ...objectToPassToMatch,
+        $or: [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    try {
+      const userWithVacation = await this.userModel.aggregate([
+        {
+          $lookup: {
+            from: 'vacations',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'vacations',
+          },
+        },{
+          $lookup: {
+            from: 'auths',
+            localField: 'auth',
+            foreignField: '_id',
+            as: 'authData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$authData',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            ...objectToPassToMatch,
+          },
+        },
+        {
+          $sort: {
+            firstName: 1,
+            lastName: 1,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            imageUrl: 1,
+            phone: 1,
+            vacations: 1,
+            role: 1,
+            email: '$authData.email',
+          },
+        },
+      ]);
+
+      return userWithVacation;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+
+  async getUservacation(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
+    if (!user || user.isDeleted) {
+      throw new ConflictException(`User with id ${id} not found`);
+    }
+
+    try {
+      const userWithVacation = await this.userModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(id),
+          },
+        },
+        {
+          $lookup: {
+            from: 'vacations',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'vacations',
+          },
+        },
+        {
+          $lookup: {
+            from: 'auths',
+            localField: 'auth',
+            foreignField: '_id',
+            as: 'authData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$authData',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            role: 1,
+            imageUrl: 1,
+            email: '$authData.email',
+            phone: 1,
+            vacations: 1,
+          },
+        },
+      ]);
+
+      if (userWithVacation.length === 0) {
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
+
+      return userWithVacation[0];
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
   private async checkUserId(userId: Types.ObjectId) {
     const userExists = await this.userModel.findById(userId);
     if (!userExists) {
