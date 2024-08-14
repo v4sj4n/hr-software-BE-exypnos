@@ -96,7 +96,6 @@ export class ApplicantsService {
         ...createApplicantDto,
         cvAttachment: cvUrl,
         status: ApplicantStatus.PENDING,
-        status: ApplicantStatus.PENDING,
       });
       await this.mailService.sendMail({
         to: createApplicantDto.email,
