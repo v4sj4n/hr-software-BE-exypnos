@@ -1,47 +1,36 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateApplicantDto {
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   firstName: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   lastName: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   experience: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   applicationMethod: string;
 
-  @IsOptional()
-  @IsString()
-  age: string;
+  @IsNotEmpty()
+  dob: Date;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   phoneNumber: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   email: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   positionApplied: string;
 
-  @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   technologiesUsed: string;
 
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  @IsNotEmpty()
+  salaryExpectations: string;
 
   @IsOptional()
-  @IsString()
-  salaryExpectations: string;
+  currentPhase?: string;
 }

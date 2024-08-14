@@ -21,7 +21,10 @@ export class AssetHistory {
   @IsOptional()
   returnDate?: Date;
 
-  @Prop({ type: { _id: Types.ObjectId, firstName: String, lastName: String }, ref: 'User' })
+  @Prop({
+    type: { _id: Types.ObjectId, firstName: String, lastName: String },
+    ref: 'User',
+  })
   @IsOptional()
   user?: { _id: Types.ObjectId; firstName: string; lastName: string };
 

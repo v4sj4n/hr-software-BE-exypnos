@@ -1,5 +1,5 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Types, Model, ObjectId } from 'mongoose';
+import { Types, Model } from 'mongoose';
 import { Poll, Event } from '../common/schema/event.schema';
 import { VoteDto } from './dto/vote.dto';
 import { User } from '../common/schema/user.schema';
@@ -62,9 +62,9 @@ async function getAllParticipants(
   userModel: Model<User>,
   authModel: Model<Auth>,
 ) {
-  let emails: string[] = [];
-  let users = await userModel.find();
-  let userIds = users.map((user) => user._id);
+  const emails: string[] = [];
+  const users = await userModel.find();
+  const userIds = users.map((user) => user._id);
   for (const userId of userIds) {
     const user = await userModel
       .findById(userId)
@@ -90,7 +90,7 @@ async function getParticipantsByUserId(
   authModel: Model<Auth>,
   participants: string[],
 ): Promise<Types.ObjectId[]> {
-  let userIds: Types.ObjectId[] = [];
+  const userIds: Types.ObjectId[] = [];
   for (let i = 0; i < participants.length; i++) {
     const auth = await authModel.findOne({ email: participants[i] });
     const user = await userModel.findOne({ auth: auth._id });

@@ -128,7 +128,6 @@ export class AssetService {
     ) {
       // make sure to add the returnDate date in the last history entry
       const lastHistoryEntry = existingAsset.history.pop();
-      const user = await this.userModel.findById(lastHistoryEntry.user._id);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: lastHistoryEntry.takenDate,

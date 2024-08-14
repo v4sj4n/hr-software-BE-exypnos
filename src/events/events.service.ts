@@ -65,7 +65,7 @@ export class EventsService {
         createEventDto.participants &&
         createEventDto.participants.length > 0
       ) {
-        var participants = await getParticipantsByUserId(
+        const participants = await getParticipantsByUserId(
           this.userModel,
           this.authModel,
           createEventDto.participants,
@@ -112,7 +112,7 @@ export class EventsService {
     }
   }
 
-  async findAll(search: string, type:string): Promise<Event[]> {
+  async findAll(search: string, type: string): Promise<Event[]> {
     const filter: FilterQuery<Event> = {};
 
     if (search) {
@@ -120,7 +120,7 @@ export class EventsService {
     }
     if (type) {
       filter.type = type;
-    }else{
+    } else {
       filter.type = { $ne: 'career' };
     }
     try {

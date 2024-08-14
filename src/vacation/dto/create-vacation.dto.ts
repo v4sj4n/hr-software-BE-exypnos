@@ -1,5 +1,4 @@
 import { IsString, IsEnum, IsOptional, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
 import { VacationStatus, VacationType } from 'src/common/enum/vacation.enum';
 import { Types } from 'mongoose';
 export class CreateVacationDto {

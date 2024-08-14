@@ -1,11 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { ApplicantStatus } from '../enum/applicantStatus.enum';
-import muv from 'mongoose-unique-validator';
+import { ApplicantPhase, ApplicantStatus } from '../enum/applicant.enum';
 
 export type ApplicantDocument = Applicant & Document;
 
-@Schema({ timestamps: true }) // Ensure timestamps are enabled
+@Schema({ timestamps: true })
 export class Applicant {
   @Prop({ required: true })
   firstName: string;
@@ -19,8 +18,8 @@ export class Applicant {
   @Prop({ required: true })
   applicationMethod: string;
 
-  @Prop({ required: true })
-  age: string;
+  @Prop({ type: Date, required: true })
+  dob: Date;
 
   @Prop({ required: true })
   phoneNumber: string;
@@ -34,16 +33,13 @@ export class Applicant {
   @Prop({ required: true })
   technologiesUsed: string;
 
-  // @Prop({ required: false })
-  // individualProjects: string;
-
   @Prop({ type: Date, default: null })
   firstInterviewDate?: Date;
 
   @Prop({ type: Date, default: null })
   secondInterviewDate?: Date;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: '' })
   notes: string;
 
   @Prop({ required: true })
@@ -52,25 +48,26 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: false, enum: ApplicantStatus, default: 'pending' })
+  @Prop({
+    required: false,
+    default: ApplicantStatus.PENDING,
+    enum: ApplicantStatus,
+  })
   status: string;
-
-  @Prop({ required: false })
-  interviewNotes?: string;
-
-  @Prop({ required: false })
-  rejectionNotes?: string;
-
-  @Prop({ type: Date, default: null })
-  interviewDate: Date;
 
   @Prop({ default: false })
   isDeleted: boolean;
 
-  @Prop({ required: false })
+  @Prop({
+    required: false,
+    default: ApplicantPhase.APPLICANT,
+    enum: ApplicantPhase,
+  })
   currentPhase?: string;
+  static firstInterviewDate: Date;
+  static secondInterviewDate: Date;
+  static notes: string;
 }
 
 const ApplicantSchema = SchemaFactory.createForClass(Applicant);
-ApplicantSchema.plugin(muv);
 export { ApplicantSchema };

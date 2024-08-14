@@ -1,46 +1,39 @@
 import {
   Controller,
   Get,
-  Query,
-  Param,
-  Patch,
   Post,
   Body,
+  Patch,
+  Param,
   Delete,
-  UploadedFile,
+  Query,
   UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/common/decorator/public.decorator';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
-import { ApplicantsService } from './applicant.service';
-import { AddInterviewNoteDto } from './dto/add-interview-note.dto';
-import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
-import { RescheduleInterviewDto } from './dto/reschedule-interview.dto';
-import { SendCustomEmailDto } from './dto/send-custom-email.dto';
-import { ApplicantStatus } from 'src/common/enum/applicantStatus.enum';
+import { ApplicantsService } from './/applicant.service';
 
 @Controller('applicant')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
-  @Get('filter')
-  async filterByDateRange(
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-    @Query('phase') phase?: 'first' | 'second',
+  @Get()
+  async findAll(
+    @Query('currentPhase') currentPhase: string,
+    @Query('status') status: string,
+    @Query('dateFilter') dateFilter: string,
+    @Query('startDate') startDate?: Date,
+    @Query('endDate') endDate?: Date,
   ) {
-    return await this.applicantsService.filterByDateRange(
+    return await this.applicantsService.findAll(
+      currentPhase,
+      status,
+      dateFilter,
       startDate,
       endDate,
-      phase,
     );
-  }
-
-  @Get()
-  async findAll() {
-    return await this.applicantsService.findAll();
   }
 
   @Get(':id')
@@ -53,15 +46,15 @@ export class ApplicantsController {
     @Param('id') id: string,
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    return await this.applicantsService.update(id, updateApplicantDto);
+    return await this.applicantsService.updateApplicant(id, updateApplicantDto);
   }
 
   @Delete(':id')
-  deleteApplicant(@Param('id') id: string) {
-    return this.applicantsService.deleteApplicant(id);
+  async deleteApplicant(@Param('id') id: string) {
+    await this.applicantsService.deleteApplicant(id);
+    return { message: 'Applicant deleted successfully' };
   }
 
-  @Public()
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async createApplicant(
@@ -71,49 +64,32 @@ export class ApplicantsController {
     return await this.applicantsService.createApplicant(file, formData);
   }
 
-  @Patch(':id/interview/note')
-  addInterviewNote(
-    @Param('id') id: string,
-    @Body() addInterviewNoteDto: AddInterviewNoteDto,
-  ) {
-    return this.applicantsService.addInterviewNote(id, addInterviewNoteDto);
-  }
-
-  @Patch(':id/interview/schedule')
-  async scheduleInterview(
-    @Param('id') id: string,
-    @Body() scheduleInterviewDto: ScheduleInterviewDto,
-  ) {
-    return await this.applicantsService.scheduleInterview(
-      id,
-      scheduleInterviewDto,
-    );
-  }
-
-  @Patch(':id/interview/reschedule')
-  async rescheduleInterview(
-    @Param('id') id: string,
-    @Body() rescheduleInterviewDto: RescheduleInterviewDto,
-  ) {
-    return await this.applicantsService.rescheduleInterview(
-      id,
-      rescheduleInterviewDto,
-    );
-  }
-
-  @Post(':id/send-email')
+  @Patch(':id/send-custom-email')
   async sendCustomEmail(
     @Param('id') id: string,
-    @Body() sendCustomEmailDto: SendCustomEmailDto,
+    @Body('customSubject') customSubject: string,
+    @Body('customMessage') customMessage: string,
   ) {
-    return this.applicantsService.sendCustomEmail(id, sendCustomEmailDto);
+    await this.applicantsService.sendCustomEmail(
+      id,
+      customSubject,
+      customMessage,
+    );
+    return { message: 'Custom email sent successfully' };
   }
 
-  @Patch(':id/status')
-  async updateStatus(
+  @Patch(':id/reschedule-interview')
+  async rescheduleInterview(
     @Param('id') id: string,
-    @Body('status') status: ApplicantStatus,
+    @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    return await this.applicantsService.updateApplicantStatus(id, status);
+    const updatedApplicant = await this.applicantsService.rescheduleInterview(
+      id,
+      updateApplicantDto,
+    );
+    return {
+      message: 'Interview rescheduled successfully',
+      applicant: updatedApplicant,
+    };
   }
 }

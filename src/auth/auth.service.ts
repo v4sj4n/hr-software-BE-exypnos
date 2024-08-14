@@ -12,9 +12,9 @@ import * as bcrypt from 'bcrypt';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
-import { MailerService } from '@nestjs-modules/mailer';
 import { generateRandomPassword } from 'src/common/util/generateRandomPassword';
 import { Auth } from 'src/common/schema/auth.schema';
+import { MailService } from 'src/mail/mail.service';
 
 type IUser = User & { email: string };
 
@@ -24,7 +24,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: mongoose.Model<User>,
     @InjectModel(Auth.name) private authModel: mongoose.Model<Auth>,
     private jwtService: JwtService,
-    private readonly mailService: MailerService,
+    private readonly mailService: MailService,
   ) {}
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     try {
@@ -51,7 +51,6 @@ export class AuthService {
       });
 
       await this.mailService.sendMail({
-        from: process.env.MAIL_USERNAME,
         to: createUserDto.email,
         subject: 'Mireseerdhe ne Codevider',
         template: 'welcome',
