@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { VacationType } from '../enum/vacation.enum';
+import { VacationStatus, VacationType } from '../enum/vacation.enum';
 import { User } from './user.schema';
 
 @Schema({
@@ -13,14 +13,14 @@ export class Vacation {
   @Prop({ required: false, type: String })
   description: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date})
   startDate: Date;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date })
   endDate: Date;
 
-  @Prop({ default: 'pending', type: String })
-  status: string;
+  @Prop({  enum: VacationStatus, default: VacationStatus.PENDING, type: String})
+  status: VacationStatus;
 
   @Prop({
     type: Types.ObjectId,

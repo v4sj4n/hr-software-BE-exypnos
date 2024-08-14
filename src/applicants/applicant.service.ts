@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -91,6 +95,7 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
+        status: ApplicantStatus.PENDING,
         status: ApplicantStatus.PENDING,
       });
       await this.mailService.sendMail({

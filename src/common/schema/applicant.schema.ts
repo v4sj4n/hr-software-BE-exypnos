@@ -61,5 +61,5 @@ export class Applicant {
   static notes: string;
 }
 
-export const ApplicantSchema = SchemaFactory.createForClass(Applicant);
-ApplicantSchema.plugin(require('mongoose-unique-validator'));
+const ApplicantSchema = SchemaFactory.createForClass(Applicant);
+export { ApplicantSchema };

@@ -1,5 +1,12 @@
-import { IsString, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
 import { Poll } from '../../common/schema/event.schema';
+import { EventType } from 'src/common/enum/event.enum';
 export class CreateEventDto {
   @IsString()
   title: string;
@@ -7,11 +14,25 @@ export class CreateEventDto {
   @IsString()
   description: string;
 
+  @IsOptional()
+  @IsString()
+  @IsEnum(EventType)
+  type: string;
+
+  @IsOptional()
   @IsDateString()
-  date: Date;
+  startDate: Date;
+
+  @IsOptional()
+  @IsDateString()
+  endDate: Date;
 
   @IsOptional()
   poll: Poll;
+
+  @IsOptional()
+  @IsArray()
+  participants: string[];
 
   @IsOptional()
   @IsString()

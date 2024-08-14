@@ -12,7 +12,6 @@ import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
 
-
 @Injectable()
 export class AssetService {
   constructor(
@@ -34,23 +33,22 @@ export class AssetService {
         ? new mongoose.Types.ObjectId(createAssetDto.userId)
         : null;
 
-      const initialHistory: AssetHistory = {
-        updatedAt: new Date(),
-        takenDate: createdAsset.takenDate,
-        returnDate: createdAsset.returnDate,
-        userId: createdAsset.userId,
-        status: createdAsset.status,
-      };
-      createdAsset.history = [initialHistory];
+      createdAsset.history = [];
       return await createdAsset.save();
     } catch (error) {
       throw new ConflictException(error);
     }
   }
-  async findAll(): Promise<Asset[]> {
+  async findAll(availability: string): Promise<Asset[]> {
+    const filter: FilterQuery<Asset> = {
+      isDeleted: false,
+    };
+    if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
+      filter.status = availability;
+    }
     try {
       return await this.assetModel
-        .find({ isDeleted: false })
+        .find(filter)
         .populate('userId', 'firstName lastName');
     } catch (error) {
       throw new ConflictException(error);
@@ -80,7 +78,7 @@ export class AssetService {
         await this.checkSerialNumber(updateAssetDto.serialNumber, id);
       }
 
-      this.validateHistoryData(updateAssetDto, existingAsset);
+      await this.validateHistoryData(updateAssetDto, existingAsset);
       await this.assetModel.findByIdAndUpdate(
         id,
         {
@@ -102,17 +100,22 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-  validateHistoryData(
+  async validateHistoryData(
     updateAssetDto: UpdateAssetDto,
-    existingAsset: mongoose.Document<unknown, {}, Asset> &
+    existingAsset: mongoose.Document<unknown, object, Asset> &
       Asset & { _id: mongoose.Types.ObjectId },
   ) {
     if (updateAssetDto.status === AssetStatus.ASSIGNED) {
+      const updateUser = await this.userModel.findById(updateAssetDto.userId);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: updateAssetDto.takenDate,
         returnDate: null,
-        userId: updateAssetDto.userId,
+        user: {
+          _id: updateUser._id,
+          firstName: updateUser.firstName,
+          lastName: updateUser.lastName,
+        },
         status: updateAssetDto.status,
       };
       Object.assign(updateAssetDto, {
@@ -125,11 +128,12 @@ export class AssetService {
     ) {
       // make sure to add the returnDate date in the last history entry
       const lastHistoryEntry = existingAsset.history.pop();
+      const user = await this.userModel.findById(lastHistoryEntry.user._id);
       const newHistoryEntry: AssetHistory = {
         updatedAt: new Date(),
         takenDate: lastHistoryEntry.takenDate,
         returnDate: updateAssetDto.returnDate,
-        userId: lastHistoryEntry.userId,
+        user: lastHistoryEntry.user,
         status: updateAssetDto.status,
       };
       Object.assign(updateAssetDto, {
@@ -190,7 +194,13 @@ export class AssetService {
     if (assetData.returnDate && !existingAsset.takenDate) {
       throw new ConflictException(`Asset must have a takenDate date first`);
     }
-    if (assetData.returnDate && compareDates(formatDate(new Date(existingAsset.takenDate)), formatDate(new Date(assetData.returnDate))) >= 1) {
+    if (
+      assetData.returnDate &&
+      compareDates(
+        formatDate(new Date(existingAsset.takenDate)),
+        formatDate(new Date(assetData.returnDate)),
+      ) >= 1
+    ) {
       throw new ConflictException(
         `Return date cannot be before the taken date`,
       );
@@ -261,6 +271,7 @@ export class AssetService {
             imageUrl: 1,
             phone: 1,
             assets: 1,
+            role: 1,
           },
         },
       ]);

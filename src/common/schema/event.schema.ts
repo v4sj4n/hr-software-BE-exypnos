@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { EventType } from '../enum/event.enum';
 
 export class PollOption {
   @Prop({ required: true, type: String })
@@ -34,11 +35,23 @@ export class Event {
   @Prop({ required: true, type: String })
   description: string;
 
-  @Prop({ required: true, type: Date })
-  date: Date;
+  @Prop({ required: false, type: String, enum: EventType,default: EventType.OTHER })
+  type: EventType;
 
-  @Prop({ type: String, default: 'Tirana' })
+  @Prop({ required: false, type: Date })
+  startDate: Date;
+
+  @Prop({ required: false, type: Date})
+  endDate: Date;
+
+  @Prop({ type: String,required: false, default: 'Tirana' })
   location: string;
+
+  @Prop({ type: [Types.ObjectId], required: false, default: [] })
+  participants: Types.ObjectId[] ;
+
+  @Prop({ type: [String], required: false })
+  photo?: [string];
 
   @Prop({ type: Poll, required: false })
   poll?: Poll;

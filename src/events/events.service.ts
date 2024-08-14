@@ -3,40 +3,85 @@ import {
   NotFoundException,
   InternalServerErrorException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { Event, Poll, PollOption } from '../common/schema/event.schema';
+import { Event, PollOption } from '../common/schema/event.schema';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
 import { VoteDto } from './dto/vote.dto';
-import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { Auth } from 'src/common/schema/auth.schema';
+import { MailService } from 
+'src/mail/mail.service';
+import {
+  validatePollData,
+  validateDate,
+  getAllParticipants,
+  getParticipantsByUserId,
+} from './events.utils';
+import {
+  addVote,
+  removeVote,
+  getEventPollResults,
+  getOptionThatUserVotedFor,
+} from './events.poll';
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<Event>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Auth.name) private authModel: Model<Auth>,
     private notificationService: NotificationService,
+    private readonly firebaseService: FirebaseService,
+    private readonly mailService: MailService,
   ) {}
 
-  async create(createEventDto: CreateEventDto): Promise<Event> {
+  async create(
+    files: Express.Multer.File[],
+    createEventDto: CreateEventDto,
+  ): Promise<Event> {
     try {
-      const createdEvent = new this.eventModel(createEventDto);
+      let eventPhotos: string[] = [];
+      if (files && files.length > 0) {
+        eventPhotos = await Promise.all(
+          files.map(async (file) => {
+            return await this.firebaseService.uploadFile(file, 'eventPhoto');
+          }),
+        );
+      }
+      const createdEvent = new this.eventModel({
+        ...createEventDto,
+        photo: eventPhotos,
+      });
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
       if (
-        compareDates(formatDate(new Date()), formatDate(createdEvent.date)) >= 1
+        createEventDto.participants &&
+        createEventDto.participants.length > 0
       ) {
-        throw new BadRequestException('Event date cannot be in the past');
+        var participants = await getParticipantsByUserId(
+          this.userModel,
+          this.authModel,
+          createEventDto.participants,
+        );
+        createdEvent.participants = participants;
+        if (participants.length !== createEventDto.participants.length) {
+          throw new NotFoundException('Some participants not found');
+        }
       }
-      if (createEventDto.poll) {
-        this.validatePollData(createEventDto.poll);
+      if (!createdEvent.endDate && createdEvent.startDate) {
+        createdEvent.endDate = createdEvent.startDate;
+        validateDate(createdEvent.startDate, createdEvent.endDate);
+      }
+
+      if (createdEvent.poll) {
+        validatePollData(createdEvent.poll);
         createdEvent.poll.options.forEach((opt) => {
           opt.votes = 0;
           opt.voters = [];
@@ -44,20 +89,42 @@ export class EventsService {
       }
       await this.notificationService.createNotification(
         'Event Created',
-        `Event ${createEventDto.title} has been created`,
+        `Event ${createdEvent.title} has been created`,
         NotificationType.EVENT,
         createdEvent._id as Types.ObjectId,
         new Date(),
       );
+      await this.mailService.sendMail({
+        to:
+          createEventDto.participants?.length === 0 ||
+          !createEventDto.participants
+            ? await getAllParticipants(this.userModel, this.authModel)
+            : createEventDto.participants,
+        subject: `${createdEvent.title} - ${createdEvent.type}`,
+        template: './event',
+        context: {
+          name: `${createdEvent.description}`,
+        },
+      });
       return await createdEvent.save();
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
-  async findAll(): Promise<Event[]> {
+  async findAll(search: string, type:string): Promise<Event[]> {
+    const filter: FilterQuery<Event> = {};
+
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+    if (type) {
+      filter.type = type;
+    }else{
+      filter.type = { $ne: 'career' };
+    }
     try {
-      return this.eventModel.find({ isDeleted: false });
+      return this.eventModel.find(filter).where('isDeleted').equals(false);
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -75,15 +142,27 @@ export class EventsService {
     }
   }
 
-  async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    photos?: Express.Multer.File[],
+  ): Promise<Event> {
     try {
+      let eventPhotos: string[] = [];
+      if (photos && photos.length > 0) {
+        eventPhotos = await Promise.all(
+          photos.map(async (photo) => {
+            return await this.firebaseService.uploadFile(photo, 'eventPhoto');
+          }),
+        );
+      }
       const existingEvent = await this.eventModel.findById(id);
       if (!existingEvent) {
         throw new NotFoundException(`Event with id ${id} not found`);
       }
 
       if (!existingEvent.poll && updateEventDto.poll) {
-        this.validatePollData(updateEventDto.poll);
+        validatePollData(updateEventDto.poll);
         updateEventDto.poll.options = updateEventDto.poll.options.map(
           (opt) => ({
             ...opt,
@@ -95,16 +174,14 @@ export class EventsService {
 
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
-        { ...updateEventDto },
+        {
+          ...updateEventDto,
+          photo: eventPhotos.length > 0 ? eventPhotos : existingEvent.photo,
+        },
         { new: true, runValidators: true },
       );
 
-      if (
-        compareDates(formatDate(new Date()), formatDate(updatedEvent.date)) >= 1
-      ) {
-        throw new BadRequestException('Event date cannot be in the past');
-      }
-
+      validateDate(updatedEvent.startDate, updatedEvent.endDate);
       await this.notificationService.createNotification(
         'Event Updated',
         `Event ${updatedEvent.title} has been updated`,
@@ -143,181 +220,23 @@ export class EventsService {
   }
 
   async addVote(id: string, vote: VoteDto): Promise<Event> {
-    await this.validateData(id, vote);
-    const event = await this.eventModel.findById(id);
-    const user = await this.userModel.findById(vote.userId);
-  
-    for (const option of event.poll.options) {
-     var existingVoter = option.voters.find(voter =>
-        voter._id.toString() === user._id.toString() &&
-        voter.firstName === user.firstName &&
-        voter.lastName === user.lastName
-      );
-      if (existingVoter) {
-        var existingVote = option.option;
-      }
-    }
-    console.log(existingVote);
-    if (existingVote && !event.poll.isMultipleVote) {
-      await this.eventModel.findOneAndUpdate(
-        { _id: id, 'poll.options.option': existingVote },
-        {
-          $inc: { 'poll.options.$.votes': -1 },
-          $pull: {
-            'poll.options.$.voters': {
-              _id: user._id,
-              firstName: user.firstName,
-              lastName: user.lastName
-            }
-          }
-        },
-        { new: true }
-      );
-    }
-    const option = event.poll.options.find((opt) => opt.option === vote.option);
-    if (option.voters.some(voter =>
-      voter._id.toString() === user._id.toString() &&
-      voter.firstName === user.firstName &&
-      voter.lastName === user.lastName
-    )) {
-      throw new ConflictException('User has already voted for this option');
-    }
-  
-    const updatedEvent = await this.eventModel.findOneAndUpdate(
-      { _id: id, 'poll.options.option': vote.option },
-      {
-        $inc: { 'poll.options.$.votes': 1 },
-        $addToSet: {
-          'poll.options.$.voters': {
-            _id: user._id,
-            firstName: user.firstName,
-            lastName: user.lastName
-          }
-        }
-      },
-      { new: true }
-    );
-  
-    if (!updatedEvent) {
-      throw new NotFoundException(`Event with id ${id} or option not found`);
-    }
-  
-    return updatedEvent;
+    return addVote(this.eventModel, this.userModel, id, vote);
   }
 
   async removeVote(id: string, vote: VoteDto): Promise<Event> {
-    await this.validateData(id, vote);
-    const event = await this.eventModel.findById(id);
-    const option = event.poll.options.find((opt) => opt.option === vote.option);
-    const user = await this.userModel.findById(vote.userId);
-
-    if (!option.voters.some(voter => 
-      voter._id.toString() === user._id.toString() &&
-      voter.firstName === user.firstName &&
-      voter.lastName === user.lastName
-    )) {
-      throw new ConflictException('User has not voted for this option');
-    }
-
-    const updatedEvent = await this.eventModel.findOneAndUpdate(
-      { _id: id, 'poll.options.option': vote.option },
-      {
-        $inc: { 'poll.options.$.votes': -1 },
-        $pull: {
-          'poll.options.$.voters': { 
-            _id: user._id,
-            firstName: user.firstName,
-            lastName: user.lastName 
-          },
-        },
-      },
-      { new: true },
-    );
-
-    if (!updatedEvent) {
-      throw new NotFoundException(`Event with id ${id} or option not found`);
-    }
-
-    return updatedEvent;
+    return removeVote(this.eventModel, this.userModel, id, vote);
   }
 
   async getEventPollResults(id: string): Promise<PollOption[]> {
-    const event = await this.eventModel.findById(id);
-    if (!event) {
-      throw new NotFoundException(`Event with id ${id} not found`);
-    }
-    if (!event.poll || !event.poll.options) {
-      throw new BadRequestException('This event does not have a poll');
-    }
-    return event.poll.options;
+    return getEventPollResults(this.eventModel, id);
   }
 
-  async getptionThatUserVotedFor(id: string, userId: string): Promise<number> {
-    const event = await this.eventModel.findById(id);
-    if
-    (!event) {
-      throw new NotFoundException(`Event with id ${id} not found`);
-    }
-    if (!event.poll || !event.poll.options) {
-      throw new BadRequestException('This event does not have a poll');
-    }
-    const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with id ${userId} not found`);
-    }
-    const votedOption = event.poll.options.find((opt) =>
-      opt.voters.some(voter => 
-        voter._id.toString() === userId &&
-        voter.firstName === user.firstName &&
-        voter.lastName === user.lastName
-      ),
+  async getOptionThatUserVotedFor(id: string, userId: string): Promise<number> {
+    return getOptionThatUserVotedFor(
+      this.eventModel,
+      this.userModel,
+      id,
+      userId,
     );
-    return votedOption ? event.poll.options.indexOf(votedOption) + 1  : -1;
-  }
-
-  private async validateData(id: string, vote: VoteDto): Promise<void> {
-    const event = await this.eventModel.findById(
-      id as unknown as Types.ObjectId,
-    );
-
-    if (!event) {
-      throw new NotFoundException(`Event with id ${id} not found`);
-    }
-    if (compareDates(formatDate(new Date()), formatDate(event.date)) >= 1) {
-      throw new BadRequestException('Event date has passed');
-    }
-
-    const user = await this.userModel.findById(vote.userId);
-    if (!user) {
-      throw new NotFoundException(`User with id ${vote.userId} not found`);
-    }
-
-    if (!event.poll || !event.poll.options) {
-      throw new BadRequestException('This event does not have a poll');
-    }
-  }
-
-  private validatePollData(poll: Poll) {
-    if (poll.question.length === 0) {
-      throw new BadRequestException('Poll question cannot be empty');
-    }
-    if (poll.options.length <= 1) {
-      throw new BadRequestException('Poll options must be more than one');
-    }
-    if (poll.options.length > 3) {
-      throw new BadRequestException('Poll options must be 3 or 2');
-    }
-    if (poll.options.some((opt) => opt.option.length <= 1)) {
-      throw new BadRequestException(
-        'Poll option cannot be less than 1 character',
-      );
-    }
-    for (let i = 0; i < poll.options.length; i++) {
-      for (let j = i + 1; j < poll.options.length; j++) {
-        if (poll.options[i].option === poll.options[j].option) {
-          throw new BadRequestException('Poll options must be unique');
-        }
-      }
-    }
   }
 }

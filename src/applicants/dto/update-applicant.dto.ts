@@ -65,3 +65,4 @@ export class UpdateApplicantDto {
   @IsString()
   currentPhase?: string;
 }
+

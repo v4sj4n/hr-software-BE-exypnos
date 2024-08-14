@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { VacationService } from './vacation.service';
@@ -22,8 +23,25 @@ export class VacationController {
   }
 
   @Get()
-  findAll() {
-    return this.vacationService.findAll();
+  findAll(
+    @Query('type') type: string = '',
+    @Query('status') status: string = '',
+    @Query('period') period: string = '',
+  ) {
+    return this.vacationService.findAll( type, status, period);
+  }
+
+  @Get('user')
+  findAllWithUsers(
+    @Query('search') search: string = '',
+    @Query('users') users: string = 'with',
+  ) {
+    return this.vacationService.getAllUserVacation(search, users);
+  }
+
+  @Get('user/:id')
+  findAllWithUsersById(@Param('id') id: string) {
+    return this.vacationService.getUservacation(id);
   }
 
   @Get(':id')
