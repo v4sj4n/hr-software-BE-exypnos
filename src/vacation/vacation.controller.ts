@@ -28,7 +28,7 @@ export class VacationController {
     @Query('status') status: string = '',
     @Query('period') period: string = '',
   ) {
-    return this.vacationService.findAll( type, status, period);
+    return this.vacationService.findAll(type, status, period);
   }
 
   @Get('user')

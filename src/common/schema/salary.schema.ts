@@ -43,4 +43,3 @@ export class Salary {
 }
 
 export const SalarySchema = SchemaFactory.createForClass(Salary);
-

@@ -35,20 +35,25 @@ export class Event {
   @Prop({ required: true, type: String })
   description: string;
 
-  @Prop({ required: false, type: String, enum: EventType,default: EventType.OTHER })
+  @Prop({
+    required: false,
+    type: String,
+    enum: EventType,
+    default: EventType.OTHER,
+  })
   type: EventType;
 
   @Prop({ required: false, type: Date })
   startDate: Date;
 
-  @Prop({ required: false, type: Date})
+  @Prop({ required: false, type: Date })
   endDate: Date;
 
-  @Prop({ type: String,required: false, default: 'Tirana' })
+  @Prop({ type: String, required: false, default: 'Tirana' })
   location: string;
 
   @Prop({ type: [Types.ObjectId], required: false, default: [] })
-  participants: Types.ObjectId[] ;
+  participants: Types.ObjectId[];
 
   @Prop({ type: [String], required: false })
   photo?: [string];

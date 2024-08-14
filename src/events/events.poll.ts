@@ -22,11 +22,8 @@ async function addVote(
   for (const option of event.poll.options) {
     const existingVoter = option.voters.find(
       (voter) => voter._id.toString() === user._id.toString(),
-      
     );
-    if (existingVoter) {
-      var existingVote = option.option;
-    }
+    var existingVote = existingVoter ? option.option : null;
   }
   if (existingVote && !event.poll.isMultipleVote) {
     await eventModel.findOneAndUpdate(

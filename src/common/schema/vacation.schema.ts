@@ -13,13 +13,13 @@ export class Vacation {
   @Prop({ required: false, type: String })
   description: string;
 
-  @Prop({ required: true, type: Date})
+  @Prop({ required: true, type: Date })
   startDate: Date;
 
   @Prop({ required: true, type: Date })
   endDate: Date;
 
-  @Prop({  enum: VacationStatus, default: VacationStatus.PENDING, type: String})
+  @Prop({ enum: VacationStatus, default: VacationStatus.PENDING, type: String })
   status: VacationStatus;
 
   @Prop({

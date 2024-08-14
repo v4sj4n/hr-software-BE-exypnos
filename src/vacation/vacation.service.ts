@@ -16,7 +16,6 @@ import {
   formatDate,
   isDateRangeOverlapping,
 } from '../common/util/dateUtil';
-import { IsEmail } from 'class-validator';
 
 @Injectable()
 export class VacationService {
@@ -171,7 +170,7 @@ export class VacationService {
           }
         : users === 'without'
           ? {
-            vacations: { $eq: [] },
+              vacations: { $eq: [] },
             }
           : {};
 
@@ -194,7 +193,8 @@ export class VacationService {
             foreignField: 'userId',
             as: 'vacations',
           },
-        },{
+        },
+        {
           $lookup: {
             from: 'auths',
             localField: 'auth',

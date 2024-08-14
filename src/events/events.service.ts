@@ -15,8 +15,7 @@ import { User } from 'src/common/schema/user.schema';
 import { VoteDto } from './dto/vote.dto';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { Auth } from 'src/common/schema/auth.schema';
-import { MailService } from 
-'src/mail/mail.service';
+import { MailService } from 'src/mail/mail.service';
 import {
   validatePollData,
   validateDate,
@@ -65,7 +64,7 @@ export class EventsService {
         createEventDto.participants &&
         createEventDto.participants.length > 0
       ) {
-        var participants = await getParticipantsByUserId(
+        const participants = await getParticipantsByUserId(
           this.userModel,
           this.authModel,
           createEventDto.participants,
@@ -112,7 +111,7 @@ export class EventsService {
     }
   }
 
-  async findAll(search: string, type:string): Promise<Event[]> {
+  async findAll(search: string, type: string): Promise<Event[]> {
     const filter: FilterQuery<Event> = {};
 
     if (search) {
@@ -120,7 +119,7 @@ export class EventsService {
     }
     if (type) {
       filter.type = type;
-    }else{
+    } else {
       filter.type = { $ne: 'career' };
     }
     try {

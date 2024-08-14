@@ -4,7 +4,7 @@ import { ApplicantPhase, ApplicantStatus } from '../enum/applicant.enum';
 
 export type ApplicantDocument = Applicant & Document;
 
-@Schema({ timestamps: true }) 
+@Schema({ timestamps: true })
 export class Applicant {
   @Prop({ required: true })
   firstName: string;
@@ -48,13 +48,21 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({ required: false, default: ApplicantStatus.PENDING, enum: ApplicantStatus })
+  @Prop({
+    required: false,
+    default: ApplicantStatus.PENDING,
+    enum: ApplicantStatus,
+  })
   status: string;
 
   @Prop({ default: false })
   isDeleted: boolean;
 
-  @Prop({ required: false, default: ApplicantPhase.APPLICANT, enum: ApplicantPhase })
+  @Prop({
+    required: false,
+    default: ApplicantPhase.APPLICANT,
+    enum: ApplicantPhase,
+  })
   currentPhase?: string;
   static firstInterviewDate: Date;
   static secondInterviewDate: Date;
