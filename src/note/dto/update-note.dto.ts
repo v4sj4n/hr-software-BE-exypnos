@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateNoteDto {
   @IsOptional()
@@ -13,6 +13,6 @@ export class UpdateNoteDto {
   willBeReminded: boolean;
 
   @IsOptional()
-  @IsString()
-  date: string;
+  @IsDateString()
+  date: Date;
 }

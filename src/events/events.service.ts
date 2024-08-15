@@ -29,6 +29,7 @@ import {
   getOptionThatUserVotedFor,
 } from './events.poll';
 import { paginate } from 'src/common/util/pagination';
+import { get } from 'http';
 
 @Injectable()
 export class EventsService {
@@ -129,7 +130,25 @@ export class EventsService {
       } else {
         filter.type = { $ne: 'career' };
       }
-      return await paginate(page, limit, this.eventModel, filter );
+      // return await paginate(page, limit, this.eventModel, filter);
+      const events = await this.eventModel.find();
+      for (const event of events) {
+        if (event.participants.length === 0) {
+          event.participants = await getAllParticipants(
+            this.userModel,
+            this.authModel,
+          );
+        } else {
+          const updatedParticipants: string[] = [];
+          for (const participant of event.participants) {
+            const user = await this.userModel.findById(participant);
+            const auth = await this.authModel.findById(user.auth);
+            updatedParticipants.push(auth.email);
+          }
+          event.participants = updatedParticipants;
+        }
+      }
+      return events;
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -138,6 +157,20 @@ export class EventsService {
   async findOne(id: string): Promise<Event> {
     try {
       const event = await this.eventModel.findById(id);
+      if (event.participants.length === 0) {
+        event.participants = await getAllParticipants(
+          this.userModel,
+          this.authModel,
+        );
+      } else {
+        const updatedParticipants: string[] = [];
+        for (const participant of event.participants) {
+          const user = await this.userModel.findById(participant);
+          const auth = await this.authModel.findById(user.auth);
+          updatedParticipants.push(auth.email);
+        }
+        event.participants = updatedParticipants;
+      }
       if (!event || event.isDeleted) {
         throw new NotFoundException(`Event with id ${id} not found`);
       }
@@ -176,16 +209,29 @@ export class EventsService {
           }),
         );
       }
+      if (
+        updateEventDto.participants &&
+        updateEventDto.participants.length > 0
+      ) {
+        var participants = await getParticipantsByUserId(
+          this.userModel,
+          this.authModel,
+          updateEventDto.participants,
+        );
+        if (participants.length !== updateEventDto.participants.length) {
+          throw new NotFoundException('Some participants not found');
+        }
+      }
 
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
         {
           ...updateEventDto,
+          participants: participants,
           photo: eventPhotos.length > 0 ? eventPhotos : existingEvent.photo,
         },
-        { new: true, runValidators: true },
+        { new: true },
       );
-
       validateDate(updatedEvent.startDate, updatedEvent.endDate);
       await this.notificationService.createNotification(
         'Event Updated',
@@ -194,9 +240,9 @@ export class EventsService {
         updatedEvent._id as Types.ObjectId,
         new Date(),
       );
-
       return updatedEvent;
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }

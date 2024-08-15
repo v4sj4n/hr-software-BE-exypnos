@@ -76,12 +76,16 @@ async function getAllParticipants(
   return emails;
 }
 
-function validateDate(startDate: Date, endDate?: Date): void {
-  if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
-    throw new BadRequestException('End date must be after or same start date');
-  }
-  if (compareDates(formatDate(new Date()), formatDate(startDate)) >= 1) {
-    throw new BadRequestException('Event date has passed');
+function validateDate(startDate?: Date, endDate?: Date): void {
+  if (startDate && endDate) {
+    if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
+      throw new BadRequestException(
+        'End date must be after or same start date',
+      );
+    }
+    if (compareDates(formatDate(new Date()), formatDate(startDate)) >= 1) {
+      throw new BadRequestException('Event date has passed');
+    }
   }
 }
 

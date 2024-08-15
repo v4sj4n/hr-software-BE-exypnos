@@ -16,7 +16,7 @@ export class Notification {
   @Prop({ required: true })
   typeId: Types.ObjectId;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: Date })
   date: Date;
 
   @Prop({ default: false, type: Boolean })

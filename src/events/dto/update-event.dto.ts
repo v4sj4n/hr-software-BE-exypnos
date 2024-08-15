@@ -24,7 +24,7 @@ export class UpdateEventDto {
 
   @IsOptional()
   @IsArray()
-  participant: string[];
+  participants: string[];
 
   @IsOptional()
   @IsDateString()

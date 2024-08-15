@@ -1,4 +1,5 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateNoteDto {
   @IsNotEmpty()
@@ -9,10 +10,14 @@ export class CreateNoteDto {
   @IsString()
   description: string;
 
+  @IsString()
+  userId?: Types.ObjectId;
+
   @IsNotEmpty()
   @IsBoolean()
   willBeReminded: boolean;
 
   @IsOptional()
-  date: string;
+  @IsDateString()
+  date: Date;
 }

@@ -53,7 +53,7 @@ export class Event {
   location: string;
 
   @Prop({ type: [Types.ObjectId], required: false, default: [] })
-  participants: Types.ObjectId[];
+  participants: Types.ObjectId[] | string[];
 
   @Prop({ type: [String], required: false })
   photo?: [string];

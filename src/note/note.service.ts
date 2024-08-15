@@ -11,12 +11,15 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { User } from 'src/common/schema/user.schema';
 
 @Injectable()
 export class NoteService {
   constructor(
     @InjectModel(Note.name) private noteModel: Model<Note>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private notificationService: NotificationService,
+
   ) {}
 
   async create(createNoteDto: CreateNoteDto): Promise<Note> {
@@ -110,6 +113,12 @@ export class NoteService {
         throw new BadRequestException('Date is required for reminder');
       }
       note.date = await this.checkDate(note.date as unknown as string);
+      if (note.userId) {
+        const user= await this.userModel.findById(note.userId);
+        if (!user) {
+          throw new BadRequestException('User not found');
+        }
+      } 
       await this.notificationService.createNotification(
         'Note: ' + note.title,
         note.description,
