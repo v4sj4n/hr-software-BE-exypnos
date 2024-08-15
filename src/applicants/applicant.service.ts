@@ -21,6 +21,7 @@ import {
 import { Public } from 'src/common/decorator/public.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class ApplicantsService {
@@ -81,8 +82,7 @@ export class ApplicantsService {
             break;
         }
       }
-
-      return await this.applicantModel.find(filter).exec();
+      return paginate(1,5,this.applicantModel,filter);
     } catch (error) {
       throw new Error('Failed to filter applicants');
     }
