@@ -123,7 +123,14 @@ export class NotificationService {
         {
           $match: {
             $or: [
-              { eventInfo: { $elemMatch: { participants: userObjectId } } },
+              {$or: [
+                { 'eventInfo.participants': { $size: 0 } },
+                {
+                  'eventInfo.participants': {
+                    $elemMatch: { $eq: userObjectId },
+                  },
+                },
+              ], },
               { 'noteInfo.userId': userObjectId },
             ],
             isDeleted: false,

@@ -64,4 +64,12 @@ export class UpdateApplicantDto {
   @IsOptional()
   @IsString()
   currentPhase?: string;
+
+  @IsOptional()
+  @IsString()
+  customSubject?: string;
+
+  @IsOptional()
+  @IsString()
+  customMessage?: string;
 }
