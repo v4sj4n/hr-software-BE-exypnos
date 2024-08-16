@@ -41,6 +41,11 @@ export class EventsController {
     return this.eventsService.findAll(search, type,page, limit);
   }
 
+  @Get('user/:id')
+  getEventsByUserId(@Param('id') id: string) {
+    return this.eventsService.getEventsByUserId(id);
+  }
+
   @Get('poll/:id')
   getEventPollResults(@Param('id') id: string) {
     return this.eventsService.getEventPollResults(id);

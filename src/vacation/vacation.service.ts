@@ -16,6 +16,7 @@ import {
   checkDatesforUpdate,
   checkDatesforCreate,
 } from './vacation.utils';
+import { VacationStatus } from 'src/common/enum/vacation.enum';
 
 @Injectable()
 export class VacationService {
@@ -141,13 +142,15 @@ export class VacationService {
         },
         { new: true },
       );
+      if(updateVacationDto.status === VacationStatus.ACCEPTED || updateVacationDto.status === VacationStatus.REJECTED) {
       await this.notificationService.createNotification(
-        'Vacation Request Update',
-        `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,
+        `Vacation request is ${updateVacationDto.status}.`,
+        `Vacation request from ${updatedVacation.startDate} to ${updatedVacation.endDate} has been updated`,
         NotificationType.VACATION,
         updatedVacation._id,
         new Date(),
       );
+      }
       return updatedVacation;
     } catch (error) {
       throw new ConflictException(error);

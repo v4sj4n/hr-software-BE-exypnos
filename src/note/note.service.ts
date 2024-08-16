@@ -24,6 +24,7 @@ export class NoteService {
 
   async create(createNoteDto: CreateNoteDto): Promise<Note> {
     try {
+      createNoteDto.userId = new Types.ObjectId(createNoteDto.userId);
       const createdNote = new this.noteModel(createNoteDto);
       await this.validateNoteData(createdNote);
       return createdNote.save();
