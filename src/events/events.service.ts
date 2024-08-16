@@ -131,7 +131,7 @@ export class EventsService {
         filter.type = { $ne: 'career' };
       }
       // return await paginate(page, limit, this.eventModel, filter);
-      const events = await this.eventModel.find();
+      const events = await this.eventModel.find(filter);
       for (const event of events) {
         if (event.participants.length === 0) {
           event.participants = await getAllParticipants(
