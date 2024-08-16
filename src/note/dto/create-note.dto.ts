@@ -11,7 +11,7 @@ export class CreateNoteDto {
   description: string;
 
   @IsString()
-  userId?: Types.ObjectId;
+  userId: Types.ObjectId;
 
   @IsNotEmpty()
   @IsBoolean()

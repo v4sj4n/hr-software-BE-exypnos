@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import {
@@ -21,6 +21,8 @@ import {
 import { Public } from 'src/common/decorator/public.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationType } from 'src/common/enum/notification.enum';
 
 @Injectable()
 export class ApplicantsService {
@@ -31,6 +33,7 @@ export class ApplicantsService {
     private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async deleteApplicant(id: string): Promise<void> {
@@ -102,6 +105,7 @@ export class ApplicantsService {
     createApplicantDto: CreateApplicantDto,
   ): Promise<Applicant> {
     try {
+      console.log('createApplicantDto', createApplicantDto);
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
@@ -118,6 +122,14 @@ export class ApplicantsService {
         },
       });
 
+      await this.notificationService.createNotification(
+        'New applicant',
+        `New applicant ${createApplicantDto.firstName} ${createApplicantDto.lastName} has applied for the position of ${createApplicantDto.positionApplied}`,
+        NotificationType.APPLICANT,
+        new Types.ObjectId(applicant._id as string),
+        new Date(),
+      );
+
       return applicant;
     } catch (err) {
       console.error('Error uploading file:', err);
@@ -129,29 +141,40 @@ export class ApplicantsService {
     id: string,
     updateApplicantDto: UpdateApplicantDto,
   ): Promise<ApplicantDocument> {
+    console.log('updateApplicantDto', updateApplicantDto);
     const applicant = await this.findOne(id);
 
-    if (updateApplicantDto.firstInterviewDate) {
-      applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
-      applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-      await this.sendEmail(applicant, EmailType.FIRST_INTERVIEW);
-    }
-
-    if (updateApplicantDto.secondInterviewDate) {
-      applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
-      applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-      await this.sendEmail(applicant, EmailType.SECOND_INTERVIEW);
-    }
-
-    if (updateApplicantDto.status) {
-      applicant.status = updateApplicantDto.status;
-      if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
-        await this.sendEmail(applicant, EmailType.REJECTED_APPLICATION);
-      }
-    }
-
     if (updateApplicantDto.notes) {
-      applicant.notes = updateApplicantDto.notes;
+      updateApplicantDto.notes = applicant.notes.concat(
+        updateApplicantDto.notes,
+      );
+    }
+    if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
+      await this.sendEmail(
+        applicant,
+        EmailType.CUSTOM,
+        updateApplicantDto.customSubject,
+        updateApplicantDto.customMessage,
+      );
+    } else {
+      if (updateApplicantDto.firstInterviewDate) {
+        applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
+        applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+        await this.sendEmail(applicant, EmailType.FIRST_INTERVIEW);
+      }
+
+      if (updateApplicantDto.secondInterviewDate) {
+        applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
+        applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+        await this.sendEmail(applicant, EmailType.SECOND_INTERVIEW);
+      }
+
+      if (updateApplicantDto.status) {
+        applicant.status = updateApplicantDto.status;
+        if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
+          await this.sendEmail(applicant, EmailType.REJECTED_APPLICATION);
+        }
+      }
     }
     if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {
       const createUserDto: CreateUserDto = {
@@ -295,28 +318,46 @@ export class ApplicantsService {
   ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
 
-    if (updateApplicantDto.firstInterviewDate) {
-      applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
-      applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-      await this.sendEmail(
-        applicant,
-        EmailType.FIRST_INTERVIEW,
-        undefined,
-        undefined,
-        true,
-      );
-    } else if (updateApplicantDto.secondInterviewDate) {
-      applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
-      applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-      await this.sendEmail(
-        applicant,
-        EmailType.SECOND_INTERVIEW,
-        undefined,
-        undefined,
-        true,
+    console.log('updateApplicantDto', updateApplicantDto);
+
+    if (updateApplicantDto.notes) {
+      updateApplicantDto.notes = applicant.notes.concat(
+        updateApplicantDto.notes,
       );
     }
-
+    if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
+      await this.sendEmail(
+        applicant,
+        EmailType.CUSTOM,
+        updateApplicantDto.customSubject,
+        updateApplicantDto.customMessage,
+        true,
+      );
+    } else {
+      if (updateApplicantDto.firstInterviewDate) {
+        applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
+        applicant.notes = updateApplicantDto.notes;
+        applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+        await this.sendEmail(
+          applicant,
+          EmailType.FIRST_INTERVIEW,
+          undefined,
+          undefined,
+          true,
+        );
+      } else if (updateApplicantDto.secondInterviewDate) {
+        applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
+        applicant.notes = updateApplicantDto.notes;
+        applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+        await this.sendEmail(
+          applicant,
+          EmailType.SECOND_INTERVIEW,
+          undefined,
+          undefined,
+          true,
+        );
+      }
+    }
     return await applicant.save();
   }
 

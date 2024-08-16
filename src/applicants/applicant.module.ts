@@ -6,6 +6,7 @@ import { ApplicantsController } from './applicant.controller';
 import { MailModule } from 'src/mail/mail.module';
 import { FirebaseModule } from 'src/firebase/firebase.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from 'src/auth/auth.module';
     MailModule,
     FirebaseModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [ApplicantsController],
   providers: [ApplicantsService],
