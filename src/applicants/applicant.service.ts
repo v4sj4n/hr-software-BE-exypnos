@@ -114,7 +114,7 @@ export class ApplicantsService {
       });
       await this.mailService.sendMail({
         to: createApplicantDto.email,
-        subject: 'Bonjour madame',
+        subject: 'Your application was received succesfully',
         template: 'successfulApplication',
         context: {
           name: createApplicantDto.firstName,

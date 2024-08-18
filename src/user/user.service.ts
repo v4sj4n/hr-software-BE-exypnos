@@ -3,13 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as admin from 'firebase-admin';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
+    private readonly firebaseService: FirebaseService,
   ) {}
   async findAll(): Promise<User[]> {
     try {
@@ -58,32 +59,16 @@ export class UserService {
 
   async uploadImage(file: Express.Multer.File, req: Request): Promise<string> {
     try {
-      const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
-      const fileName = `${Date.now()}_${file.originalname}`;
-      const fileUpload = bucket.file(`userImages/${fileName}`);
+      const profileImageUrl = await this.firebaseService.uploadFile(
+        file,
+        'cv',
+        'square',
+      );
 
-      const stream = fileUpload.createWriteStream({
-        metadata: {
-          contentType: file.mimetype,
-        },
-      });
-
-      await new Promise<void>((resolve, reject) => {
-        stream.on('error', (error) => {
-          console.error('Error in stream:', error);
-          reject(new ConflictException('Failed to upload file'));
-        });
-
-        stream.on('finish', resolve);
-        stream.end(file.buffer);
-      });
-
-      await fileUpload.makePublic();
-      const publicUrl = fileUpload.publicUrl();
       await this.userModel.findByIdAndUpdate(req['user'].sub, {
-        imageUrl: publicUrl,
+        imageUrl: profileImageUrl,
       });
-      return publicUrl;
+      return profileImageUrl;
     } catch (error) {
       console.error('Error uploading file:', error);
       throw new ConflictException('Failed to upload file');

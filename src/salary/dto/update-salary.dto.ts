@@ -1,6 +1,12 @@
-import { IsMongoId, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Types } from 'mongoose';
-
 
 export class UpdateSalaryDto {
   @IsOptional()

@@ -1,4 +1,11 @@
-import { IsNumber, IsString, IsOptional, IsMongoId, Min, Max } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsMongoId,
+  Min,
+  Max,
+} from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateSalaryDto {

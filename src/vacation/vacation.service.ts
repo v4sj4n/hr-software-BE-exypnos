@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model, Types } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
@@ -142,14 +142,17 @@ export class VacationService {
         },
         { new: true },
       );
-      if(updateVacationDto.status === VacationStatus.ACCEPTED || updateVacationDto.status === VacationStatus.REJECTED) {
-      await this.notificationService.createNotification(
-        `Vacation request is ${updateVacationDto.status}.`,
-        `Vacation request from ${updatedVacation.startDate} to ${updatedVacation.endDate} has been updated`,
-        NotificationType.VACATION,
-        updatedVacation._id,
-        new Date(),
-      );
+      if (
+        updateVacationDto.status === VacationStatus.ACCEPTED ||
+        updateVacationDto.status === VacationStatus.REJECTED
+      ) {
+        await this.notificationService.createNotification(
+          `Vacation request is ${updateVacationDto.status}.`,
+          `Vacation request from ${updatedVacation.startDate} to ${updatedVacation.endDate} has been updated`,
+          NotificationType.VACATION,
+          updatedVacation._id,
+          new Date(),
+        );
       }
       return updatedVacation;
     } catch (error) {

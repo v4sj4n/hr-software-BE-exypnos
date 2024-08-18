@@ -9,7 +9,6 @@ import { Notification } from '../common/schema/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
-import { get } from 'http';
 
 @Injectable()
 export class NotificationService {
@@ -123,14 +122,16 @@ export class NotificationService {
         {
           $match: {
             $or: [
-              {$or: [
-                { 'eventInfo.participants': { $size: 0 } },
-                {
-                  'eventInfo.participants': {
-                    $elemMatch: { $eq: userObjectId },
+              {
+                $or: [
+                  { 'eventInfo.participants': { $size: 0 } },
+                  {
+                    'eventInfo.participants': {
+                      $elemMatch: { $eq: userObjectId },
+                    },
                   },
-                },
-              ], },
+                ],
+              },
               { 'noteInfo.userId': userObjectId },
             ],
             isDeleted: false,
@@ -239,7 +240,7 @@ export class NotificationService {
           {
             $match: {
               'vacationInfo.userId': new Types.ObjectId(userId),
-              title:{$ne: 'Vacation Request'},  
+              title: { $ne: 'Vacation Request' },
               isDeleted: false,
               isShown: false,
             },

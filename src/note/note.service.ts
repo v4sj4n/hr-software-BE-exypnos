@@ -19,7 +19,6 @@ export class NoteService {
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(User.name) private userModel: Model<User>,
     private notificationService: NotificationService,
-
   ) {}
 
   async create(createNoteDto: CreateNoteDto): Promise<Note> {
@@ -115,11 +114,11 @@ export class NoteService {
       }
       note.date = await this.checkDate(note.date as unknown as string);
       if (note.userId) {
-        const user= await this.userModel.findById(note.userId);
+        const user = await this.userModel.findById(note.userId);
         if (!user) {
           throw new BadRequestException('User not found');
         }
-      } 
+      }
       await this.notificationService.createNotification(
         'Note: ' + note.title,
         note.description,
