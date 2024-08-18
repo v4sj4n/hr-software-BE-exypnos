@@ -34,7 +34,7 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsBoolean()
   isRead: boolean;
-  
+
   @IsNotEmpty()
   @IsMongoId()
   typeId: Types.ObjectId;
