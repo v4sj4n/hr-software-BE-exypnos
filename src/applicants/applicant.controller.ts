@@ -9,6 +9,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  ConflictException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -83,13 +84,14 @@ export class ApplicantsController {
     @Param('id') id: string,
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    const updatedApplicant = await this.applicantsService.rescheduleInterview(
-      id,
-      updateApplicantDto,
-    );
-    return {
-      message: 'Interview rescheduled successfully',
-      applicant: updatedApplicant,
-    };
+    try {
+      const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
+      return {
+        message: 'Interview rescheduled successfully',
+        applicant: updatedApplicant,
+      };
+    } catch (error) {
+      throw new ConflictException(error.message || 'Error rescheduling interview');
+    }
   }
 }
