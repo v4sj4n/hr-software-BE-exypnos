@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { Event, PollOption } from '../common/schema/event.schema';
@@ -289,5 +290,30 @@ export class EventsService {
       id,
       userId,
     );
+  }
+  async getEventsByUserId(id: string): Promise<Event[]> {
+    try {
+      const user = await this.userModel.findById(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const userObjectId = new Types.ObjectId(id);
+      const events = await this.eventModel
+        .find({
+          isDeleted: false,
+          $or: [
+            { participants: { $size: 0 } },
+            {
+              participants: {
+                $elemMatch: { $eq: new ObjectId('669a1c14340e143b8dbd74fd') },
+              },
+            },
+          ],
+        })
+        .sort({ createdAt: -1 });
+      return events;
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 }

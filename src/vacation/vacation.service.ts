@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model, Types } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
@@ -16,6 +16,7 @@ import {
   checkDatesforUpdate,
   checkDatesforCreate,
 } from './vacation.utils';
+import { VacationStatus } from 'src/common/enum/vacation.enum';
 
 @Injectable()
 export class VacationService {
@@ -141,13 +142,18 @@ export class VacationService {
         },
         { new: true },
       );
-      await this.notificationService.createNotification(
-        'Vacation Request Update',
-        `Vacation request from ${updateVacationDto.startDate} to ${updateVacationDto.endDate}`,
-        NotificationType.VACATION,
-        updatedVacation._id,
-        new Date(),
-      );
+      if (
+        updateVacationDto.status === VacationStatus.ACCEPTED ||
+        updateVacationDto.status === VacationStatus.REJECTED
+      ) {
+        await this.notificationService.createNotification(
+          `Vacation request is ${updateVacationDto.status}.`,
+          `Vacation request from ${updatedVacation.startDate} to ${updatedVacation.endDate} has been updated`,
+          NotificationType.VACATION,
+          updatedVacation._id,
+          new Date(),
+        );
+      }
       return updatedVacation;
     } catch (error) {
       throw new ConflictException(error);

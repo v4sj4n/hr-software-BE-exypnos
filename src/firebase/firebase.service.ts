@@ -1,20 +1,45 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
+import sharp from 'sharp';
 
 @Injectable()
 export class FirebaseService {
   async uploadFile(
     file: Express.Multer.File,
     directoryToSave: string,
+    aspect: string = '',
   ): Promise<string> {
     try {
-      const bucket = admin.storage().bucket('gs://exypnos-63ca1.appspot.com');
-      const fileName = `${Date.now()}_${file.originalname}`;
+      const bucket = admin.storage().bucket(process.env.FIREBASE_BUCKETNAME);
+      const fileName = `${Date.now()}_${file.mimetype.startsWith('image/') ? file.originalname.split('.').slice(0, -1).join('.') + '.webp' : file.originalname}`;
       const fileUpload = bucket.file(`${directoryToSave}/${fileName}`);
+
+      let fileBuffer = file.buffer;
+
+      if (file.mimetype.startsWith('image/')) {
+        if (aspect === 'square') {
+          const metadata = await sharp(file.buffer).metadata();
+
+          const size = Math.min(metadata.width, metadata.height);
+
+          const left = Math.floor((metadata.width - size) / 2);
+          const top = Math.floor((metadata.height - size) / 2);
+
+          fileBuffer = await sharp(file.buffer)
+            .extract({ width: size, height: size, left, top })
+            .toBuffer();
+        }
+
+        fileBuffer = await sharp(fileBuffer)
+          .webp({
+            quality: 75,
+          })
+          .toBuffer();
+      }
 
       const stream = fileUpload.createWriteStream({
         metadata: {
-          contentType: file.mimetype,
+          contentType: 'image/webp',
         },
       });
 
@@ -25,7 +50,7 @@ export class FirebaseService {
         });
 
         stream.on('finish', resolve);
-        stream.end(file.buffer);
+        stream.end(fileBuffer);
       });
 
       await fileUpload.makePublic();

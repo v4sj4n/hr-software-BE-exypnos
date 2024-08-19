@@ -38,7 +38,12 @@ export class EventsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
   ) {
-    return this.eventsService.findAll(search, type,page, limit);
+    return this.eventsService.findAll(search, type, page, limit);
+  }
+
+  @Get('user/:id')
+  getEventsByUserId(@Param('id') id: string) {
+    return this.eventsService.getEventsByUserId(id);
   }
 
   @Get('poll/:id')

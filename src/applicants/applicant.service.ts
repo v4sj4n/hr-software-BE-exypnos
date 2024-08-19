@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import {
@@ -22,6 +22,8 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import { DateTime } from 'luxon';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationType } from 'src/common/enum/notification.enum';
 
 
 @Injectable()
@@ -33,6 +35,7 @@ export class ApplicantsService {
     private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async deleteApplicant(id: string): Promise<void> {
@@ -112,13 +115,21 @@ export class ApplicantsService {
       });
       await this.mailService.sendMail({
         to: createApplicantDto.email,
-        subject: 'Bonjour madame',
+        subject: 'Your application was received succesfully',
         template: 'successfulApplication',
         context: {
           name: createApplicantDto.firstName,
           positionApplied: createApplicantDto.positionApplied,
         },
       });
+
+      await this.notificationService.createNotification(
+        'New applicant',
+        `New applicant ${createApplicantDto.firstName} ${createApplicantDto.lastName} has applied for the position of ${createApplicantDto.positionApplied}`,
+        NotificationType.APPLICANT,
+        new Types.ObjectId(applicant._id as string),
+        new Date(),
+      );
 
       return applicant;
     } catch (err) {
