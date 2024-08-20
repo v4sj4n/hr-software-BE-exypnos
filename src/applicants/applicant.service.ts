@@ -112,7 +112,7 @@ export class ApplicantsService {
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING,
+        status: ApplicantStatus.ACTIVE,
       });
       await this.mailService.sendMail({
         to: createApplicantDto.email,
@@ -217,6 +217,17 @@ export class ApplicantsService {
   
     if (updateApplicantDto.notes) {
       applicant.notes = updateApplicantDto.notes;
+    }
+    
+    if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {
+      const createUserDto: CreateUserDto = {
+        firstName: applicant.firstName,
+        lastName: applicant.lastName,
+        email: applicant.email,
+        phone: applicant.phoneNumber,
+      };
+
+      await this.authService.signUp(createUserDto);
     }
   
     Object.assign(applicant, updateApplicantDto);
