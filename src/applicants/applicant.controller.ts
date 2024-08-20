@@ -47,8 +47,17 @@ export class ApplicantsController {
     @Param('id') id: string,
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
-    return await this.applicantsService.updateApplicant(id, updateApplicantDto);
+    try {
+      const updatedApplicant = await this.applicantsService.updateApplicant(id, updateApplicantDto);
+      return {
+        message: 'Applicant updated successfully',
+        applicant: updatedApplicant,
+      };
+    } catch (error) {
+      throw new ConflictException(error.message || 'Error updating applicant');
+    }
   }
+  
 
   @Delete(':id')
   async deleteApplicant(@Param('id') id: string) {
@@ -65,36 +74,36 @@ export class ApplicantsController {
     return await this.applicantsService.createApplicant(file, formData);
   }
 
-  @Patch(':id/send-custom-email')
-  async sendCustomEmail(
-    @Param('id') id: string,
-    @Body('customSubject') customSubject: string,
-    @Body('customMessage') customMessage: string,
-  ) {
-    await this.applicantsService.sendCustomEmail(
-      id,
-      customSubject,
-      customMessage,
-    );
-    return { message: 'Custom email sent successfully' };
-  }
+  // @Patch(':id/send-custom-email')
+  // async sendCustomEmail(
+  //   @Param('id') id: string,
+  //   @Body('customSubject') customSubject: string,
+  //   @Body('customMessage') customMessage: string,
+  // ) {
+  //   await this.applicantsService.sendCustomEmail(
+  //     id,
+  //     customSubject,
+  //     customMessage,
+  //   );
+  //   return { message: 'Custom email sent successfully' };
+  // }
 
-  @Patch(':id/reschedule-interview')
-  async rescheduleInterview(
-    @Param('id') id: string,
-    @Body() updateApplicantDto: UpdateApplicantDto,
-  ) {
-    try {
-      const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
+  // @Patch(':id/reschedule-interview')
+  // async rescheduleInterview(
+  //   @Param('id') id: string,
+  //   @Body() updateApplicantDto: UpdateApplicantDto,
+  // ) {
+  //   try {
+  //     const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
   
-      return {
-        message: 'Interview rescheduled successfully',
-        applicant: updatedApplicant,
-      };
-    } catch (error) {
-      console.error('Error rescheduling interview:', error.message);
-      throw new ConflictException(error.message || 'Error rescheduling interview');
-    }
-  }
+  //     return {
+  //       message: 'Interview rescheduled successfully',
+  //       applicant: updatedApplicant,
+  //     };
+  //   } catch (error) {
+  //     console.error('Error rescheduling interview:', error.message);
+  //     throw new ConflictException(error.message || 'Error rescheduling interview');
+  //   }
+  // }
   
 }

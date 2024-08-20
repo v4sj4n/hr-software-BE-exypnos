@@ -48,13 +48,9 @@ export class Applicant {
   @Prop()
   cvAttachment?: string;
 
-  @Prop({
-    required: false,
-    default: ApplicantStatus.ACTIVE,
-    enum: ApplicantStatus,
-  })
-  status: string;
-
+  @Prop({ type: String, enum: ApplicantStatus, default: ApplicantStatus.ACTIVE })
+  status: ApplicantStatus;
+  
   @Prop({ default: false })
   isDeleted: boolean;
 
