@@ -1,9 +1,10 @@
 export enum ApplicantStatus {
-  PENDING = 'pending',
+  ACTIVE = 'active',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
   EMPLOYED = 'employed',
 }
+
 
 export enum ApplicantPhase {
   APPLICANT = 'applicant',
