@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsDateString, ValidateIf, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsDateString, ValidateIf, IsOptional, IsString, IsEnum } from 'class-validator';
 import { DateTime } from 'luxon';
+import { ApplicantStatus } from 'src/common/enum/applicant.enum';
 
 export class UpdateApplicantDto {
   @IsOptional()
@@ -67,9 +68,10 @@ export class UpdateApplicantDto {
   cvAttachment?: string;
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(ApplicantStatus)
+  status?: ApplicantStatus;
 
+  
   @IsOptional()
   @IsString()
   currentPhase?: string;
