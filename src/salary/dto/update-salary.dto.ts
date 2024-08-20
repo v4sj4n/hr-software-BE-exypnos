@@ -1,8 +1,11 @@
 import {
+  IsEnum,
+  isEnum,
   IsMongoId,
   IsNumber,
   IsOptional,
   IsString,
+  Length,
   Max,
   Min,
 } from 'class-validator';
@@ -26,6 +29,11 @@ export class UpdateSalaryDto {
   bonus?: number;
 
   @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  bonusDescription?: string;
+
+  @IsOptional()
   @IsNumber()
   socialSecurity?: number;
 
@@ -39,9 +47,9 @@ export class UpdateSalaryDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(1)
-  @Max(12)
-  month: number;
+  @Min(0)
+  @Max(11)
+  month: string;
 
   @IsOptional()
   @IsNumber()
@@ -52,7 +60,4 @@ export class UpdateSalaryDto {
   @IsMongoId()
   userId: Types.ObjectId;
 
-  @IsOptional()
-  @IsString()
-  uniqueId?: string;
 }

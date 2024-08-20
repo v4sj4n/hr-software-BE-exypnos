@@ -16,6 +16,9 @@ export class Salary {
   @Prop({ default: 0, type: 'number' })
   bonus: number;
 
+  @Prop({ default: '', type: 'string' })
+  bonusDescription: string;
+
   @Prop({ default: 0, type: 'number' })
   socialSecurity: number;
 
@@ -25,7 +28,7 @@ export class Salary {
   @Prop({ default: 0, type: 'number' })
   grossSalary: number;
 
-  @Prop({ default: 0, type: 'number' })
+  @Prop({ required: true, type: 'number' })
   month: number;
 
   @Prop({ default: 0, type: 'number' })

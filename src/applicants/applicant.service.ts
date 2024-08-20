@@ -105,7 +105,6 @@ export class ApplicantsService {
     createApplicantDto: CreateApplicantDto,
   ): Promise<Applicant> {
     try {
-      console.log('createApplicantDto', createApplicantDto);
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
@@ -141,14 +140,8 @@ export class ApplicantsService {
     id: string,
     updateApplicantDto: UpdateApplicantDto,
   ): Promise<ApplicantDocument> {
-    console.log('updateApplicantDto', updateApplicantDto);
     const applicant = await this.findOne(id);
 
-    if (updateApplicantDto.notes) {
-      updateApplicantDto.notes = applicant.notes.concat(
-        updateApplicantDto.notes,
-      );
-    }
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
       await this.sendEmail(
         applicant,
@@ -318,13 +311,6 @@ export class ApplicantsService {
   ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
 
-    console.log('updateApplicantDto', updateApplicantDto);
-
-    if (updateApplicantDto.notes) {
-      updateApplicantDto.notes = applicant.notes.concat(
-        updateApplicantDto.notes,
-      );
-    }
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
       await this.sendEmail(
         applicant,

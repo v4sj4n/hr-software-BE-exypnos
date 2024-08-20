@@ -10,6 +10,8 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import * as bcrypt from 'bcrypt';
+import { paginate } from 'src/common/util/pagination';
+import { last } from 'rxjs';
 
 @Injectable()
 export class SalaryService {
@@ -22,32 +24,69 @@ export class SalaryService {
     try {
       await this.checkUserId(createSalaryDto.userId);
       await this.validateSalaryData(createSalaryDto);
-      const salarys = await this.salaryModel.find();
-      for (const salary of salarys) {
-        if (
-          this.ismatch(
-            createSalaryDto.userId as unknown as string,
-            createSalaryDto.month,
-            createSalaryDto.year,
-            salary.uniqueId,
-          )
-        ) {
-          throw new ConflictException(
-            'Salary already exists for this user in this month',
-          );
-        }
-      }
+
+      const uniqueId = await this.createUniqueId(
+        createSalaryDto.userId as unknown as string,
+        createSalaryDto.month,
+        createSalaryDto.year,
+      );
+      createSalaryDto.userId = new Types.ObjectId(createSalaryDto.userId);
       const createdSalary = new this.salaryModel(createSalaryDto);
-      createdSalary.uniqueId = await this.createUniqueId(createSalaryDto);
+      createdSalary.uniqueId = uniqueId;
       return await createdSalary.save();
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
-  async findAll(): Promise<Salary[]> {
+  async findAll(month?: number, year?: number): Promise<Salary[]> {
+    console.log('month', month);
+    console.log('year', year);
     try {
-      return await this.salaryModel.find();
+      const filter: any = {};
+
+      if (month !== null && month !== undefined) {
+        filter.month = month;
+      }
+      if (year) {
+        filter.year = year;
+      }
+
+      console.log('filter', filter);
+      const salaries = await this.salaryModel
+        .find(filter)
+        .sort({ month: -1, year: -1 })
+        .populate('userId', 'firstName lastName phone createdAt');
+      return salaries;
+    } catch (error) {
+      throw new ConflictException(error);
+    }
+  }
+
+  async findByUserId(
+    userId: string,
+    month?: number,
+    year?: number,
+  ): Promise<Salary[]> {
+    try {
+      console.log('userId', userId);
+      const filter: any = {};
+      if (userId) {
+        filter.userId = new Types.ObjectId(userId);
+      }
+      if (month) {
+        filter.month = month;
+      }
+      if (year) {
+        filter.year = year;
+      }
+      
+console.log('filter', filter);
+      const salaries = await this.salaryModel
+        .find(filter)
+        .sort({ month: -1, year: -1 })
+        .populate('userId', 'firstName lastName phone createdAt');
+      return salaries;
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -55,7 +94,8 @@ export class SalaryService {
 
   async findOne(id: string): Promise<Salary> {
     try {
-      const salary = await this.salaryModel.findById(id);
+      const salary = await this.salaryModel
+        .findById(id)
       if (!salary) {
         throw new NotFoundException(`Salary with id ${id} not found`);
       }
@@ -110,6 +150,22 @@ export class SalaryService {
     if (salaryData.bonus && salaryData.bonus < 0) {
       throw new ConflictException('Bonus amount cannot be negative');
     }
+    if (salaryData.month && salaryData.year && salaryData.userId) {
+      for (const salary of await this.salaryModel.find()) {
+        if (
+          await this.ismatch(
+            salaryData.userId,
+            salaryData.month as number,
+            salaryData.year,
+            salary.uniqueId,
+          )
+        ) {
+          throw new ConflictException(
+            `Salary for user ${salaryData.userId} for month ${salaryData.month} and year ${salaryData.year} already exists`,
+          );
+        }
+      }
+    }
   }
   private async checkUserId(userId: Types.ObjectId) {
     const userExists = await this.userModel.findById(userId);
@@ -119,54 +175,29 @@ export class SalaryService {
   }
 
   private async createUniqueId(
-    salary: CreateSalaryDto | UpdateSalaryDto,
+    userId: string,
+    month: number,
+    year: number,
   ): Promise<string> {
-    const uniqueId = await bcrypt.hash(
-      `${salary.userId}${salary.month}${salary.year}`,
-      10,
-    );
+    console.log('userId', userId);
+    console.log('month', month);
+    console.log('year', year);
+    const uniqueId = await bcrypt.hash(`${userId}${month}${year}`, 10);
+    await bcrypt.genSalt(10);
+    console.log('uniqueId', uniqueId);
     return uniqueId;
   }
 
   private async ismatch(
-    userId: string,
+    userId: Types.ObjectId,
     month: number,
     year: number,
     uniqueId: string,
   ): Promise<boolean> {
-    const isMatch = await bcrypt.compare(`${userId}${month}${year}`, uniqueId);
+    const isMatch = await bcrypt.compare(
+      `${userId}${String(month)}${year}`,
+      uniqueId,
+    );
     return isMatch;
-  }
-
-  //for later use
-  async getSalaryByUserId(userId: string): Promise<Salary> {
-    const salary = await this.salaryModel.findOne({ userId });
-    if (!salary) {
-      throw new NotFoundException(`Salary with user id ${userId} not found`);
-    }
-    return salary;
-  }
-
-  async getSalaryByUniqueId(uniqueId: string): Promise<Salary> {
-    const salary = await this.salaryModel.findOne({ uniqueId });
-    if (!salary) {
-      throw new NotFoundException(
-        `Salary with unique id ${uniqueId} not found`,
-      );
-    }
-    return salary;
-  }
-
-  async getSalaryByMonthAndYear(
-    month: number,
-    year: number,
-  ): Promise<Salary[]> {
-    const salary = await this.salaryModel.find({ month, year });
-    if (!salary) {
-      throw new NotFoundException(
-        `Salary with month ${month} and year ${year} not found`,
-      );
-    }
-    return salary;
   }
 }

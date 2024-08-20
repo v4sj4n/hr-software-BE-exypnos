@@ -20,9 +20,6 @@ export class Notification {
   date: Date;
 
   @Prop({ default: false, type: Boolean })
-  isShown: boolean;
-
-  @Prop({ default: false, type: Boolean })
   isRead: boolean;
 
   @Prop({ default: false, type: Boolean })
