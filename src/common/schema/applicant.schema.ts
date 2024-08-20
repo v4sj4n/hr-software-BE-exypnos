@@ -50,7 +50,7 @@ export class Applicant {
 
   @Prop({
     required: false,
-    default: ApplicantStatus.PENDING,
+    default: ApplicantStatus.ACTIVE,
     enum: ApplicantStatus,
   })
   status: string;
