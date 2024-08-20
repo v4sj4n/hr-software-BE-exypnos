@@ -86,12 +86,15 @@ export class ApplicantsController {
   ) {
     try {
       const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
+  
       return {
         message: 'Interview rescheduled successfully',
         applicant: updatedApplicant,
       };
     } catch (error) {
+      console.error('Error rescheduling interview:', error.message);
       throw new ConflictException(error.message || 'Error rescheduling interview');
     }
   }
+  
 }
