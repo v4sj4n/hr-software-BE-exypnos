@@ -15,6 +15,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VoteDto } from './dto/vote.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @Controller('event')
 export class EventsController {
@@ -39,6 +40,13 @@ export class EventsController {
     @Query('limit') limit: number = 5,
   ) {
     return this.eventsService.findAll(search, type, page, limit);
+  }
+
+  @Public()
+  @Get('career')
+  findAllPublic(
+  ) {
+    return this.eventsService.findCareerEvents();
   }
 
   @Get('user/:id')

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { SalaryService } from './salary.service';
 import { CreateSalaryDto } from './dto/create-salary.dto';
@@ -19,10 +20,27 @@ export class SalaryController {
   create(@Body() createSalaryDto: CreateSalaryDto) {
     return this.salaryService.create(createSalaryDto);
   }
-
   @Get()
-  findAll() {
-    return this.salaryService.findAll();
+  find(@Query('month') month: number, @Query('year') year: number) {
+    const resolvedMonth = !Number.isNaN(month)
+      ? month
+      : new Date().getMonth() - 1;
+    if (resolvedMonth < 0 || resolvedMonth > 11) {
+      throw new Error('Month must be between 0 and 11');
+    }
+    return this.salaryService.findAll(
+      resolvedMonth,
+      year ? year : new Date().getFullYear(),
+    );
+  }
+  @Get('user/:id')
+  findByUserId(
+    @Param('id') id: string,
+    @Query('month') month: number,
+    @Query('year') year: number,
+  ) {
+    console.log('gerti');
+    return this.salaryService.findByUserId(id, month, year);
   }
 
   @Get(':id')

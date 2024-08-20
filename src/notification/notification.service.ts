@@ -31,7 +31,6 @@ export class NotificationService {
         content,
         type,
         typeId,
-        isShown: false,
         isRead: false,
         date,
       };
@@ -91,7 +90,10 @@ export class NotificationService {
     }
   }
 
-  async getNotificationsByUserId(id: string): Promise<Notification[]> {
+  async getNotificationsByUserId(
+    id: string,
+    isRead?: Boolean,
+  ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(id);
       if (!user) {
@@ -135,8 +137,8 @@ export class NotificationService {
               { 'noteInfo.userId': userObjectId },
             ],
             isDeleted: false,
-            isShown: false,
             date: { $gte: today },
+            isRead: isRead ? isRead : false,
           },
         },
         {
@@ -146,18 +148,9 @@ export class NotificationService {
           },
         },
       ]);
-      if (notifications.length > 0) {
-        const notificationIds = notifications.map(
-          (notification) => notification._id,
-        );
-        await this.notificationModel.updateMany(
-          { _id: { $in: notificationIds } },
-          { $set: { isShown: true } },
-        );
-      }
       const applicantsNotifications =
-        await this.getNotificationsOfApplicants(id);
-      const vacationNotifications = await this.getNotificationOfVacation(id);
+        await this.getNotificationsOfApplicants(id, isRead);
+      const vacationNotifications = await this.getNotificationOfVacation(id, isRead);
 
       return notifications
         .concat(applicantsNotifications)
@@ -169,6 +162,7 @@ export class NotificationService {
 
   private async getNotificationsOfApplicants(
     userId: string,
+    isRead?: Boolean,
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(userId);
@@ -181,18 +175,7 @@ export class NotificationService {
         notifications = await this.notificationModel.find({
           type: NotificationType.APPLICANT,
           isDeleted: false,
-          isShown: false,
         });
-
-        if (notifications.length > 0) {
-          const notificationIds = notifications.map(
-            (notification) => notification._id,
-          );
-          await this.notificationModel.updateMany(
-            { _id: { $in: notificationIds } },
-            { $set: { isShown: true } },
-          );
-        }
       }
       return notifications;
     } catch (error) {
@@ -202,6 +185,7 @@ export class NotificationService {
 
   private async getNotificationOfVacation(
     userId: string,
+    isRead?: Boolean,
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(userId);
@@ -210,22 +194,11 @@ export class NotificationService {
       }
       let notifications = [];
       if (user.role === 'hr') {
-        console.log('vacation');
         notifications = await this.notificationModel.find({
           type: NotificationType.VACATION,
           title: 'Vacation Request',
           isDeleted: false,
-          isShown: false,
         });
-        if (notifications.length > 0) {
-          const notificationIds = notifications.map(
-            (notification) => notification._id,
-          );
-          await this.notificationModel.updateMany(
-            { _id: { $in: notificationIds } },
-            { $set: { isShown: true } },
-          );
-        }
       } else {
         console.log('vacation employee');
         notifications = await this.notificationModel.aggregate([
@@ -242,7 +215,6 @@ export class NotificationService {
               'vacationInfo.userId': new Types.ObjectId(userId),
               title: { $ne: 'Vacation Request' },
               isDeleted: false,
-              isShown: false,
             },
           },
           {
@@ -251,15 +223,6 @@ export class NotificationService {
             },
           },
         ]);
-        if (notifications.length > 0) {
-          const notificationIds = notifications.map(
-            (notification) => notification._id,
-          );
-          await this.notificationModel.updateMany(
-            { _id: { $in: notificationIds } },
-            { $set: { isShown: true } },
-          );
-        }
       }
       return notifications;
     } catch (error) {

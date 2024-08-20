@@ -16,8 +16,11 @@ export class NotificationController {
     return this.notificationService.findOne(id);
   }
 
-  @Get('user/:id')
-  findByUserId(@Param('id') id: string): Promise<Notification[]> {
-    return this.notificationService.getNotificationsByUserId(id);
+  @Get('user')
+  findByUserId(
+    @Param('id') id: string,
+    @Param('isRead') isRead: boolean,
+  ): Promise<Notification[]> {
+    return this.notificationService.getNotificationsByUserId(id,isRead);
   }
 }

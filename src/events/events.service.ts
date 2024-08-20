@@ -132,28 +132,22 @@ export class EventsService {
         filter.type = { $ne: 'career' };
       }
       // return await paginate(page, limit, this.eventModel, filter);
-      const events = await this.eventModel.find(filter);
-      for (const event of events) {
-        if (event.participants.length === 0) {
-          event.participants = await getAllParticipants(
-            this.userModel,
-            this.authModel,
-          );
-        } else {
-          const updatedParticipants: string[] = [];
-          for (const participant of event.participants) {
-            const user = await this.userModel.findById(participant);
-            const auth = await this.authModel.findById(user.auth);
-            updatedParticipants.push(auth.email);
-          }
-          event.participants = updatedParticipants;
-        }
-      }
+      const events = await this.eventModel.find(filter).sort({ createdAt: -1 });
+     
       return events;
     } catch (error) {
       throw new ConflictException(error);
     }
   }
+
+  async findCareerEvents(){
+    try {
+      return await this.eventModel.find({type: 'career', isDeleted: false}).sort({createdAt: -1});
+  }
+  catch (error) {
+    throw new ConflictException(error);
+  }
+}
 
   async findOne(id: string): Promise<Event> {
     try {
