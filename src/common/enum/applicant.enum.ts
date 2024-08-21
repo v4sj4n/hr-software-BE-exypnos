@@ -5,7 +5,6 @@ export enum ApplicantStatus {
   EMPLOYED = 'employed',
 }
 
-
 export enum ApplicantPhase {
   APPLICANT = 'applicant',
   FIRST_INTERVIEW = 'first_interview',

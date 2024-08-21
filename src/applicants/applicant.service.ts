@@ -159,6 +159,15 @@ export class ApplicantsService {
           'First interview date and time must be in the future',
         );
       }
+      const conflict = await this.checkInterviewConflict(
+        firstInterviewDate,
+        id,
+      );
+      if (conflict) {
+        throw new ConflictException(
+          'The selected first interview date and time is already booked.',
+        );
+      }
 
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
@@ -174,6 +183,12 @@ export class ApplicantsService {
     }
 
     if (updateApplicantDto.secondInterviewDate) {
+      if (!applicant.firstInterviewDate) {
+        throw new ConflictException(
+          'Second interview date cannot be scheduled before the first interview date.',
+        );
+      }
+
       const secondInterviewDate = DateTime.fromISO(
         updateApplicantDto.secondInterviewDate.toString(),
       );
@@ -185,11 +200,19 @@ export class ApplicantsService {
       }
 
       if (
-        applicant.firstInterviewDate &&
         secondInterviewDate <= DateTime.fromJSDate(applicant.firstInterviewDate)
       ) {
         throw new ConflictException(
           'Second interview date must be later than the first interview date',
+        );
+      }
+      const conflict = await this.checkInterviewConflict(
+        secondInterviewDate,
+        id,
+      );
+      if (conflict) {
+        throw new ConflictException(
+          'The selected second interview date and time is already booked.',
         );
       }
 
@@ -494,20 +517,19 @@ export class ApplicantsService {
     return await this.applicantModel.find(filter).exec();
   }
   private async checkInterviewConflict(
-    interviewDate: DateTime,
+    date: DateTime,
     applicantId: string,
   ): Promise<boolean> {
     const conflict = await this.applicantModel
       .findOne({
-        _id: { $ne: applicantId }, // Exclude the current applicant
+        _id: { $ne: applicantId },
         $or: [
-          { firstInterviewDate: interviewDate.toJSDate() },
-          { secondInterviewDate: interviewDate.toJSDate() },
+          { firstInterviewDate: date.toJSDate() },
+          { secondInterviewDate: date.toJSDate() },
         ],
       })
       .exec();
 
-    console.log('Conflict check result:', conflict);
     return !!conflict;
   }
 }
