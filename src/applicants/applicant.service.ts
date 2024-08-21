@@ -148,10 +148,10 @@ export class ApplicantsService {
     }
   
     const currentDateTime = DateTime.now();
-  
+
     if (updateApplicantDto.firstInterviewDate) {
       const firstInterviewDate = DateTime.fromISO(updateApplicantDto.firstInterviewDate.toString());
-  
+    
       if (firstInterviewDate <= currentDateTime) {
         throw new ConflictException('First interview date and time must be in the future');
       }
@@ -159,11 +159,11 @@ export class ApplicantsService {
       if (conflict) {
         throw new ConflictException('The selected first interview date and time is already booked.');
       }
-  
+    
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-  
+    
       await this.sendEmail(
         applicant,
         EmailType.FIRST_INTERVIEW,
@@ -172,26 +172,30 @@ export class ApplicantsService {
         isReschedule, // Send reschedule template if date was previously set
       );
     }
-  
+    
     if (updateApplicantDto.secondInterviewDate) {
+      if (!applicant.firstInterviewDate) {
+        throw new ConflictException('Second interview date cannot be scheduled before the first interview date.');
+      }
+    
       const secondInterviewDate = DateTime.fromISO(updateApplicantDto.secondInterviewDate.toString());
-  
+    
       if (secondInterviewDate <= currentDateTime) {
         throw new ConflictException('Second interview date and time must be in the future');
       }
-  
-      if (applicant.firstInterviewDate && secondInterviewDate <= DateTime.fromJSDate(applicant.firstInterviewDate)) {
+    
+      if (secondInterviewDate <= DateTime.fromJSDate(applicant.firstInterviewDate)) {
         throw new ConflictException('Second interview date must be later than the first interview date');
       }
       const conflict = await this.checkInterviewConflict(secondInterviewDate, id);
       if (conflict) {
         throw new ConflictException('The selected second interview date and time is already booked.');
       }
-  
+    
       const isReschedule = !!applicant.secondInterviewDate;
       applicant.secondInterviewDate = secondInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-  
+    
       await this.sendEmail(
         applicant,
         EmailType.SECOND_INTERVIEW,
@@ -200,7 +204,7 @@ export class ApplicantsService {
         isReschedule, // Send reschedule template if date was previously set
       );
     }
-  
+    
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
       // Send custom email without altering the interview dates
       await this.sendEmail(
@@ -210,6 +214,7 @@ export class ApplicantsService {
         updateApplicantDto.customMessage,
       );
     }
+    
     
   
     if (updateApplicantDto.notes) {
