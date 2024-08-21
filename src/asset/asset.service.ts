@@ -11,6 +11,7 @@ import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class AssetService {
@@ -105,11 +106,16 @@ export class AssetService {
     existingAsset: mongoose.Document<unknown, object, Asset> &
       Asset & { _id: mongoose.Types.ObjectId },
   ) {
+    const now = DateTime.now();
+
     if (updateAssetDto.status === AssetStatus.ASSIGNED) {
       const updateUser = await this.userModel.findById(updateAssetDto.userId);
+      const takenDate = DateTime.fromJSDate(
+        updateAssetDto.takenDate,
+      ).toJSDate();
       const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        takenDate: updateAssetDto.takenDate,
+        updatedAt: now.toJSDate(),
+        takenDate: takenDate,
         returnDate: null,
         user: {
           _id: updateUser._id,
@@ -118,6 +124,7 @@ export class AssetService {
         },
         status: updateAssetDto.status,
       };
+
       Object.assign(updateAssetDto, {
         history: [...existingAsset.history, newHistoryEntry],
       });
@@ -126,20 +133,24 @@ export class AssetService {
         updateAssetDto.status === AssetStatus.BROKEN) &&
       existingAsset.status
     ) {
-      // make sure to add the returnDate date in the last history entry
       const lastHistoryEntry = existingAsset.history.pop();
+      const takenDate = DateTime.fromJSDate(
+        updateAssetDto.takenDate,
+      ).toJSDate();
       const newHistoryEntry: AssetHistory = {
-        updatedAt: new Date(),
-        takenDate: lastHistoryEntry.takenDate,
-        returnDate: updateAssetDto.returnDate,
+        updatedAt: now.toJSDate(),
+        takenDate: takenDate,
+        returnDate: updateAssetDto.returnDate, 
         user: lastHistoryEntry.user,
         status: updateAssetDto.status,
       };
+
       Object.assign(updateAssetDto, {
         history: [...existingAsset.history, newHistoryEntry],
       });
     }
   }
+
   async remove(id: string): Promise<Asset> {
     try {
       const asset = await this.assetModel.findByIdAndUpdate(
