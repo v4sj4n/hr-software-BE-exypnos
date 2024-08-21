@@ -11,7 +11,6 @@ import {
 import { Types } from 'mongoose';
 
 export class CreateSalaryDto {
-
   @IsNumber()
   @Min(1)
   netSalary: number;
@@ -62,5 +61,4 @@ export class CreateSalaryDto {
   @IsNotEmpty()
   @IsMongoId()
   userId: Types.ObjectId;
-
 }

@@ -59,5 +59,4 @@ export class UpdateSalaryDto {
   @IsOptional()
   @IsMongoId()
   userId: Types.ObjectId;
-
 }

@@ -80,8 +80,8 @@ export class SalaryService {
       if (year) {
         filter.year = year;
       }
-      
-console.log('filter', filter);
+
+      console.log('filter', filter);
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
@@ -94,8 +94,7 @@ console.log('filter', filter);
 
   async findOne(id: string): Promise<Salary> {
     try {
-      const salary = await this.salaryModel
-        .findById(id)
+      const salary = await this.salaryModel.findById(id);
       if (!salary) {
         throw new NotFoundException(`Salary with id ${id} not found`);
       }

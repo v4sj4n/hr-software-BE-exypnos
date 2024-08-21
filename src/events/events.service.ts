@@ -133,21 +133,22 @@ export class EventsService {
       }
       // return await paginate(page, limit, this.eventModel, filter);
       const events = await this.eventModel.find(filter).sort({ createdAt: -1 });
-     
+
       return events;
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
-  async findCareerEvents(){
+  async findCareerEvents() {
     try {
-      return await this.eventModel.find({type: 'career', isDeleted: false}).sort({createdAt: -1});
+      return await this.eventModel
+        .find({ type: 'career', isDeleted: false })
+        .sort({ createdAt: -1 });
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
-  catch (error) {
-    throw new ConflictException(error);
-  }
-}
 
   async findOne(id: string): Promise<Event> {
     try {
