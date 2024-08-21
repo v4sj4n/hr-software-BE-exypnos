@@ -29,8 +29,6 @@ import {
   getEventPollResults,
   getOptionThatUserVotedFor,
 } from './events.poll';
-import { paginate } from 'src/common/util/pagination';
-import { get } from 'http';
 
 @Injectable()
 export class EventsService {
@@ -238,7 +236,6 @@ export class EventsService {
       );
       return updatedEvent;
     } catch (error) {
-      console.log(error);
       throw new ConflictException(error);
     }
   }
@@ -292,7 +289,6 @@ export class EventsService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      const userObjectId = new Types.ObjectId(id);
       const events = await this.eventModel
         .find({
           isDeleted: false,

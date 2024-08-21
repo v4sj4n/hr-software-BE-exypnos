@@ -1,6 +1,4 @@
 import {
-  IsEnum,
-  isEnum,
   IsMongoId,
   IsNumber,
   IsOptional,
@@ -12,10 +10,6 @@ import {
 import { Types } from 'mongoose';
 
 export class UpdateSalaryDto {
-  @IsOptional()
-  @IsNumber()
-  netSalary: number;
-
   @IsOptional()
   @IsNumber()
   workingDays: number;

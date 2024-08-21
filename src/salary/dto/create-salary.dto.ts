@@ -13,10 +13,6 @@ import { Types } from 'mongoose';
 export class CreateSalaryDto {
   @IsNumber()
   @Min(1)
-  netSalary: number;
-
-  @IsNumber()
-  @Min(1)
   @Max(31)
   workingDays: number;
 

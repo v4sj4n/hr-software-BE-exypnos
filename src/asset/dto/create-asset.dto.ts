@@ -6,12 +6,12 @@ import {
   MaxLength,
   IsAlphanumeric,
 } from 'class-validator';
-import { AssetType, AssetStatus } from '../../common/enum/asset.enum';
+import { AssetStatus } from '../../common/enum/asset.enum';
 import { Types } from 'mongoose';
 
 export class CreateAssetDto {
-  @IsEnum(AssetType)
-  type: AssetType;
+  @IsString()
+  type: string;
 
   @IsString()
   @MinLength(8)
