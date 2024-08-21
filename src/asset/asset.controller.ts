@@ -44,6 +44,11 @@ export class AssetController {
     return this.assetService.getAssetBySerialNumber(serialNumber);
   }
 
+  @Get('type')
+  findAllWithType() {
+    return AssetType;
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.assetService.findOne(id);

@@ -21,6 +21,6 @@ export class NotificationController {
     @Param('id') id: string,
     @Param('isRead') isRead: boolean,
   ): Promise<Notification[]> {
-    return this.notificationService.getNotificationsByUserId(id,isRead);
+    return this.notificationService.getNotificationsByUserId(id, isRead);
   }
 }

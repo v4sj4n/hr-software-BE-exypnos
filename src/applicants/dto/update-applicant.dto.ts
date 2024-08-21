@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsDateString, ValidateIf, IsOptional, IsString, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsDateString,
+  ValidateIf,
+  IsOptional,
+  IsString,
+  IsEnum,
+} from 'class-validator';
 import { DateTime } from 'luxon';
 import { ApplicantStatus } from 'src/common/enum/applicant.enum';
 
@@ -19,17 +26,16 @@ export class UpdateApplicantDto {
   @IsString()
   applicationMethod: string;
 
+  @IsNotEmpty()
+  @IsDateString()
+  @ValidateIf((obj) => {
+    const now = DateTime.now();
+    const dob = DateTime.fromISO(obj.dob);
+    const age = now.diff(dob, 'years').years;
 
-    @IsNotEmpty()
-    @IsDateString()
-    @ValidateIf((obj) => {
-      const now = DateTime.now();
-      const dob = DateTime.fromISO(obj.dob);
-      const age = now.diff(dob, 'years').years;
-  
-      return dob <= now && age >= 16;
-    })
-    dob: string;
+    return dob <= now && age >= 16;
+  })
+  dob: string;
 
   @IsOptional()
   @IsString()
@@ -71,16 +77,14 @@ export class UpdateApplicantDto {
   @IsEnum(ApplicantStatus)
   status?: ApplicantStatus;
 
-  
   @IsOptional()
   @IsString()
   currentPhase?: string;
 
   @IsOptional()
   @IsString()
-  customSubject?: string; 
-  
-  
+  customSubject?: string;
+
   @IsOptional()
   @IsString()
   customMessage?: string;
