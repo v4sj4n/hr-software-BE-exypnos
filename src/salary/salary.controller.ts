@@ -38,9 +38,9 @@ export class SalaryController {
     @Param('id') id: string,
     @Query('month') month: number,
     @Query('year') year: number,
+    @Query('graf') graf: boolean,
   ) {
-    console.log('gerti');
-    return this.salaryService.findByUserId(id, month, year);
+    return this.salaryService.findByUserId(id, month, year, graf);
   }
 
   @Get(':id')

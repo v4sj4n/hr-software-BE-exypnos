@@ -92,7 +92,7 @@ export class NotificationService {
 
   async getNotificationsByUserId(
     id: string,
-    isRead?: Boolean,
+    isRead?: boolean,
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(id);
@@ -148,9 +148,14 @@ export class NotificationService {
           },
         },
       ]);
-      const applicantsNotifications =
-        await this.getNotificationsOfApplicants(id, isRead);
-      const vacationNotifications = await this.getNotificationOfVacation(id, isRead);
+      const applicantsNotifications = await this.getNotificationsOfApplicants(
+        id,
+        isRead,
+      );
+      const vacationNotifications = await this.getNotificationOfVacation(
+        id,
+        isRead,
+      );
 
       return notifications
         .concat(applicantsNotifications)
@@ -162,7 +167,7 @@ export class NotificationService {
 
   private async getNotificationsOfApplicants(
     userId: string,
-    isRead?: Boolean,
+    isRead?: boolean,
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(userId);
@@ -171,10 +176,10 @@ export class NotificationService {
       }
       let notifications = [];
       if (user.role === 'hr') {
-        console.log('applicant');
         notifications = await this.notificationModel.find({
           type: NotificationType.APPLICANT,
           isDeleted: false,
+          isRead: isRead,
         });
       }
       return notifications;
@@ -185,7 +190,7 @@ export class NotificationService {
 
   private async getNotificationOfVacation(
     userId: string,
-    isRead?: Boolean,
+    isRead?: boolean,
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(userId);
@@ -198,9 +203,9 @@ export class NotificationService {
           type: NotificationType.VACATION,
           title: 'Vacation Request',
           isDeleted: false,
+          isRead: isRead,
         });
       } else {
-        console.log('vacation employee');
         notifications = await this.notificationModel.aggregate([
           {
             $lookup: {
