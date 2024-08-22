@@ -26,6 +26,9 @@ export class Salary {
   healthInsurance: number;
 
   @Prop({ default: 0, type: 'number' })
+  tax: number;
+
+  @Prop({ default: 0, type: 'number' })
   grossSalary: number;
 
   @Prop({ required: true, type: 'number' })

@@ -87,8 +87,9 @@ export class EventsService {
           opt.voters = [];
         });
       }
-      if(typeof createdEvent.location  === 'string') {
+      if(createdEvent.location && typeof createdEvent.location  === 'string') {
         createdEvent.location = JSON.parse(createdEvent.location);
+        // createdEvent.location = null
       }
       await this.notificationService.createNotification(
         'Event Created',

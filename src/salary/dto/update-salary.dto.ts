@@ -42,6 +42,11 @@ export class UpdateSalaryDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(400)
+  @Min(0)
+  tax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(40000)
   grossSalary?: number;
 }
