@@ -23,8 +23,6 @@ export class Poll {
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
 
-  @Prop({ default: false })
-  isMultipleVote: boolean;
 }
 
 @Schema({ timestamps: true })

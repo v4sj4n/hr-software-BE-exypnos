@@ -81,7 +81,7 @@ export class EventsService {
       }
 
       if (createdEvent.poll) {
-        validatePollData(createdEvent.poll);
+        createdEvent.poll = validatePollData(createdEvent.poll);
         createdEvent.poll.options.forEach((opt) => {
           opt.votes = 0;
           opt.voters = [];
@@ -108,6 +108,7 @@ export class EventsService {
       });
       return await createdEvent.save();
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }

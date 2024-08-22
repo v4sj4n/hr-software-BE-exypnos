@@ -25,7 +25,7 @@ async function addVote(
     );
     var existingVote = existingVoter ? option.option : null;
   }
-  if (existingVote && !event.poll.isMultipleVote) {
+  if (existingVote ) {
     await eventModel.findOneAndUpdate(
       { _id: id, 'poll.options.option': existingVote },
       {
