@@ -53,7 +53,7 @@ export class SalaryService {
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
-        .populate('userId', 'firstName lastName phone createdAt');
+        .populate('userId', 'firstName lastName phone position createdAt');
       return salaries;
     } catch (error) {
       throw new ConflictException(error);
@@ -77,10 +77,19 @@ export class SalaryService {
       if (year) {
         filter.year = year;
       }
+
+      if (graf) {
+        let query = this.salaryModel
+          .find(filter)
+          .sort({ year: -1, month: -1 })
+          .populate('userId', 'firstName lastName phone position createdAt');
+        query = query.limit(6);
+      }
+
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
-        .populate('userId', 'firstName lastName phone createdAt');
+        .populate('userId', 'firstName lastName phone position createdAt');
       return salaries;
     } catch (error) {
       throw new ConflictException(error);
@@ -89,7 +98,9 @@ export class SalaryService {
 
   async findOne(id: string): Promise<Salary> {
     try {
-      const salary = await this.salaryModel.findById(id);
+      const salary = await this.salaryModel
+        .findById(id)
+        .populate('userId', 'firstName lastName phone position createdAt');
       if (!salary) {
         throw new NotFoundException(`Salary with id ${id} not found`);
       }
@@ -101,15 +112,6 @@ export class SalaryService {
 
   async update(id: string, updateSalaryDto: UpdateSalaryDto): Promise<Salary> {
     try {
-      const existingSalary = await this.salaryModel.findById(id);
-      if (!existingSalary) {
-        throw new NotFoundException(`Salary with id ${id} not found`);
-      }
-      if (updateSalaryDto.userId) {
-        await this.checkUserId(updateSalaryDto.userId);
-      }
-      await this.validateSalaryData(updateSalaryDto);
-
       const updatedSalary = await this.salaryModel.findByIdAndUpdate(
         id,
         {
@@ -136,9 +138,7 @@ export class SalaryService {
     }
   }
 
-  private async validateSalaryData(
-    salaryData: CreateSalaryDto | UpdateSalaryDto,
-  ) {
+  private async validateSalaryData(salaryData: CreateSalaryDto) {
     if (salaryData.bonus && salaryData.bonus < 0) {
       throw new ConflictException('Bonus amount cannot be negative');
     }

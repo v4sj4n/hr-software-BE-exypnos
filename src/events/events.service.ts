@@ -87,6 +87,9 @@ export class EventsService {
           opt.voters = [];
         });
       }
+      if(typeof createdEvent.location  === 'string') {
+        createdEvent.location = JSON.parse(createdEvent.location);
+      }
       await this.notificationService.createNotification(
         'Event Created',
         `Event ${createdEvent.title} has been created`,
@@ -227,6 +230,9 @@ export class EventsService {
         },
         { new: true },
       );
+      if(typeof updatedEvent.location  === 'string') {
+        updatedEvent.location = JSON.parse(updatedEvent.location);
+      }
       validateDate(updatedEvent.startDate, updatedEvent.endDate);
       await this.notificationService.createNotification(
         'Event Updated',
