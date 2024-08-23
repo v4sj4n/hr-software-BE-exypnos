@@ -58,7 +58,7 @@ export class ApplicantsService {
       if (currentPhase) {
         filter.currentPhase = currentPhase;
       }
-      
+
       if (startDate && endDate) {
         switch (currentPhase) {
           case 'first_interview':
@@ -82,7 +82,9 @@ export class ApplicantsService {
             break;
         }
       }
-
+     console.log('Filter:', filter);
+     console.log('Applicant Model:', await this.applicantModel.find(filter).exec());
+     console.log('Applicant Model:', await this.applicantModel.find(filter).countDocuments());
       return await this.applicantModel.find(filter).exec();
     } catch (error) {
       console.error('Error filtering applicants:', error);

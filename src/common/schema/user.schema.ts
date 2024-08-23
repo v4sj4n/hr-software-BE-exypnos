@@ -42,7 +42,7 @@ export class User {
   @Prop({ required: false, enum: PositionType, type: String })
   position: PositionType;
 
-  @Prop({ required: false, enum: PositionType, type: String })
+  @Prop({ required: false, enum: GradeType, type: String })
   grade: GradeType;
 
   @Prop({ default: false, type: Boolean })
