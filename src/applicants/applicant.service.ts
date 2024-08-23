@@ -24,6 +24,7 @@ import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import { DateTime } from 'luxon';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
+import { create } from 'domain';
 
 @Injectable()
 export class ApplicantsService {
@@ -47,31 +48,27 @@ export class ApplicantsService {
   }
   async findAll(
     currentPhase?: string,
-    status?: string,
-    dateFilter?: string,
     startDate?: Date,
     endDate?: Date,
   ): Promise<Applicant[]> {
     try {
+      console.log('Filtering applicants...',currentPhase, startDate, endDate);
       const filter: any = {};
 
       if (currentPhase) {
         filter.currentPhase = currentPhase;
       }
-
-      if (status) {
-        filter.status = status;
-      }
+      
       if (startDate && endDate) {
-        switch (dateFilter) {
-          case 'firstInterviewDate':
+        switch (currentPhase) {
+          case 'first_interview':
             filter.firstInterviewDate = {
               $ne: null,
               $gte: startDate,
               $lte: endDate,
             };
             break;
-          case 'secondInterviewDate':
+          case 'second_interview':
             filter.secondInterviewDate = {
               $ne: null,
               $gte: startDate,
@@ -88,6 +85,7 @@ export class ApplicantsService {
 
       return await this.applicantModel.find(filter).exec();
     } catch (error) {
+      console.error('Error filtering applicants:', error);
       throw new Error('Failed to filter applicants');
     }
   }
@@ -264,6 +262,8 @@ export class ApplicantsService {
 
       await this.authService.signUp(createUserDto);
     }
+    console.log('dto', updateApplicantDto);
+    console.log('Applicant after update:', applicant);
 
     return await applicant.save();
   }

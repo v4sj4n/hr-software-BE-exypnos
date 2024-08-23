@@ -53,8 +53,4 @@ export class SalaryController {
     return this.salaryService.update(id, updateSalaryDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.salaryService.remove(id);
-  }
 }
