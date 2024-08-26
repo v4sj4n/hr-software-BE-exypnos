@@ -10,8 +10,8 @@ import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
-import { compareDates, formatDate } from 'src/common/util/dateUtil';
 import { User } from 'src/common/schema/user.schema';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class NoteService {
@@ -98,15 +98,20 @@ export class NoteService {
 
   private async checkDate(dateString: string): Promise<Date> {
     const date = new Date(dateString);
+
     if (isNaN(date.getTime())) {
       throw new BadRequestException('Invalid date format');
     }
-    if (compareDates(formatDate(new Date()), formatDate(date)) >= 1) {
+
+    const now = DateTime.now();
+    const givenDate = DateTime.fromJSDate(date);
+
+    if (givenDate <= now) {
       throw new BadRequestException('Date must be in the future');
     }
+
     return date;
   }
-
   private async validateNoteData(note: Note) {
     if (note.willBeReminded) {
       if (!note.date) {

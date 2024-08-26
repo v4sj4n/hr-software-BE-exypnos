@@ -58,9 +58,11 @@ export class EventsService {
         ...createEventDto,
         photo: eventPhotos,
       });
+
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
+
       if (
         createEventDto.participants &&
         createEventDto.participants.length > 0
@@ -75,10 +77,15 @@ export class EventsService {
           throw new NotFoundException('Some participants not found');
         }
       }
+
       if (!createdEvent.endDate && createdEvent.startDate) {
         createdEvent.endDate = createdEvent.startDate;
-        validateDate(createdEvent.startDate, createdEvent.endDate);
       }
+
+      validateDate(
+        createdEvent.startDate?.toISOString(),
+        createdEvent.endDate?.toISOString(),
+      );
 
       if (createdEvent.poll) {
         createdEvent.poll = validatePollData(createdEvent.poll);
@@ -98,6 +105,14 @@ export class EventsService {
         createdEvent._id as Types.ObjectId,
         new Date(),
       );
+
+      console.log(
+        createEventDto.participants?.length === 0 ||
+          !createEventDto.participants
+          ? await getAllParticipants(this.userModel, this.authModel)
+          : createEventDto.participants,
+      );
+
       await this.mailService.sendMail({
         to:
           createEventDto.participants?.length === 0 ||
@@ -110,13 +125,13 @@ export class EventsService {
           name: `${createdEvent.description}`,
         },
       });
+
       return await createdEvent.save();
     } catch (error) {
       console.log(error);
       throw new ConflictException(error);
     }
   }
-
   async findAll(
     search: string,
     type: string,
@@ -231,10 +246,10 @@ export class EventsService {
         },
         { new: true },
       );
-      if(typeof updatedEvent.location  === 'string') {
-        updatedEvent.location = JSON.parse(updatedEvent.location);
-      }
-      validateDate(updatedEvent.startDate, updatedEvent.endDate);
+      validateDate(
+        updatedEvent.startDate?.toISOString(),
+        updatedEvent.endDate?.toISOString(),
+      );
       await this.notificationService.createNotification(
         'Event Updated',
         `Event ${updatedEvent.title} has been updated`,

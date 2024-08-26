@@ -141,11 +141,14 @@ export class ApplicantsService {
   ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
 
+
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
 
+
     const currentDateTime = DateTime.now();
+
 
     if (updateApplicantDto.firstInterviewDate) {
       const firstInterviewDate = DateTime.fromISO(
@@ -167,9 +170,11 @@ export class ApplicantsService {
         );
       }
 
+
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
+
 
       await this.sendEmail(
         applicant,
@@ -181,12 +186,6 @@ export class ApplicantsService {
     }
 
     if (updateApplicantDto.secondInterviewDate) {
-      if (!applicant.firstInterviewDate) {
-        throw new ConflictException(
-          'Second interview date cannot be scheduled before the first interview date.',
-        );
-      }
-
       const secondInterviewDate = DateTime.fromISO(
         updateApplicantDto.secondInterviewDate.toString(),
       );
@@ -195,9 +194,13 @@ export class ApplicantsService {
         throw new ConflictException(
           'Second interview date and time must be in the future',
         );
+        throw new ConflictException(
+          'Second interview date and time must be in the future',
+        );
       }
 
       if (
+        applicant.firstInterviewDate &&
         secondInterviewDate <= DateTime.fromJSDate(applicant.firstInterviewDate)
       ) {
         throw new ConflictException(
@@ -214,9 +217,11 @@ export class ApplicantsService {
         );
       }
 
+
       const isReschedule = !!applicant.secondInterviewDate;
       applicant.secondInterviewDate = secondInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
+
 
       await this.sendEmail(
         applicant,
@@ -226,6 +231,7 @@ export class ApplicantsService {
         isReschedule, // Send reschedule template if date was previously set
       );
     }
+
 
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
       // Send custom email without altering the interview dates
@@ -237,9 +243,22 @@ export class ApplicantsService {
       );
     }
 
+
     if (updateApplicantDto.notes) {
       applicant.notes = updateApplicantDto.notes;
     }
+
+    if (updateApplicantDto.status) {
+      applicant.status = updateApplicantDto.status;
+      console.log('Updated status:', applicant.status);
+    }
+    if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
+      await this.sendEmail(
+        applicant,
+        EmailType.REJECTED_APPLICATION, // Only send the template email for rejection
+      );
+    }
+
 
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
@@ -260,10 +279,9 @@ export class ApplicantsService {
         phone: applicant.phoneNumber,
       };
 
+
       await this.authService.signUp(createUserDto);
     }
-    console.log('dto', updateApplicantDto);
-    console.log('Applicant after update:', applicant);
 
     return await applicant.save();
   }
@@ -360,118 +378,6 @@ export class ApplicantsService {
     });
   }
 
-  // async rescheduleInterview(
-  //   id: string,
-  //   updateApplicantDto: UpdateApplicantDto,
-  // ): Promise<ApplicantDocument> {
-  //   const applicant = await this.findOne(id);
-  //   const now = DateTime.now();
-
-  //   // Check if custom email is provided
-  //   if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
-  //     await this.sendEmail(
-  //       applicant,
-  //       EmailType.CUSTOM,
-  //       updateApplicantDto.customSubject,
-  //       updateApplicantDto.customMessage,
-  //     );
-  //     return applicant;
-  //   }
-
-  //   // Reschedule first interview
-  //   if (updateApplicantDto.firstInterviewDate) {
-  //     if (!applicant.firstInterviewDate) {
-  //       throw new ConflictException(
-  //         'First interview cannot be rescheduled because it has not been scheduled yet.',
-  //       );
-  //     }
-
-  //     const firstInterviewDate = DateTime.fromJSDate(
-  //       new Date(updateApplicantDto.firstInterviewDate),
-  //     );
-  //     console.log('First Interview Date:', firstInterviewDate.toISO());
-
-  //     if (firstInterviewDate <= now) {
-  //       console.error('Validation Failed: First interview date is in the past.');
-  //       throw new ConflictException(
-  //         'First interview date and time must be in the future.',
-  //       );
-  //     }
-
-  //     const conflict = await this.checkInterviewConflict(firstInterviewDate, id);
-  //     if (conflict) {
-  //       console.error('Conflict Found: First interview date is already booked.');
-  //       throw new ConflictException(
-  //         'The selected first interview date and time is already booked.',
-  //       );
-  //     }
-
-  //     applicant.firstInterviewDate = updateApplicantDto.firstInterviewDate;
-  //     applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-  //     await this.sendEmail(
-  //       applicant,
-  //       EmailType.FIRST_INTERVIEW,
-  //       updateApplicantDto.customSubject,
-  //       updateApplicantDto.customMessage,
-  //       true,
-  //     );
-  //   }
-
-  //   // Reschedule second interview
-  //   if (updateApplicantDto.secondInterviewDate) {
-  //     if (!applicant.secondInterviewDate) {
-  //       throw new ConflictException(
-  //         'Second interview cannot be rescheduled because it has not been scheduled yet.',
-  //       );
-  //     }
-
-  //     const secondInterviewDate = DateTime.fromJSDate(
-  //       new Date(updateApplicantDto.secondInterviewDate),
-  //     );
-  //     console.log('Second Interview Date:', secondInterviewDate.toISO());
-
-  //     if (secondInterviewDate <= now) {
-  //       console.error('Validation Failed: Second interview date is in the past.');
-  //       throw new ConflictException(
-  //         'Second interview date and time must be in the future.',
-  //       );
-  //     }
-
-  //     if (
-  //       applicant.firstInterviewDate &&
-  //       secondInterviewDate <=
-  //         DateTime.fromJSDate(new Date(applicant.firstInterviewDate))
-  //     ) {
-  //       console.error(
-  //         'Validation Failed: Second interview date is before the first interview date.',
-  //       );
-  //       throw new ConflictException(
-  //         'Second interview date must be later than the first interview date.',
-  //       );
-  //     }
-
-  //     const conflict = await this.checkInterviewConflict(secondInterviewDate, id);
-  //     if (conflict) {
-  //       console.error('Conflict Found: Second interview date is already booked.');
-  //       throw new ConflictException(
-  //         'The selected second interview date and time is already booked.',
-  //       );
-  //     }
-
-  //     applicant.secondInterviewDate = updateApplicantDto.secondInterviewDate;
-  //     applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-  //     await this.sendEmail(
-  //       applicant,
-  //       EmailType.SECOND_INTERVIEW,
-  //       updateApplicantDto.customSubject,
-  //       updateApplicantDto.customMessage,
-  //       true,
-  //     );
-  //   }
-
-  //   console.log('Applicant after update:', applicant);
-  //   return await applicant.save();
-  // }
 
   async sendCustomEmail(
     id: string,

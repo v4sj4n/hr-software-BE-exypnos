@@ -4,7 +4,7 @@ import { Poll, Event } from '../common/schema/event.schema';
 import { VoteDto } from './dto/vote.dto';
 import { User } from '../common/schema/user.schema';
 import { Auth } from '../common/schema/auth.schema';
-import { compareDates, formatDate } from 'src/common/util/dateUtil';
+import { DateTime } from 'luxon';
 
 async function validateData(
   eventModel: Model<Event>,
@@ -17,7 +17,11 @@ async function validateData(
   if (!event) {
     throw new NotFoundException(`Event with id ${id} not found`);
   }
-  if (compareDates(formatDate(new Date()), formatDate(event.startDate)) >= 1) {
+
+  const now = DateTime.now();
+  const eventStartDate = DateTime.fromISO(event.startDate.toString());
+
+  if (eventStartDate <= now) {
     throw new BadRequestException('Event date has passed');
   }
 
@@ -85,14 +89,19 @@ async function getAllParticipants(
   return emails;
 }
 
-function validateDate(startDate?: Date, endDate?: Date): void {
+function validateDate(startDate?: string, endDate?: string): void {
   if (startDate && endDate) {
-    if (compareDates(formatDate(startDate), formatDate(endDate)) >= 1) {
+    const start = DateTime.fromISO(startDate);
+    const end = DateTime.fromISO(endDate);
+    const now = DateTime.now();
+
+    if (end < start) {
       throw new BadRequestException(
-        'End date must be after or same start date',
+        'End date must be after or the same as the start date',
       );
     }
-    if (compareDates(formatDate(new Date()), formatDate(startDate)) >= 1) {
+
+    if (start <= now) {
       throw new BadRequestException('Event date has passed');
     }
   }

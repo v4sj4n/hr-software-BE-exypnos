@@ -1,14 +1,20 @@
+import { DateTime } from 'luxon';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import mongoose, { Model, Types } from 'mongoose';
 import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
-import {
-  compareDates,
-  formatDate,
-  isDateRangeOverlapping,
-} from '../common/util/dateUtil';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
+export function isDateRangeOverlapping(
+  start1: DateTime,
+  end1: DateTime,
+  start2: DateTime,
+  end2: DateTime,
+): boolean {
+  return start1 <= end2 && start2 <= end1;
+}
+
+// Vacation Validation Functions
 
 async function checkUserId(userModel: Model<User>, userId: Types.ObjectId) {
   const userExists = await userModel.findById(userId);
@@ -28,22 +34,22 @@ async function checkDatesforUpdate(
   }
 
   const startDate = updateVacationDto.startDate
-    ? formatDate(new Date(updateVacationDto.startDate))
-    : formatDate(new Date(existingVacation.startDate));
+    ? DateTime.fromISO(updateVacationDto.startDate.toString())
+    : DateTime.fromJSDate(existingVacation.startDate);
   const endDate = updateVacationDto.endDate
-    ? formatDate(new Date(updateVacationDto.endDate))
-    : formatDate(new Date(existingVacation.endDate));
-  const today = formatDate(new Date());
+    ? DateTime.fromISO(updateVacationDto.endDate.toString())
+    : DateTime.fromJSDate(existingVacation.endDate);
+  const today = DateTime.now();
 
-  if (compareDates(startDate, today) <= 0) {
+  if (startDate <= today) {
     throw new ConflictException(
-      `Start date ${startDate} must be greater than today ${today}`,
+      `Start date ${startDate.toISODate()} must be greater than today ${today.toISODate()}`,
     );
   }
 
-  if (compareDates(endDate, startDate) < 0) {
+  if (endDate < startDate) {
     throw new ConflictException(
-      `End date ${endDate} must be greater than start date ${startDate}`,
+      `End date ${endDate.toISODate()} must be greater than start date ${startDate.toISODate()}`,
     );
   }
 
@@ -51,7 +57,7 @@ async function checkDatesforUpdate(
     {
       $match: {
         userId: existingVacation.userId,
-        endDate: { $gt: new Date() },
+        endDate: { $gt: today.toJSDate() },
       },
     },
     {
@@ -60,15 +66,15 @@ async function checkDatesforUpdate(
   ]);
 
   for (const vacation of conflictingVacation) {
-    const vacationStart = formatDate(new Date(vacation.startDate));
-    const vacationEnd = formatDate(new Date(vacation.endDate));
+    const vacationStart = DateTime.fromJSDate(vacation.startDate);
+    const vacationEnd = DateTime.fromJSDate(vacation.endDate);
 
     if (
       vacation._id.toString() !== id &&
       isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
     ) {
       throw new ConflictException(
-        `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
+        `New vacation conflicts with an existing vacation from ${vacationStart.toISODate()} to ${vacationEnd.toISODate()}`,
       );
     }
   }
@@ -78,19 +84,19 @@ async function checkDatesforCreate(
   vacationModel: Model<Vacation>,
   vacationData: CreateVacationDto | UpdateVacationDto,
 ) {
-  const startDate = formatDate(new Date(vacationData.startDate));
-  const endDate = formatDate(new Date(vacationData.endDate));
-  const today = formatDate(new Date());
+  const startDate = DateTime.fromISO(vacationData.startDate.toString());
+  const endDate = DateTime.fromISO(vacationData.endDate.toString());
+  const today = DateTime.now();
 
-  if (compareDates(startDate, today) <= 0) {
+  if (startDate <= today) {
     throw new ConflictException(
-      `Start date ${startDate} must be greater than today ${today}`,
+      `Start date ${startDate.toISODate()} must be greater than today ${today.toISODate()}`,
     );
   }
 
-  if (compareDates(endDate, startDate) < 0) {
+  if (endDate < startDate) {
     throw new ConflictException(
-      `End date ${endDate} must be greater than start date ${startDate}`,
+      `End date ${endDate.toISODate()} must be greater than start date ${startDate.toISODate()}`,
     );
   }
 
@@ -103,14 +109,14 @@ async function checkDatesforCreate(
   ]);
 
   for (const vacation of conflictingVacation) {
-    const vacationStart = formatDate(new Date(vacation.startDate));
-    const vacationEnd = formatDate(new Date(vacation.endDate));
+    const vacationStart = DateTime.fromJSDate(vacation.startDate);
+    const vacationEnd = DateTime.fromJSDate(vacation.endDate);
 
     if (
       isDateRangeOverlapping(startDate, endDate, vacationStart, vacationEnd)
     ) {
       throw new ConflictException(
-        `New vacation conflicts with an existing vacation from ${vacationStart} to ${vacationEnd}`,
+        `New vacation conflicts with an existing vacation from ${vacationStart.toISODate()} to ${vacationEnd.toISODate()}`,
       );
     }
   }
