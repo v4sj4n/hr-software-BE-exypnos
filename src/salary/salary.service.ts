@@ -209,14 +209,14 @@ export class SalaryService {
       salaryData.bonus = 0;
     }
 
-    salaryData.socialSecurity = socialInsurance;
-    salaryData.healthInsurance = healthInsurance;
-    salaryData.tax = tax;
+    salaryData.socialSecurity = Math.round(socialInsurance);
+    salaryData.healthInsurance = Math.round(healthInsurance); 
+    salaryData.tax = Math.round(tax);
 
     const salary = new this.salaryModel({
       ...salaryData,
       uniqueId,
-      netSalary: netSalary,
+      netSalary: Math.round(netSalary),
     });
     return salary;
   }
