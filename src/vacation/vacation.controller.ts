@@ -26,22 +26,24 @@ export class VacationController {
   findAll(
     @Query('type') type: string = '',
     @Query('status') status: string = '',
-    @Query('period') period: string = '',
+    @Query('startDate') startDate: string = '',
+    @Query('endDate') endDate: string = '',
   ) {
-    return this.vacationService.findAll(type, status, period);
+    return this.vacationService.findAll(type, status, startDate, endDate);
   }
 
   @Get('user')
   findAllWithUsers(
     @Query('search') search: string = '',
-    @Query('users') users: string = 'with',
+    @Query('users') users: string = 'all',
   ) {
     return this.vacationService.getAllUserVacation(search, users);
   }
 
   @Get('user/:id')
-  findAllWithUsersById(@Param('id') id: string) {
-    return this.vacationService.getUservacation(id);
+  findAllWithUsersById(
+  @Param('id') id: string,) {
+    return this.vacationService.getUserVacation(id);
   }
 
   @Get(':id')

@@ -299,6 +299,19 @@ export class AssetService {
             foreignField: 'userId',
             as: 'assets',
           },
+        },{
+          $lookup: {
+            from: 'auths',
+            localField: 'auth',
+            foreignField: '_id',
+            as: 'authData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$authData',
+            preserveNullAndEmptyArrays: true,
+          },
         },
         {
           $match: {
@@ -320,6 +333,7 @@ export class AssetService {
             phone: 1,
             assets: 1,
             role: 1,
+            email: '$authData.email',
           },
         },
       ]);
