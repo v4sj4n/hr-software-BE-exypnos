@@ -7,23 +7,22 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { Types } from 'mongoose';
 
 export class UpdateSalaryDto {
   @IsOptional()
   @IsNumber()
-  netSalary: number;
-
-  @IsOptional()
-  @IsNumber()
+  @Min(1)
+  @Max(22)
   workingDays: number;
 
   @IsOptional()
   @IsString()
+  @Min(0)
   currency?: string;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   bonus?: number;
 
   @IsOptional()
@@ -33,28 +32,21 @@ export class UpdateSalaryDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   socialSecurity?: number;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   healthInsurance?: number;
 
   @IsOptional()
   @IsNumber()
-  grossSalary?: number;
-
-  @IsOptional()
-  @IsNumber()
   @Min(0)
-  @Max(11)
-  month: string;
+  tax?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(2000)
-  year: number;
-
-  @IsOptional()
-  @IsMongoId()
-  userId: Types.ObjectId;
+  @Min(40000)
+  grossSalary?: number;
 }

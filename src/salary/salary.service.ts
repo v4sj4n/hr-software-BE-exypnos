@@ -10,6 +10,7 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import * as bcrypt from 'bcrypt';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class SalaryService {
@@ -29,17 +30,16 @@ export class SalaryService {
         createSalaryDto.year,
       );
       createSalaryDto.userId = new Types.ObjectId(createSalaryDto.userId);
-      const createdSalary = new this.salaryModel(createSalaryDto);
-      createdSalary.uniqueId = uniqueId;
-      return await createdSalary.save();
+      const newSalary = new this.salaryModel(
+        await this.calculateNetSalary(createSalaryDto, uniqueId),
+      );
+      return newSalary.save();
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
   async findAll(month?: number, year?: number): Promise<Salary[]> {
-    console.log('month', month);
-    console.log('year', year);
     try {
       const filter: any = {};
 
@@ -50,11 +50,10 @@ export class SalaryService {
         filter.year = year;
       }
 
-      console.log('filter', filter);
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
-        .populate('userId', 'firstName lastName phone createdAt');
+        .populate('userId', 'firstName lastName phone position createdAt');
       return salaries;
     } catch (error) {
       throw new ConflictException(error);
@@ -65,9 +64,9 @@ export class SalaryService {
     userId: string,
     month?: number,
     year?: number,
+    graf?: boolean,
   ): Promise<Salary[]> {
     try {
-      console.log('userId', userId);
       const filter: any = {};
       if (userId) {
         filter.userId = new Types.ObjectId(userId);
@@ -79,11 +78,18 @@ export class SalaryService {
         filter.year = year;
       }
 
-      console.log('filter', filter);
+      if (graf) {
+        let query = this.salaryModel
+          .find(filter)
+          .sort({ year: -1, month: -1 })
+          .populate('userId', 'firstName lastName phone position createdAt');
+        query = query.limit(6);
+      }
+
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
-        .populate('userId', 'firstName lastName phone createdAt');
+        .populate('userId', 'firstName lastName phone position createdAt');
       return salaries;
     } catch (error) {
       throw new ConflictException(error);
@@ -92,7 +98,9 @@ export class SalaryService {
 
   async findOne(id: string): Promise<Salary> {
     try {
-      const salary = await this.salaryModel.findById(id);
+      const salary = await this.salaryModel
+        .findById(id)
+        .populate('userId', 'firstName lastName phone position createdAt');
       if (!salary) {
         throw new NotFoundException(`Salary with id ${id} not found`);
       }
@@ -104,19 +112,14 @@ export class SalaryService {
 
   async update(id: string, updateSalaryDto: UpdateSalaryDto): Promise<Salary> {
     try {
-      const existingSalary = await this.salaryModel.findById(id);
-      if (!existingSalary) {
-        throw new NotFoundException(`Salary with id ${id} not found`);
-      }
-      if (updateSalaryDto.userId) {
-        await this.checkUserId(updateSalaryDto.userId);
-      }
-      await this.validateSalaryData(updateSalaryDto);
-
+      const salary = await this.salaryModel.findById(id);
       const updatedSalary = await this.salaryModel.findByIdAndUpdate(
         id,
         {
           ...updateSalaryDto,
+          netSalary: (
+            await this.calculateNetSalary(updateSalaryDto, salary.uniqueId)
+          ).netSalary,
         },
         { new: true },
       );
@@ -126,24 +129,7 @@ export class SalaryService {
     }
   }
 
-  async remove(id: string): Promise<Salary> {
-    try {
-      const salary = await this.salaryModel.findByIdAndDelete(id);
-      if (!salary) {
-        throw new NotFoundException(`Salary with id ${id} not found`);
-      }
-      return salary;
-    } catch (error) {
-      throw new ConflictException(error);
-    }
-  }
-
-  private async validateSalaryData(
-    salaryData: CreateSalaryDto | UpdateSalaryDto,
-  ) {
-    if (salaryData.netSalary && salaryData.netSalary < 0) {
-      throw new ConflictException('Net salary cannot be negative');
-    }
+  private async validateSalaryData(salaryData: CreateSalaryDto) {
     if (salaryData.bonus && salaryData.bonus < 0) {
       throw new ConflictException('Bonus amount cannot be negative');
     }
@@ -176,12 +162,8 @@ export class SalaryService {
     month: number,
     year: number,
   ): Promise<string> {
-    console.log('userId', userId);
-    console.log('month', month);
-    console.log('year', year);
     const uniqueId = await bcrypt.hash(`${userId}${month}${year}`, 10);
     await bcrypt.genSalt(10);
-    console.log('uniqueId', uniqueId);
     return uniqueId;
   }
 
@@ -196,5 +178,84 @@ export class SalaryService {
       uniqueId,
     );
     return isMatch;
+  }
+
+  private async calculateNetSalary(
+    salaryData: CreateSalaryDto | UpdateSalaryDto,
+    uniqueId: string,
+  ): Promise<Salary> {
+    const grossSalary = (salaryData.grossSalary / 22) * salaryData.workingDays;
+    const healthInsurance = 0.017 * grossSalary;
+    const socialInsurance = 0.095 * grossSalary;
+    let tax = 0;
+    if (grossSalary <= 50000) {
+      tax = 0;
+    } else if (grossSalary <= 60000) {
+      tax = 0.13 * (grossSalary - 35000);
+    } else if (grossSalary <= 200000) {
+      tax = 0.13 * (grossSalary - 30000);
+    } else {
+      tax = 0.23 * (grossSalary - 200000) + 0.13 * (grossSalary - 170000);
+    }
+    let netSalary = grossSalary - tax - healthInsurance - socialInsurance;
+    if (salaryData.bonus) {
+      netSalary =
+        grossSalary -
+        tax -
+        healthInsurance -
+        socialInsurance +
+        salaryData.bonus;
+    } else {
+      salaryData.bonus = 0;
+    }
+
+    salaryData.socialSecurity = socialInsurance;
+    salaryData.healthInsurance = healthInsurance;
+    salaryData.tax = tax;
+
+    const salary = new this.salaryModel({
+      ...salaryData,
+      uniqueId,
+      netSalary: netSalary,
+    });
+    return salary;
+  }
+
+  @Cron('0 0 28 * *')
+  async handleCron() {
+    try {
+      const currentSalaries = await this.findAll(
+        new Date().getMonth(),
+        new Date().getFullYear(),
+      );
+
+      for (const currentSalary of currentSalaries) {
+        const nextMonth = (currentSalary.month + 1) % 12 || 12;
+        const nextYear =
+          currentSalary.month + 1 > 11
+            ? currentSalary.year + 1
+            : currentSalary.year;
+
+        const user = await this.userModel.find({
+          _id: currentSalary.userId,
+          isDeleted: false,
+        });
+        if (user) {
+          var newSalary: CreateSalaryDto = {
+            workingDays: currentSalary.workingDays,
+            currency: currentSalary.currency,
+            bonus: currentSalary.bonus,
+            bonusDescription: currentSalary.bonusDescription,
+            grossSalary: currentSalary.grossSalary,
+            month: nextMonth,
+            year: nextYear,
+            userId: currentSalary.userId,
+          };
+        }
+        await this.create(newSalary);
+      }
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 }

@@ -176,10 +176,10 @@ export class NotificationService {
       }
       let notifications = [];
       if (user.role === 'hr') {
-        console.log('applicant');
         notifications = await this.notificationModel.find({
           type: NotificationType.APPLICANT,
           isDeleted: false,
+          isRead: isRead,
         });
       }
       return notifications;
@@ -203,9 +203,9 @@ export class NotificationService {
           type: NotificationType.VACATION,
           title: 'Vacation Request',
           isDeleted: false,
+          isRead: isRead,
         });
       } else {
-        console.log('vacation employee');
         notifications = await this.notificationModel.aggregate([
           {
             $lookup: {

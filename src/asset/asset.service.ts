@@ -21,6 +21,7 @@ export class AssetService {
   async create(createAssetDto: CreateAssetDto): Promise<Asset> {
     try {
       await this.validateAssetData(createAssetDto);
+      await this.checkType(createAssetDto.type);
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
       createdAsset.takenDate = createAssetDto.takenDate
@@ -39,6 +40,13 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
+  checkType(type: string) {
+    if (!AssetType.includes(type)) {
+      AssetType.push(type);
+    }
+    console.log(AssetType);
+  }
+
   async findAll(availability: string): Promise<Asset[]> {
     const filter: FilterQuery<Asset> = {
       isDeleted: false,
@@ -191,6 +199,7 @@ export class AssetService {
       if (!asset) {
         throw new NotFoundException(`Asset with id ${id} not found`);
       }
+
       return asset;
     } catch (error) {
       throw new ConflictException(error);

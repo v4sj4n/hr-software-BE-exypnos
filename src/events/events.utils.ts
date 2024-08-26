@@ -36,23 +36,31 @@ async function validateData(
 }
 
 function validatePollData(poll: Poll) {
-  if (poll.isMultipleVote === undefined) {
-    poll.isMultipleVote = false;
+  if (typeof poll === 'string') {
+    poll = JSON.parse(poll);
   }
-  if (poll.question.length === 0) {
+
+  if (typeof poll !== 'object' || poll === null) {
+    throw new BadRequestException('Invalid poll data');
+  }
+  if (!poll.question || poll.question.length === 0) {
     throw new BadRequestException('Poll question cannot be empty');
   }
-  if (poll.options.length <= 1) {
+
+  if (!Array.isArray(poll.options) || poll.options.length <= 1) {
     throw new BadRequestException('Poll options must be more than one');
   }
+
   if (poll.options.length > 3) {
     throw new BadRequestException('Poll options must be 3 or 2');
   }
-  if (poll.options.some((opt) => opt.option.length <= 1)) {
+
+  if (poll.options.some((opt) => !opt.option || opt.option.length <= 1)) {
     throw new BadRequestException(
       'Poll option cannot be less than 1 character',
     );
   }
+
   for (let i = 0; i < poll.options.length; i++) {
     for (let j = i + 1; j < poll.options.length; j++) {
       if (poll.options[i].option === poll.options[j].option) {
@@ -60,8 +68,9 @@ function validatePollData(poll: Poll) {
       }
     }
   }
-}
 
+  return poll;
+}
 async function getAllParticipants(
   userModel: Model<User>,
   authModel: Model<Auth>,

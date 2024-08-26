@@ -1,9 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import muv from 'mongoose-unique-validator';
-import { AssetStatus, AssetType } from '../enum/asset.enum';
+import { AssetStatus } from '../enum/asset.enum';
 import { User } from './user.schema';
 import { IsDate, IsEnum, IsOptional } from 'class-validator';
+
+declare global {
+  var AssetType: string[];
+}
+global.AssetType = ['laptop', 'monitor'];
 
 @Schema({ _id: false })
 export class AssetHistory {
@@ -37,8 +42,8 @@ export class AssetHistory {
 // Return Date is the date when the asset was returned
 @Schema({ timestamps: true })
 export class Asset {
-  @Prop({ required: true, enum: AssetType, type: String })
-  type: AssetType;
+  @Prop({ required: true, type: String })
+  type: string;
 
   @Prop({ required: true, unique: true })
   serialNumber: string;

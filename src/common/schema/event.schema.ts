@@ -23,8 +23,13 @@ export class Poll {
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
 
-  @Prop({ default: false })
-  isMultipleVote: boolean;
+}
+export class Geolocation {
+  @Prop({ required: true })
+  latitude: number;
+
+  @Prop({ required: true })
+  longitude: number;
 }
 
 @Schema({ timestamps: true })
@@ -49,8 +54,8 @@ export class Event {
   @Prop({ required: false, type: Date })
   endDate: Date;
 
-  @Prop({ type: String, required: false, default: 'Tirana' })
-  location: string;
+  @Prop({ required: false, type: Geolocation })
+  location: Geolocation;
 
   @Prop({ type: [Types.ObjectId], required: false, default: [] })
   participants: Types.ObjectId[] | string[];
