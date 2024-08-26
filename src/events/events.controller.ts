@@ -44,8 +44,7 @@ export class EventsController {
 
   @Public()
   @Get('career')
-  findAllPublic(
-  ) {
+  findAllPublic() {
     return this.eventsService.findCareerEvents();
   }
 

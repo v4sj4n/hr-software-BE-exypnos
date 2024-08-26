@@ -10,7 +10,6 @@ import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
-import { compareDates, formatDate } from 'src/common/util/dateUtil';
 import { DateTime } from 'luxon';
 
 @Injectable()
@@ -108,11 +107,36 @@ export class AssetService {
   ) {
     const now = DateTime.now();
 
+    // Ensure the history array is initialized if it doesn't exist
+    if (!existingAsset.history) {
+      existingAsset.history = [];
+    }
+
+    let takenDate;
+
+    if (updateAssetDto.takenDate) {
+      // Convert takenDate from ISO string to JS Date
+      takenDate = DateTime.fromISO(
+        updateAssetDto.takenDate.toString(),
+      ).toJSDate();
+    } else if (existingAsset.takenDate) {
+      // If takenDate is not provided, use existingAsset's takenDate
+      takenDate = DateTime.fromJSDate(existingAsset.takenDate).toJSDate();
+    } else {
+      // If takenDate is not available, we can't proceed
+      throw new ConflictException(
+        'Taken date is required for assigned assets.',
+      );
+    }
+
     if (updateAssetDto.status === AssetStatus.ASSIGNED) {
       const updateUser = await this.userModel.findById(updateAssetDto.userId);
-      const takenDate = DateTime.fromJSDate(
-        updateAssetDto.takenDate,
-      ).toJSDate();
+      if (!updateUser) {
+        throw new NotFoundException(
+          `User with id ${updateAssetDto.userId} not found`,
+        );
+      }
+
       const newHistoryEntry: AssetHistory = {
         updatedAt: now.toJSDate(),
         takenDate: takenDate,
@@ -125,29 +149,35 @@ export class AssetService {
         status: updateAssetDto.status,
       };
 
+      existingAsset.history.push(newHistoryEntry);
       Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
+        history: existingAsset.history,
       });
     } else if (
       (updateAssetDto.status === AssetStatus.AVAILABLE ||
         updateAssetDto.status === AssetStatus.BROKEN) &&
-      existingAsset.status
+      existingAsset.history.length > 0
     ) {
       const lastHistoryEntry = existingAsset.history.pop();
-      const takenDate = DateTime.fromJSDate(
-        updateAssetDto.takenDate,
-      ).toJSDate();
+
       const newHistoryEntry: AssetHistory = {
         updatedAt: now.toJSDate(),
-        takenDate: takenDate,
-        returnDate: updateAssetDto.returnDate, 
+        takenDate: lastHistoryEntry.takenDate,
+        returnDate: updateAssetDto.returnDate
+          ? DateTime.fromISO(updateAssetDto.returnDate.toString()).toJSDate()
+          : null,
         user: lastHistoryEntry.user,
         status: updateAssetDto.status,
       };
 
+      existingAsset.history.push(newHistoryEntry);
       Object.assign(updateAssetDto, {
-        history: [...existingAsset.history, newHistoryEntry],
+        history: existingAsset.history,
       });
+    } else {
+      throw new ConflictException(
+        'Cannot update history; asset has no previous history entries.',
+      );
     }
   }
 
@@ -206,13 +236,12 @@ export class AssetService {
     }
     if (
       assetData.returnDate &&
-      compareDates(
-        formatDate(new Date(existingAsset.takenDate)),
-        formatDate(new Date(assetData.returnDate)),
-      ) >= 1
+      existingAsset.takenDate &&
+      DateTime.fromJSDate(existingAsset.takenDate).toMillis() >
+        DateTime.fromJSDate(assetData.returnDate).toMillis()
     ) {
       throw new ConflictException(
-        `Return date cannot be before the taken date`,
+        'Return date cannot be before the taken date',
       );
     }
   }

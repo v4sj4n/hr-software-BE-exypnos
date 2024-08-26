@@ -26,7 +26,7 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsDate()
   date: Date;
-  
+
   @IsOptional()
   @IsBoolean()
   isRead: boolean;

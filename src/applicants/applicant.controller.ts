@@ -48,7 +48,10 @@ export class ApplicantsController {
     @Body() updateApplicantDto: UpdateApplicantDto,
   ) {
     try {
-      const updatedApplicant = await this.applicantsService.updateApplicant(id, updateApplicantDto);
+      const updatedApplicant = await this.applicantsService.updateApplicant(
+        id,
+        updateApplicantDto,
+      );
       return {
         message: 'Applicant updated successfully',
         applicant: updatedApplicant,
@@ -57,7 +60,6 @@ export class ApplicantsController {
       throw new ConflictException(error.message || 'Error updating applicant');
     }
   }
-  
 
   @Delete(':id')
   async deleteApplicant(@Param('id') id: string) {
@@ -95,7 +97,7 @@ export class ApplicantsController {
   // ) {
   //   try {
   //     const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
-  
+
   //     return {
   //       message: 'Interview rescheduled successfully',
   //       applicant: updatedApplicant,
@@ -105,5 +107,4 @@ export class ApplicantsController {
   //     throw new ConflictException(error.message || 'Error rescheduling interview');
   //   }
   // }
-  
 }

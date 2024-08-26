@@ -1,6 +1,4 @@
 import {
-  IsEnum,
-  isEnum,
   IsMongoId,
   IsNumber,
   IsOptional,
@@ -59,5 +57,4 @@ export class UpdateSalaryDto {
   @IsOptional()
   @IsMongoId()
   userId: Types.ObjectId;
-
 }

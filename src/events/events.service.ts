@@ -81,8 +81,11 @@ export class EventsService {
       if (!createdEvent.endDate && createdEvent.startDate) {
         createdEvent.endDate = createdEvent.startDate;
       }
-      
-      validateDate(createdEvent.startDate?.toISOString(), createdEvent.endDate?.toISOString());
+
+      validateDate(
+        createdEvent.startDate?.toISOString(),
+        createdEvent.endDate?.toISOString(),
+      );
 
       if (createdEvent.poll) {
         validatePollData(createdEvent.poll);
@@ -100,10 +103,12 @@ export class EventsService {
         new Date(),
       );
 
-      console.log(createEventDto.participants?.length === 0 ||
-        !createEventDto.participants
+      console.log(
+        createEventDto.participants?.length === 0 ||
+          !createEventDto.participants
           ? await getAllParticipants(this.userModel, this.authModel)
-          : createEventDto.participants)
+          : createEventDto.participants,
+      );
 
       await this.mailService.sendMail({
         to:
@@ -143,21 +148,22 @@ export class EventsService {
       }
       // return await paginate(page, limit, this.eventModel, filter);
       const events = await this.eventModel.find(filter).sort({ createdAt: -1 });
-     
+
       return events;
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
-  async findCareerEvents(){
+  async findCareerEvents() {
     try {
-      return await this.eventModel.find({type: 'career', isDeleted: false}).sort({createdAt: -1});
+      return await this.eventModel
+        .find({ type: 'career', isDeleted: false })
+        .sort({ createdAt: -1 });
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
-  catch (error) {
-    throw new ConflictException(error);
-  }
-}
 
   async findOne(id: string): Promise<Event> {
     try {
@@ -237,7 +243,11 @@ export class EventsService {
         },
         { new: true },
       );
-      validateDate(updatedEvent.startDate?.toISOString(), updatedEvent.endDate?.toISOString());      await this.notificationService.createNotification(
+      validateDate(
+        updatedEvent.startDate?.toISOString(),
+        updatedEvent.endDate?.toISOString(),
+      );
+      await this.notificationService.createNotification(
         'Event Updated',
         `Event ${updatedEvent.title} has been updated`,
         NotificationType.EVENT,
@@ -300,7 +310,6 @@ export class EventsService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      const userObjectId = new Types.ObjectId(id);
       const events = await this.eventModel
         .find({
           isDeleted: false,

@@ -10,8 +10,6 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import * as bcrypt from 'bcrypt';
-import { paginate } from 'src/common/util/pagination';
-import { last } from 'rxjs';
 
 @Injectable()
 export class SalaryService {
@@ -80,8 +78,8 @@ export class SalaryService {
       if (year) {
         filter.year = year;
       }
-      
-console.log('filter', filter);
+
+      console.log('filter', filter);
       const salaries = await this.salaryModel
         .find(filter)
         .sort({ month: -1, year: -1 })
@@ -94,8 +92,7 @@ console.log('filter', filter);
 
   async findOne(id: string): Promise<Salary> {
     try {
-      const salary = await this.salaryModel
-        .findById(id)
+      const salary = await this.salaryModel.findById(id);
       if (!salary) {
         throw new NotFoundException(`Salary with id ${id} not found`);
       }

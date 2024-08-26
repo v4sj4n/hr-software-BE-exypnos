@@ -4,9 +4,7 @@ import { Poll, Event } from '../common/schema/event.schema';
 import { VoteDto } from './dto/vote.dto';
 import { User } from '../common/schema/user.schema';
 import { Auth } from '../common/schema/auth.schema';
-import { compareDates, formatDate } from 'src/common/util/dateUtil';
 import { DateTime } from 'luxon';
-
 
 async function validateData(
   eventModel: Model<Event>,
@@ -36,7 +34,6 @@ async function validateData(
     throw new BadRequestException('This event does not have a poll');
   }
 }
-
 
 function validatePollData(poll: Poll) {
   if (poll.isMultipleVote === undefined) {
@@ -90,7 +87,9 @@ function validateDate(startDate?: string, endDate?: string): void {
     const now = DateTime.now();
 
     if (end < start) {
-      throw new BadRequestException('End date must be after or the same as the start date');
+      throw new BadRequestException(
+        'End date must be after or the same as the start date',
+      );
     }
 
     if (start <= now) {
@@ -98,7 +97,6 @@ function validateDate(startDate?: string, endDate?: string): void {
     }
   }
 }
-
 
 async function getParticipantsByUserId(
   userModel: Model<User>,
