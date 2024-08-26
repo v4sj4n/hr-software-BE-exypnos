@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   Query,
+  UsePipes,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -16,6 +17,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { VoteDto } from './dto/vote.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
+import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
 
 @Controller('event')
 export class EventsController {
@@ -23,14 +25,15 @@ export class EventsController {
 
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
+  @UsePipes(new FileMimeTypeValidationPipe())
   async create(
-    @UploadedFiles()
-    files: { photo?: Express.Multer.File[] },
+    @UploadedFiles() files: { photo?: Express.Multer.File[] },
     @Body() createEventDto: CreateEventDto,
   ) {
     const photo = files?.photo || [];
     return await this.eventsService.create(photo, createEventDto);
   }
+
 
   @Get()
   findAll(
@@ -70,15 +73,16 @@ export class EventsController {
 
   @Patch(':id')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
-  partialUpdate(
+  @UsePipes(new FileMimeTypeValidationPipe())
+  async partialUpdate(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @UploadedFiles()
-    files: { photo?: Express.Multer.File[] },
+    @UploadedFiles() files: { photo?: Express.Multer.File[] },
   ) {
     const photo = files?.photo || [];
     return this.eventsService.update(id, updateEventDto, photo);
   }
+
 
   @Delete(':id')
   remove(@Param('id') id: string) {
