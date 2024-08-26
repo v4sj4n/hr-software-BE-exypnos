@@ -10,11 +10,13 @@ import {
   UseInterceptors,
   UploadedFile,
   ConflictException,
+  UsePipes,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantsService } from './/applicant.service';
+import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
 
 @Controller('applicant')
 export class ApplicantsController {
@@ -65,6 +67,7 @@ export class ApplicantsController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
+  @UsePipes(new FileMimeTypeValidationPipe())
   async createApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
