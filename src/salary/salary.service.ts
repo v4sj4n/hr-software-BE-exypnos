@@ -22,7 +22,14 @@ export class SalaryService {
   async create(createSalaryDto: CreateSalaryDto): Promise<Salary> {
     try {
       await this.checkUserId(createSalaryDto.userId);
+      if (createSalaryDto.month === null ||createSalaryDto.month === undefined || createSalaryDto.month >= new Date().getMonth()) {
+        createSalaryDto.month = new Date().getMonth()-1;
+      }
+      if (createSalaryDto.year === null ||createSalaryDto.year === undefined || createSalaryDto.year >= new Date().getFullYear()) {
+        createSalaryDto.year = new Date().getFullYear();
+      }
       await this.validateSalaryData(createSalaryDto);
+      
 
       const uniqueId = await this.createUniqueId(
         createSalaryDto.userId as unknown as string,
@@ -42,7 +49,7 @@ export class SalaryService {
   async findAll(month?: number, year?: number): Promise<Salary[]> {
     try {
       const filter: any = {};
-
+console.log(month, year);
       if (month !== null && month !== undefined) {
         filter.month = month;
       }

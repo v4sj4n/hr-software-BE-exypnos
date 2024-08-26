@@ -50,11 +50,13 @@ export class CreateSalaryDto {
   @Min(40000)
   grossSalary?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(11)
   month: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(2000)
   year: number;
