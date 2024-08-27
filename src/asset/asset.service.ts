@@ -4,13 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model } from 'mongoose';
+import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { DateTime } from 'luxon';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class AssetService {
@@ -44,7 +45,6 @@ export class AssetService {
     if (!AssetType.includes(type)) {
       AssetType.push(type);
     }
-    console.log(AssetType);
   }
 
   async findAll(availability: string): Promise<Asset[]> {
@@ -268,7 +268,7 @@ export class AssetService {
     }
   }
 
-  async getAllUserWithAssets(search: string, users: string): Promise<User[]> {
+  async getAllUserWithAssets(search: string, users: string, page: number, limit: number): Promise<any> {
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {
@@ -279,7 +279,7 @@ export class AssetService {
               assets: { $eq: [] },
             }
           : {};
-
+  
     if (search) {
       objectToPassToMatch = {
         ...objectToPassToMatch,
@@ -289,9 +289,9 @@ export class AssetService {
         ],
       };
     }
-
+  
     try {
-      const usersWithAsset = await this.userModel.aggregate([
+      const aggregationPipeline:PipelineStage[] = [
         {
           $lookup: {
             from: 'assets',
@@ -299,7 +299,8 @@ export class AssetService {
             foreignField: 'userId',
             as: 'assets',
           },
-        },{
+        },
+        {
           $lookup: {
             from: 'auths',
             localField: 'auth',
@@ -336,9 +337,17 @@ export class AssetService {
             email: '$authData.email',
           },
         },
-      ]);
-
-      return usersWithAsset;
+      ];
+  
+      const paginatedResults = await paginate(
+        page,
+        limit,
+        this.userModel,
+        objectToPassToMatch,
+        aggregationPipeline
+      );
+  
+      return paginatedResults;
     } catch (err) {
       throw new ConflictException(err);
     }
@@ -392,7 +401,6 @@ export class AssetService {
           },
         },
       ]);
-
       if (userWithAsset.length === 0) {
         throw new NotFoundException(`User with id ${id} not found`);
       }

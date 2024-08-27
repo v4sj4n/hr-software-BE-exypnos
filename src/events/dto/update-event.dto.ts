@@ -7,7 +7,6 @@ import {
 } from 'class-validator';
 import { EventType } from 'src/common/enum/event.enum';
 import { Poll } from 'src/common/schema/event.schema';
-import { Geolocation } from 'src/common/schema/event.schema';
 
 export class UpdateEventDto {
   @IsOptional()
@@ -36,7 +35,8 @@ export class UpdateEventDto {
   endDate: Date;
 
   @IsOptional()
-  location: Geolocation;
+  @IsString()
+  location: string;
 
   @IsOptional()
   poll: Poll;

@@ -52,7 +52,6 @@ export class ApplicantsService {
     endDate?: Date,
   ): Promise<Applicant[]> {
     try {
-      console.log('Filtering applicants...',currentPhase, startDate, endDate);
       const filter: any = {};
 
       if (currentPhase) {
@@ -250,7 +249,6 @@ export class ApplicantsService {
 
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
-      console.log('Updated status:', applicant.status);
     }
     if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
       await this.sendEmail(
@@ -262,7 +260,6 @@ export class ApplicantsService {
 
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
-      console.log('Updated status:', applicant.status);
     }
     if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
       await this.sendEmail(

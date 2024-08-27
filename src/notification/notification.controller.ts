@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification } from '../common/schema/notification.schema';
 
@@ -10,17 +10,21 @@ export class NotificationController {
   findAll(): Promise<Notification[]> {
     return this.notificationService.findAll();
   }
-
+  @Get('user/:id')
+  findByUserId(
+    @Param('id') id: string,
+    @Query('isRead') isRead: boolean,
+  ): Promise<Notification[]> {
+    return this.notificationService.getNotificationsByUserId(id, isRead);
+  }
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Notification> {
     return this.notificationService.findOne(id);
   }
-
-  @Get('user')
-  findByUserId(
+  @Patch(':id')
+  updateNotification(
     @Param('id') id: string,
-    @Param('isRead') isRead: boolean,
-  ): Promise<Notification[]> {
-    return this.notificationService.getNotificationsByUserId(id, isRead);
+  ): Promise<Notification> {
+    return this.notificationService.update(id);
   }
 }

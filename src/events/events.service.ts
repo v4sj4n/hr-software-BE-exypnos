@@ -94,23 +94,12 @@ export class EventsService {
           opt.voters = [];
         });
       }
-      if(createdEvent.location && typeof createdEvent.location  === 'string') {
-        createdEvent.location = JSON.parse(createdEvent.location);
-        // createdEvent.location = null
-      }
       await this.notificationService.createNotification(
         'Event Created',
         `Event ${createdEvent.title} has been created`,
         NotificationType.EVENT,
         createdEvent._id as Types.ObjectId,
         new Date(),
-      );
-
-      console.log(
-        createEventDto.participants?.length === 0 ||
-          !createEventDto.participants
-          ? await getAllParticipants(this.userModel, this.authModel)
-          : createEventDto.participants,
       );
 
       await this.mailService.sendMail({
@@ -128,7 +117,6 @@ export class EventsService {
 
       return await createdEvent.save();
     } catch (error) {
-      console.log(error);
       throw new ConflictException(error);
     }
   }

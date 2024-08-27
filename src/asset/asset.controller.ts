@@ -30,8 +30,10 @@ export class AssetController {
   findAllWithUsers(
     @Query('search') search: string = '',
     @Query('users') users: string = 'all',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
   ) {
-    return this.assetService.getAllUserWithAssets(search, users);
+    return this.assetService.getAllUserWithAssets(search, users, page, limit);
   }
 
   @Get('user/:id')

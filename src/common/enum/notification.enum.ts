@@ -1,6 +1,6 @@
 export enum NotificationType {
-  EVENT = 'event',
-  NOTE = 'note',
+  EVENT = 'events',
+  NOTE = 'notes',
   VACATION = 'vacation',
-  APPLICANT = 'applicant',
+  APPLICANT = 'candidates',
 }

@@ -63,6 +63,24 @@ export class NotificationService {
     }
   }
 
+  async update(id: string): Promise<Notification> {
+    try {
+      const updatedNotification = await this.notificationModel.findOneAndUpdate(
+        { _id: id },
+        { isRead: true },
+        { new: true },
+      );
+
+      if (!updatedNotification) {
+        throw new NotFoundException('Notification not found');
+      }
+
+      return updatedNotification;
+    } catch (error) {
+      throw new ConflictException(error);
+    }
+  }
+
   async updateNotification(
     title: string,
     content: string,
@@ -179,7 +197,7 @@ export class NotificationService {
         notifications = await this.notificationModel.find({
           type: NotificationType.APPLICANT,
           isDeleted: false,
-          isRead: isRead,
+          isRead: isRead ? isRead : false,
         });
       }
       return notifications;
@@ -203,7 +221,7 @@ export class NotificationService {
           type: NotificationType.VACATION,
           title: 'Vacation Request',
           isDeleted: false,
-          isRead: isRead,
+          isRead: false,
         });
       } else {
         notifications = await this.notificationModel.aggregate([
@@ -220,6 +238,7 @@ export class NotificationService {
               'vacationInfo.userId': new Types.ObjectId(userId),
               title: { $ne: 'Vacation Request' },
               isDeleted: false,
+              isRead: isRead ? isRead : false,
             },
           },
           {

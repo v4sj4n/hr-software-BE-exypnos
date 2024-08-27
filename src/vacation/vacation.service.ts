@@ -278,8 +278,7 @@ export class VacationService {
       ]);
 
       if (userWithVacation.length === 0) {
-        console.log('userWithVacation', userWithVacation);
-        throw new NotFoundException(`User with id ${id} not found`);
+        throw new NotFoundException(`This user has no vacation requests`);
       }
 
       return userWithVacation[0];

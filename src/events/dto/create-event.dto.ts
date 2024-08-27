@@ -7,7 +7,6 @@ import {
 } from 'class-validator';
 import { Poll } from '../../common/schema/event.schema';
 import { EventType } from 'src/common/enum/event.enum';
-import { Geolocation } from 'src/common/schema/event.schema';
 export class CreateEventDto {
   @IsString()
   title: string;
@@ -36,5 +35,6 @@ export class CreateEventDto {
   participants: string[];
 
   @IsOptional()
-  location: Geolocation;
+  @IsString()
+  location: string;
 }

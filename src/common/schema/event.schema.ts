@@ -24,13 +24,6 @@ export class Poll {
   options: PollOption[];
 
 }
-export class Geolocation {
-  @Prop({ required: true })
-  latitude: number;
-
-  @Prop({ required: true })
-  longitude: number;
-}
 
 @Schema({ timestamps: true })
 export class Event {
@@ -54,8 +47,8 @@ export class Event {
   @Prop({ required: false, type: Date })
   endDate: Date;
 
-  @Prop({ required: false, type: Geolocation })
-  location: Geolocation;
+  @Prop({ required: false, type: String })
+  location: string;
 
   @Prop({ type: [Types.ObjectId], required: false, default: [] })
   participants: Types.ObjectId[] | string[];
