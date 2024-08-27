@@ -188,6 +188,7 @@ export class EventsService {
     photos?: Express.Multer.File[],
   ): Promise<Event> {
     try {
+      console.log(updateEventDto);
       let eventPhotos: string[] = [];
       if (photos && photos.length > 0) {
         eventPhotos = await Promise.all(
@@ -247,6 +248,7 @@ export class EventsService {
       );
       return updatedEvent;
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }

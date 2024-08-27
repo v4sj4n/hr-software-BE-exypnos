@@ -73,7 +73,6 @@ export class EventsController {
 
   @Patch(':id')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
-  @UsePipes(new FileMimeTypeValidationPipe())
   async partialUpdate(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
