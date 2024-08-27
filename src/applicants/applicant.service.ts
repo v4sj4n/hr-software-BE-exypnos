@@ -18,108 +18,51 @@ import {
   Applicant,
   ApplicantDocument,
 } from 'src/common/schema/applicant.schema';
-import { Public } from 'src/common/decorator/public.decorator';
-import { AuthService } from 'src/auth/auth.service';
-import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import { DateTime } from 'luxon';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
-import { create } from 'domain';
+import { v4 as uuidv4 } from 'uuid';
+import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 
 @Injectable()
 export class ApplicantsService {
-  update: any;
+  authService: any;
   constructor(
     @InjectModel(Applicant.name)
     private applicantModel: Model<ApplicantDocument>,
-    private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
     private readonly notificationService: NotificationService,
   ) {}
 
-  async deleteApplicant(id: string): Promise<void> {
-    const applicant = await this.findOne(id);
-    if (!applicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
-    }
-    applicant.isDeleted = true;
-    await applicant.save();
-  }
-  async findAll(
-    currentPhase?: string,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<Applicant[]> {
-    try {
-      console.log('Filtering applicants...',currentPhase, startDate, endDate);
-      const filter: any = {};
-
-      if (currentPhase) {
-        filter.currentPhase = currentPhase;
-      }
-      
-      if (startDate && endDate) {
-        switch (currentPhase) {
-          case 'first_interview':
-            filter.firstInterviewDate = {
-              $ne: null,
-              $gte: startDate,
-              $lte: endDate,
-            };
-            break;
-          case 'second_interview':
-            filter.secondInterviewDate = {
-              $ne: null,
-              $gte: startDate,
-              $lte: endDate,
-            };
-            break;
-          case 'createdAt':
-            filter.createdAt = { $gte: startDate, $lte: endDate };
-            filter.firstInterviewDate = null;
-            filter.secondInterviewDate = null;
-            break;
-        }
-      }
-
-      return await this.applicantModel.find(filter).exec();
-    } catch (error) {
-      console.error('Error filtering applicants:', error);
-      throw new Error('Failed to filter applicants');
-    }
-  }
-
-  async findOne(id: string): Promise<ApplicantDocument> {
-    const applicant = await this.applicantModel.findById(id).exec();
-    if (!applicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
-    }
-    return applicant;
-  }
-
-  @Public()
   async createApplicant(
     file: Express.Multer.File,
     createApplicantDto: CreateApplicantDto,
   ): Promise<Applicant> {
     try {
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
+      const confirmationToken = uuidv4();
+  
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.ACTIVE,
+        status: ApplicantStatus.PENDING,
+        confirmationToken,
       });
+
+      const confirmationUrl = `http://localhost:3000/applicant?token=${confirmationToken}`;
+
       await this.mailService.sendMail({
         to: createApplicantDto.email,
-        subject: 'Your application was received succesfully',
+        subject: 'Confirm Your Application',
         template: 'successfulApplication',
         context: {
           name: createApplicantDto.firstName,
           positionApplied: createApplicantDto.positionApplied,
+          confirmationUrl,
         },
       });
-
+  
       await this.notificationService.createNotification(
         'New applicant',
         `New applicant ${createApplicantDto.firstName} ${createApplicantDto.lastName} has applied for the position of ${createApplicantDto.positionApplied}`,
@@ -127,13 +70,39 @@ export class ApplicantsService {
         new Types.ObjectId(applicant._id as string),
         new Date(),
       );
-
+  
       return applicant;
     } catch (err) {
-      console.error('Error uploading file:', err);
+      console.error('Error creating applicant or sending email:', err);
       throw new ConflictException('Failed to create applicant');
     }
   }
+
+  async confirmApplication(token: string): Promise<string> {
+    const applicant = await this.applicantModel.findOne({ confirmationToken: token }).exec();
+
+    if (!applicant) {
+      throw new NotFoundException('Invalid or expired confirmation token.');
+    }
+
+    applicant.status = ApplicantStatus.ACTIVE;
+applicant.confirmationToken = null;
+
+    await applicant.save();
+
+    await this.mailService.sendMail({
+      to: applicant.email,
+      subject: 'Application Confirmed',
+      template: 'applicationConfirmed',
+      context: {
+        name: applicant.firstName,
+        positionApplied: applicant.positionApplied,
+      },
+    });
+
+    return 'Application confirmed successfully!';
+  }
+
 
   async updateApplicant(
     id: string,
@@ -141,14 +110,11 @@ export class ApplicantsService {
   ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
 
-
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
 
-
     const currentDateTime = DateTime.now();
-
 
     if (updateApplicantDto.firstInterviewDate) {
       const firstInterviewDate = DateTime.fromISO(
@@ -170,18 +136,16 @@ export class ApplicantsService {
         );
       }
 
-
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-
 
       await this.sendEmail(
         applicant,
         EmailType.FIRST_INTERVIEW,
         updateApplicantDto.customSubject,
         updateApplicantDto.customMessage,
-        isReschedule, // Send reschedule template if date was previously set
+        isReschedule,
       );
     }
 
@@ -191,9 +155,6 @@ export class ApplicantsService {
       );
 
       if (secondInterviewDate <= currentDateTime) {
-        throw new ConflictException(
-          'Second interview date and time must be in the future',
-        );
         throw new ConflictException(
           'Second interview date and time must be in the future',
         );
@@ -217,24 +178,20 @@ export class ApplicantsService {
         );
       }
 
-
       const isReschedule = !!applicant.secondInterviewDate;
       applicant.secondInterviewDate = secondInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-
 
       await this.sendEmail(
         applicant,
         EmailType.SECOND_INTERVIEW,
         updateApplicantDto.customSubject,
         updateApplicantDto.customMessage,
-        isReschedule, // Send reschedule template if date was previously set
+        isReschedule,
       );
     }
 
-
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
-      // Send custom email without altering the interview dates
       await this.sendEmail(
         applicant,
         EmailType.CUSTOM,
@@ -243,7 +200,6 @@ export class ApplicantsService {
       );
     }
 
-
     if (updateApplicantDto.notes) {
       applicant.notes = updateApplicantDto.notes;
     }
@@ -251,36 +207,24 @@ export class ApplicantsService {
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
       console.log('Updated status:', applicant.status);
-    }
-    if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
-      await this.sendEmail(
-        applicant,
-        EmailType.REJECTED_APPLICATION, // Only send the template email for rejection
-      );
-    }
 
+      if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
+        await this.sendEmail(
+          applicant,
+          EmailType.REJECTED_APPLICATION,
+        );
+      }
 
-    if (updateApplicantDto.status) {
-      applicant.status = updateApplicantDto.status;
-      console.log('Updated status:', applicant.status);
-    }
-    if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
-      await this.sendEmail(
-        applicant,
-        EmailType.REJECTED_APPLICATION, // Only send the template email for rejection
-      );
-    }
+      if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {
+        const createUserDto: CreateUserDto = {
+          firstName: applicant.firstName,
+          lastName: applicant.lastName,
+          email: applicant.email,
+          phone: applicant.phoneNumber,
+        };
 
-    if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {
-      const createUserDto: CreateUserDto = {
-        firstName: applicant.firstName,
-        lastName: applicant.lastName,
-        email: applicant.email,
-        phone: applicant.phoneNumber,
-      };
-
-
-      await this.authService.signUp(createUserDto);
+        await this.authService.signUp(createUserDto);
+      }
     }
 
     return await applicant.save();
@@ -378,50 +322,67 @@ export class ApplicantsService {
     });
   }
 
-
-  async sendCustomEmail(
-    id: string,
-    customSubject: string,
-    customMessage: string,
-  ): Promise<void> {
+  async deleteApplicant(id: string): Promise<void> {
     const applicant = await this.findOne(id);
-    await this.sendEmail(
-      applicant,
-      EmailType.CUSTOM,
-      customSubject,
-      customMessage,
-    );
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    applicant.isDeleted = true;
+    await applicant.save();
   }
-  async filterApplicants(
-    phase?: ApplicantPhase,
-    status?: ApplicantStatus,
-    startDate?: string,
-    endDate?: string,
+
+  async findAll(
+    currentPhase?: string,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<Applicant[]> {
-    const filter: any = {
-      isDeleted: false,
-    };
+    try {
+      console.log('Filtering applicants...', currentPhase, startDate, endDate);
+      const filter: any = {};
 
-    if (phase) {
-      filter.currentPhase = phase;
-    }
-
-    if (status) {
-      filter.status = status;
-    }
-
-    if (startDate || endDate) {
-      filter.createdAt = {};
-      if (startDate) {
-        filter.createdAt.$gte = new Date(startDate);
+      if (currentPhase) {
+        filter.currentPhase = currentPhase;
       }
-      if (endDate) {
-        filter.createdAt.$lte = new Date(endDate);
-      }
-    }
 
-    return await this.applicantModel.find(filter).exec();
+      if (startDate && endDate) {
+        switch (currentPhase) {
+          case 'first_interview':
+            filter.firstInterviewDate = {
+              $ne: null,
+              $gte: startDate,
+              $lte: endDate,
+            };
+            break;
+          case 'second_interview':
+            filter.secondInterviewDate = {
+              $ne: null,
+              $gte: startDate,
+              $lte: endDate,
+            };
+            break;
+          case 'createdAt':
+            filter.createdAt = { $gte: startDate, $lte: endDate };
+            filter.firstInterviewDate = null;
+            filter.secondInterviewDate = null;
+            break;
+        }
+      }
+
+      return await this.applicantModel.find(filter).exec();
+    } catch (error) {
+      console.error('Error filtering applicants:', error);
+      throw new Error('Failed to filter applicants');
+    }
   }
+
+  async findOne(id: string): Promise<ApplicantDocument> {
+    const applicant = await this.applicantModel.findById(id).exec();
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    return applicant;
+  }
+
   private async checkInterviewConflict(
     date: DateTime,
     applicantId: string,

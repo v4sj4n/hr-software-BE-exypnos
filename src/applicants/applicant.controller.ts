@@ -11,6 +11,7 @@ import {
   UploadedFile,
   ConflictException,
   UsePipes,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -34,6 +35,8 @@ export class ApplicantsController {
       endDate,
     );
   }
+
+  
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -66,14 +69,32 @@ export class ApplicantsController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  @UsePipes(new FileMimeTypeValidationPipe())
-  async createApplicant(
+  @UseInterceptors(FileInterceptor('file')) // Or 'photo' based on your input
+  // @UsePipes(new FileMimeTypeValidationPipe())
+  async handleApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
+    @Query('token') token?: string,
   ) {
-    return await this.applicantsService.createApplicant(file, formData);
+    if (token) {
+      // Handle the confirmation logic
+      return await this.applicantsService.confirmApplication(token);
+    } else {
+      // Handle the creation logic
+      return await this.applicantsService.createApplicant(file, formData);
+    }
   }
+  
+  @Get()
+  async handleApplicantConfirmation(@Query('token') token?: string) {
+    if (token) {
+      return await this.applicantsService.confirmApplication(token);
+    }
+    throw new BadRequestException('No token provided for confirmation.');
+  }
+
+}
+
 
   // @Patch(':id/send-custom-email')
   // async sendCustomEmail(
@@ -106,4 +127,3 @@ export class ApplicantsController {
   //     throw new ConflictException(error.message || 'Error rescheduling interview');
   //   }
   // }
-}
