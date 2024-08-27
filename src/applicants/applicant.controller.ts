@@ -11,16 +11,23 @@ import {
   UploadedFile,
   ConflictException,
   UsePipes,
+  BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantsService } from './/applicant.service';
 import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
+import { RecaptchaService } from 'src/common/recaptcha/recaptcha.service';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('applicant')
+@UseGuards(ThrottlerGuard)
 export class ApplicantsController {
-  constructor(private readonly applicantsService: ApplicantsService) {}
+  constructor (private readonly applicantsService: ApplicantsService,
+  private readonly recaptchaService: RecaptchaService, 
+) {}
 
   @Get()
   async findAll(
@@ -68,12 +75,36 @@ export class ApplicantsController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   @UsePipes(new FileMimeTypeValidationPipe())
-  async createApplicant(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() formData: CreateApplicantDto,
-  ) {
-    return await this.applicantsService.createApplicant(file, formData);
+@Post()
+@UseInterceptors(FileInterceptor('file'))
+@UsePipes(new FileMimeTypeValidationPipe())
+async createApplicant(
+  @UploadedFile() file: Express.Multer.File,
+  @Body() formData: CreateApplicantDto,
+  @Body('recaptchaToken') recaptchaToken: string,
+  @Body('recaptchaAction') recaptchaAction: string,
+) {
+  try {
+    // Validate the reCAPTCHA token
+    const recaptchaScore = await this.recaptchaService.createAssessment(
+      recaptchaToken,
+      recaptchaAction,
+    );
+
+    // You can now decide how to proceed based on the recaptchaScore
+    if (typeof recaptchaScore === 'number' && recaptchaScore < 0.5) {
+      throw new BadRequestException('reCAPTCHA verification failed.');
+    }
+
+    // Proceed with creating the applicant if reCAPTCHA is valid
+    return await this.applicantsService.create(CreateApplicantDto);
+  } catch (error) {
+    throw new BadRequestException(error.message);
   }
+}
+}
+
+
 
   // @Patch(':id/send-custom-email')
   // async sendCustomEmail(
@@ -106,4 +137,4 @@ export class ApplicantsController {
   //     throw new ConflictException(error.message || 'Error rescheduling interview');
   //   }
   // }
-}
+

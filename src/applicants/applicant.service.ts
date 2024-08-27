@@ -28,6 +28,9 @@ import { create } from 'domain';
 
 @Injectable()
 export class ApplicantsService {
+  create(createApplicantDto: any) {
+    throw new Error('Method not implemented.');
+  }
   update: any;
   constructor(
     @InjectModel(Applicant.name)

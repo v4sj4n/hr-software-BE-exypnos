@@ -1,0 +1,21 @@
+<head>
+    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LfDjS8qAAAAAKk2WUmKTSz4M5QVCPni2QDW0y1z"></script>
+  </head>
+  <script>
+    function onClick(e) {
+      e.preventDefault();
+      grecaptcha.enterprise.ready(async () => {
+        const token = await grecaptcha.enterprise.execute('6LfDjS8qAAAAAKk2WUmKTSz4M5QVCPni2QDW0y1z', {action: 'LOGIN'});
+        
+        // Send the token to your backend for verification
+        await fetch('/api/verify-recaptcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token, action: 'LOGIN' })
+        });
+      });
+    }
+  </script>
+  

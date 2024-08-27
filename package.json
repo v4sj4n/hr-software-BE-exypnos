@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@google-cloud/recaptcha-enterprise": "^5.10.0",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
@@ -30,8 +31,10 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.3.10",
     "@nestjs/schedule": "^4.1.0",
+    "@nestjs/throttler": "^6.2.1",
     "@swc/jest": "^0.2.36",
     "@types/bcrypt": "^5.0.2",
+    "axios": "^1.7.5",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

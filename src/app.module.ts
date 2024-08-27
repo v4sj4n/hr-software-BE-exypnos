@@ -18,6 +18,7 @@ import { MailModule } from './mail/mail.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
