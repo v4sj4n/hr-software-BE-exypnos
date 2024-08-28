@@ -34,7 +34,6 @@ export class EventsController {
     return await this.eventsService.create(photo, createEventDto);
   }
 
-
   @Get()
   findAll(
     @Query('search') search: string = '',
@@ -81,7 +80,6 @@ export class EventsController {
     const photo = files?.photo || [];
     return this.eventsService.update(id, updateEventDto, photo);
   }
-
 
   @Delete(':id')
   remove(@Param('id') id: string) {

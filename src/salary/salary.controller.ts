@@ -52,5 +52,4 @@ export class SalaryController {
   update(@Param('id') id: string, @Body() updateSalaryDto: UpdateSalaryDto) {
     return this.salaryService.update(id, updateSalaryDto);
   }
-
 }

@@ -17,7 +17,6 @@ import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from 'src/common/enum/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -41,8 +41,7 @@ export class VacationController {
   }
 
   @Get('user/:id')
-  findAllWithUsersById(
-  @Param('id') id: string,) {
+  findAllWithUsersById(@Param('id') id: string) {
     return this.vacationService.getUserVacation(id);
   }
 

@@ -22,9 +22,7 @@ export class NotificationController {
     return this.notificationService.findOne(id);
   }
   @Patch(':id')
-  updateNotification(
-    @Param('id') id: string,
-  ): Promise<Notification> {
+  updateNotification(@Param('id') id: string): Promise<Notification> {
     return this.notificationService.update(id);
   }
 }

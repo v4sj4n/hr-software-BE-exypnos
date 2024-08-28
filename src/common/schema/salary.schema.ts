@@ -43,9 +43,7 @@ export class Salary {
     ref: User.name,
   })
   userId: Types.ObjectId;
-
 }
-
 
 export const SalarySchema = SchemaFactory.createForClass(Salary);
 SalarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });

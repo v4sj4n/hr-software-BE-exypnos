@@ -57,7 +57,7 @@ export class ApplicantsService {
       if (currentPhase) {
         filter.currentPhase = currentPhase;
       }
-      
+
       if (startDate && endDate) {
         switch (currentPhase) {
           case 'first_interview':
@@ -140,14 +140,11 @@ export class ApplicantsService {
   ): Promise<ApplicantDocument> {
     const applicant = await this.findOne(id);
 
-
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
 
-
     const currentDateTime = DateTime.now();
-
 
     if (updateApplicantDto.firstInterviewDate) {
       const firstInterviewDate = DateTime.fromISO(
@@ -169,11 +166,9 @@ export class ApplicantsService {
         );
       }
 
-
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-
 
       await this.sendEmail(
         applicant,
@@ -216,11 +211,9 @@ export class ApplicantsService {
         );
       }
 
-
       const isReschedule = !!applicant.secondInterviewDate;
       applicant.secondInterviewDate = secondInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-
 
       await this.sendEmail(
         applicant,
@@ -231,7 +224,6 @@ export class ApplicantsService {
       );
     }
 
-
     if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
       // Send custom email without altering the interview dates
       await this.sendEmail(
@@ -241,7 +233,6 @@ export class ApplicantsService {
         updateApplicantDto.customMessage,
       );
     }
-
 
     if (updateApplicantDto.notes) {
       applicant.notes = updateApplicantDto.notes;
@@ -256,7 +247,6 @@ export class ApplicantsService {
         EmailType.REJECTED_APPLICATION, // Only send the template email for rejection
       );
     }
-
 
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
@@ -275,7 +265,6 @@ export class ApplicantsService {
         email: applicant.email,
         phone: applicant.phoneNumber,
       };
-
 
       await this.authService.signUp(createUserDto);
     }
@@ -374,7 +363,6 @@ export class ApplicantsService {
       context: context,
     });
   }
-
 
   async sendCustomEmail(
     id: string,

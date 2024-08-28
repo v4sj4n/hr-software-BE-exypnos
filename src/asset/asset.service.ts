@@ -268,7 +268,12 @@ export class AssetService {
     }
   }
 
-  async getAllUserWithAssets(search: string, users: string, page: number, limit: number): Promise<any> {
+  async getAllUserWithAssets(
+    search: string,
+    users: string,
+    page: number,
+    limit: number,
+  ): Promise<any> {
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {
@@ -279,7 +284,7 @@ export class AssetService {
               assets: { $eq: [] },
             }
           : {};
-  
+
     if (search) {
       objectToPassToMatch = {
         ...objectToPassToMatch,
@@ -289,9 +294,9 @@ export class AssetService {
         ],
       };
     }
-  
+
     try {
-      const aggregationPipeline:PipelineStage[] = [
+      const aggregationPipeline: PipelineStage[] = [
         {
           $lookup: {
             from: 'assets',
@@ -338,15 +343,15 @@ export class AssetService {
           },
         },
       ];
-  
+
       const paginatedResults = await paginate(
         page,
         limit,
         this.userModel,
         objectToPassToMatch,
-        aggregationPipeline
+        aggregationPipeline,
       );
-  
+
       return paginatedResults;
     } catch (err) {
       throw new ConflictException(err);

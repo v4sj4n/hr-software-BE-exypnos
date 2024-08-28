@@ -22,9 +22,7 @@ export class Poll {
 
   @Prop({ type: [PollOption], default: [] })
   options: PollOption[];
-
 }
-
 
 @Schema({ timestamps: true })
 export class Event {

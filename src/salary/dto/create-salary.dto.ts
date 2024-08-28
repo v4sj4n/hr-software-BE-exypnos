@@ -45,7 +45,6 @@ export class CreateSalaryDto {
   @Min(0)
   tax?: number;
 
-
   @IsNumber()
   @Min(40000)
   grossSalary?: number;

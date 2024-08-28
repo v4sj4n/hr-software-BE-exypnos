@@ -21,15 +21,21 @@ export class SalaryService {
   async create(createSalaryDto: CreateSalaryDto): Promise<Salary> {
     try {
       await this.checkUserId(createSalaryDto.userId);
-      const month = new Date().getMonth() -1;
+      const month = new Date().getMonth() - 1;
       const year = new Date().getFullYear();
       createSalaryDto.userId = new Types.ObjectId(createSalaryDto.userId);
 
-      if(await this.salaryModel.findOne({userId: createSalaryDto.userId, month: month, year: year})){
+      if (
+        await this.salaryModel.findOne({
+          userId: createSalaryDto.userId,
+          month: month,
+          year: year,
+        })
+      ) {
         throw new ConflictException('Salary already exists');
-      }else{
+      } else {
         const newSalary = new this.salaryModel(
-          await this.calculateNetSalary(createSalaryDto)
+          await this.calculateNetSalary(createSalaryDto),
         );
         return newSalary.save();
       }
@@ -76,9 +82,7 @@ export class SalaryService {
       }
 
       if (graf) {
-        let query = this.salaryModel
-          .find(filter)
-          .sort({ month: 1 })
+        let query = this.salaryModel.find(filter).sort({ month: 1 });
         query = query.limit(6);
         return query;
       }
@@ -114,17 +118,12 @@ export class SalaryService {
         id,
         {
           ...updateSalaryDto,
-          netSalary: (
-            await this.calculateNetSalary(updateSalaryDto)
-          ).netSalary,
-          tax: (await this.calculateNetSalary(updateSalaryDto))
-            .tax,
-          healthInsurance: (
-            await this.calculateNetSalary(updateSalaryDto)
-          ).healthInsurance,
-          socialSecurity: (
-            await this.calculateNetSalary(updateSalaryDto)
-          ).socialSecurity,
+          netSalary: (await this.calculateNetSalary(updateSalaryDto)).netSalary,
+          tax: (await this.calculateNetSalary(updateSalaryDto)).tax,
+          healthInsurance: (await this.calculateNetSalary(updateSalaryDto))
+            .healthInsurance,
+          socialSecurity: (await this.calculateNetSalary(updateSalaryDto))
+            .socialSecurity,
         },
         { new: true },
       );
@@ -134,7 +133,6 @@ export class SalaryService {
     }
   }
 
-
   private async checkUserId(userId: Types.ObjectId) {
     const userExists = await this.userModel.findById(userId);
     if (!userExists) {
@@ -142,9 +140,9 @@ export class SalaryService {
     }
   }
 
-
   private async calculateNetSalary(
-    salaryData: CreateSalaryDto | UpdateSalaryDto  ): Promise<Salary> {
+    salaryData: CreateSalaryDto | UpdateSalaryDto,
+  ): Promise<Salary> {
     const grossSalary = (salaryData.grossSalary / 22) * salaryData.workingDays;
     const healthInsurance = 0.017 * grossSalary;
     const socialInsurance = 0.095 * grossSalary;
@@ -177,7 +175,7 @@ export class SalaryService {
     const salary = new this.salaryModel({
       ...salaryData,
       netSalary: Math.round(netSalary),
-      month: new Date().getMonth() -1,
+      month: new Date().getMonth() - 1,
       year: new Date().getFullYear(),
     });
     return salary;
