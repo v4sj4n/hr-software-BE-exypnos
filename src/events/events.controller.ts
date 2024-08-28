@@ -39,8 +39,8 @@ export class EventsController {
   findAll(
     @Query('search') search: string = '',
     @Query('type') type: string = '',
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 5,
+    @Query('page') page: number = 0,
+    @Query('limit') limit: number = 6,
   ) {
     return this.eventsService.findAll(search, type, page, limit);
   }

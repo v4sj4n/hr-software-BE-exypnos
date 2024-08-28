@@ -29,6 +29,7 @@ import {
   getEventPollResults,
   getOptionThatUserVotedFor,
 } from './events.poll';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class EventsService {
@@ -137,10 +138,7 @@ export class EventsService {
       } else {
         filter.type = { $ne: 'career' };
       }
-      // return await paginate(page, limit, this.eventModel, filter);
-      const events = await this.eventModel.find(filter).sort({ createdAt: -1 });
-
-      return events;
+      return await paginate(page, limit, this.eventModel, filter);
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -188,7 +186,6 @@ export class EventsService {
     photos?: Express.Multer.File[],
   ): Promise<Event> {
     try {
-      console.log(updateEventDto);
       let eventPhotos: string[] = [];
       if (photos && photos.length > 0) {
         eventPhotos = await Promise.all(
@@ -248,7 +245,6 @@ export class EventsService {
       );
       return updatedEvent;
     } catch (error) {
-      console.log(error);
       throw new ConflictException(error);
     }
   }

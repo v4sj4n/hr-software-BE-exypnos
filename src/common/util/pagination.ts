@@ -9,9 +9,6 @@ export async function paginate(
 ): Promise<any> {
   return new Promise(async (resolve, reject) => {
     try {
-      page = page ? page : 1;
-      limit = limit ? limit : 5;
-
       let count: number;
       let data: any[];
 
@@ -25,7 +22,7 @@ export async function paginate(
 
         data = await model.aggregate([
           ...aggregationPipeline,
-          { $skip: (page - 1) * limit },
+          { $skip: (page) * limit },
           { $limit: limit }
         ]);
       } else {
@@ -33,7 +30,7 @@ export async function paginate(
         data = await model
           .find(filter)
           .limit(limit)
-          .skip((page - 1) * limit);
+          .skip((page) * limit);
       }
 
       const totalPages = Math.ceil(count / limit);

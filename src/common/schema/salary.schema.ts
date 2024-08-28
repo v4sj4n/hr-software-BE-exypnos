@@ -44,8 +44,8 @@ export class Salary {
   })
   userId: Types.ObjectId;
 
-  @Prop({ type: 'string' })
-  uniqueId: string;
 }
 
+
 export const SalarySchema = SchemaFactory.createForClass(Salary);
+SalarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });

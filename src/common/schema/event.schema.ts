@@ -25,6 +25,7 @@ export class Poll {
 
 }
 
+
 @Schema({ timestamps: true })
 export class Event {
   @Prop({ required: true, type: String })
