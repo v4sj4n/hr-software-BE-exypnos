@@ -11,12 +11,17 @@ import {
   UploadedFile,
   ConflictException,
   UsePipes,
+  BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantsService } from './/applicant.service';
 import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
+import { Response } from 'express';
+import { Express } from 'express';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @Controller('applicant')
 export class ApplicantsController {
@@ -65,45 +70,31 @@ export class ApplicantsController {
     return { message: 'Applicant deleted successfully' };
   }
 
+
+  @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  @UsePipes(new FileMimeTypeValidationPipe())
-  async createApplicant(
+  @UseInterceptors(FileInterceptor('file')) 
+  @UsePipes(new FileMimeTypeValidationPipe()) 
+  async handleApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
+    @Query('token') token?: string, 
   ) {
-    return await this.applicantsService.createApplicant(file, formData);
+    if (token) {
+      return await this.applicantsService.confirmApplication(token);
+    } else {
+      return await this.applicantsService.createApplicant(file, formData);
+    }
   }
 
-  // @Patch(':id/send-custom-email')
-  // async sendCustomEmail(
-  //   @Param('id') id: string,
-  //   @Body('customSubject') customSubject: string,
-  //   @Body('customMessage') customMessage: string,
-  // ) {
-  //   await this.applicantsService.sendCustomEmail(
-  //     id,
-  //     customSubject,
-  //     customMessage,
-  //   );
-  //   return { message: 'Custom email sent successfully' };
-  // }
-
-  // @Patch(':id/reschedule-interview')
-  // async rescheduleInterview(
-  //   @Param('id') id: string,
-  //   @Body() updateApplicantDto: UpdateApplicantDto,
-  // ) {
-  //   try {
-  //     const updatedApplicant = await this.applicantsService.rescheduleInterview(id, updateApplicantDto);
-
-  //     return {
-  //       message: 'Interview rescheduled successfully',
-  //       applicant: updatedApplicant,
-  //     };
-  //   } catch (error) {
-  //     console.error('Error rescheduling interview:', error.message);
-  //     throw new ConflictException(error.message || 'Error rescheduling interview');
-  //   }
-  // }
+@Public()
+@Get('confirm')
+async handleApplicantConfirmation(
+  @Query('token') token: string,
+  @Res() res: Response,
+) {
+  await this.applicantsService.confirmApplication(token);  
+  return res.redirect('/confirmation-success');  
 }
+}
+
