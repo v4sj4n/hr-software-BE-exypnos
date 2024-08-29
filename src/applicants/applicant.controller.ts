@@ -41,15 +41,15 @@ export class ApplicantsController {
   }
 
   @Public()
-@Get('confirm')
-async handleApplicantConfirmation(
-  @Query('token') token: string,
-  // @Res() res: Response,
-) {
-  // await this.applicantsService.confirmApplication(token);  
-  // return res.redirect('/confirmation-success');  
-  return await this.applicantsService.confirmApplication(token);
-}
+  @Get('confirm')
+  async handleApplicantConfirmation(
+    @Query('token') token: string,
+    // @Res() res: Response,
+  ) {
+    // await this.applicantsService.confirmApplication(token);
+    // return res.redirect('/confirmation-success');
+    return await this.applicantsService.confirmApplication(token);
+  }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -82,15 +82,14 @@ async handleApplicantConfirmation(
     return { message: 'Applicant deleted successfully' };
   }
 
-
   @Public()
   @Post()
-  @UseInterceptors(FileInterceptor('file')) 
-  @UsePipes(new FileMimeTypeValidationPipe()) 
+  @UseInterceptors(FileInterceptor('file'))
+  @UsePipes(new FileMimeTypeValidationPipe())
   async handleApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
-    @Query('token') token?: string, 
+    @Query('token') token?: string,
   ) {
     if (token) {
       return await this.applicantsService.confirmApplication(token);
@@ -98,7 +97,4 @@ async handleApplicantConfirmation(
       return await this.applicantsService.createApplicant(file, formData);
     }
   }
-
-
 }
-

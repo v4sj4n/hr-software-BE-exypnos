@@ -23,7 +23,6 @@ import { NotificationService } from 'src/notification/notification.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 
-
 @Injectable()
 export class ApplicantsService {
   authService: any;
@@ -40,13 +39,13 @@ export class ApplicantsService {
   ): Promise<Applicant> {
     try {
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
-      const confirmationToken = uuidv4(); 
+      const confirmationToken = uuidv4();
 
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING, 
-        confirmationToken, 
+        status: ApplicantStatus.PENDING,
+        confirmationToken,
       });
 
       const confirmationUrl = `http://localhost:3000/applicant/confirm?token=${confirmationToken}`;
@@ -58,17 +57,24 @@ export class ApplicantsService {
         context: {
           name: createApplicantDto.firstName,
           positionApplied: createApplicantDto.positionApplied,
-          confirmationUrl, 
+          confirmationUrl,
         },
       });
 
       setTimeout(async () => {
-        const pendingApplicant = await this.applicantModel.findById(applicant._id).exec();
-        if (pendingApplicant && pendingApplicant.status === ApplicantStatus.PENDING) {
+        const pendingApplicant = await this.applicantModel
+          .findById(applicant._id)
+          .exec();
+        if (
+          pendingApplicant &&
+          pendingApplicant.status === ApplicantStatus.PENDING
+        ) {
           await this.applicantModel.deleteOne({ _id: applicant._id }).exec();
-          console.log(`Deleted unconfirmed applicant with ID: ${applicant._id}`);
+          console.log(
+            `Deleted unconfirmed applicant with ID: ${applicant._id}`,
+          );
         }
-      }, 120000); 
+      }, 120000);
 
       return applicant;
     } catch (err) {
@@ -78,21 +84,22 @@ export class ApplicantsService {
   }
 
   async confirmApplication(token?: string): Promise<string> {
-    if(!token){
+    if (!token) {
       throw new NotFoundException('Confirmation token is required.');
     }
-    const applicant = await this.applicantModel.findOne({ confirmationToken: token });
+    const applicant = await this.applicantModel.findOne({
+      confirmationToken: token,
+    });
     if (!applicant) {
       throw new NotFoundException('Invalid or expired confirmation token.');
     }
     applicant.status = ApplicantStatus.ACTIVE;
-    applicant.confirmationToken = null; 
+    applicant.confirmationToken = null;
 
     await applicant.save();
-    
-    return "Confirmed"
-  }
 
+    return 'Confirmed';
+  }
 
   async updateApplicant(
     id: string,
@@ -199,10 +206,7 @@ export class ApplicantsService {
       console.log('Updated status:', applicant.status);
 
       if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
-        await this.sendEmail(
-          applicant,
-          EmailType.REJECTED_APPLICATION,
-        );
+        await this.sendEmail(applicant, EmailType.REJECTED_APPLICATION);
       }
 
       if (updateApplicantDto.status === ApplicantStatus.EMPLOYED) {

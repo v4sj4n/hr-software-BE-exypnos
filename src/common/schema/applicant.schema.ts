@@ -72,6 +72,5 @@ export class Applicant {
   static notes: string;
 }
 
-
 const ApplicantSchema = SchemaFactory.createForClass(Applicant);
 export { ApplicantSchema };
