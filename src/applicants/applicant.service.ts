@@ -20,11 +20,8 @@ import {
 } from 'src/common/schema/applicant.schema';
 import { DateTime } from 'luxon';
 import { NotificationService } from 'src/notification/notification.service';
-import { NotificationType } from 'src/common/enum/notification.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
-import { Public } from 'src/common/decorator/public.decorator';
-import { Express } from 'express'; 
 
 
 @Injectable()
@@ -35,7 +32,6 @@ export class ApplicantsService {
     private applicantModel: Model<ApplicantDocument>,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
-    private readonly notificationService: NotificationService,
   ) {}
 
   async createApplicant(
@@ -53,7 +49,7 @@ export class ApplicantsService {
         confirmationToken, 
       });
 
-      const confirmationUrl = `http://localhost:5173/recruitment/confirm?token=${confirmationToken}`;
+      const confirmationUrl = `http://localhost:3000/applicant/confirm?token=${confirmationToken}`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
@@ -72,7 +68,7 @@ export class ApplicantsService {
           await this.applicantModel.deleteOne({ _id: applicant._id }).exec();
           console.log(`Deleted unconfirmed applicant with ID: ${applicant._id}`);
         }
-      }, 60000); 
+      }, 120000); 
 
       return applicant;
     } catch (err) {
@@ -81,27 +77,20 @@ export class ApplicantsService {
     }
   }
 
-  async confirmApplication(token: string): Promise<void> {
-    const applicant = await this.applicantModel.findOne({ confirmationToken: token }).exec();
-
+  async confirmApplication(token?: string): Promise<string> {
+    if(!token){
+      throw new NotFoundException('Confirmation token is required.');
+    }
+    const applicant = await this.applicantModel.findOne({ confirmationToken: token });
     if (!applicant) {
       throw new NotFoundException('Invalid or expired confirmation token.');
     }
-
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null; 
 
     await applicant.save();
     
-    await this.mailService.sendMail({
-      to: applicant.email,
-      subject: 'Application Confirmed',
-      template: 'applicationConfirmed', 
-      context: {
-        name: applicant.firstName,
-        positionApplied: applicant.positionApplied,
-      },
-    });
+    return "Confirmed"
   }
 
 

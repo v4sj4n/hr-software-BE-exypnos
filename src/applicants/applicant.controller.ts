@@ -40,8 +40,20 @@ export class ApplicantsController {
     );
   }
 
+  @Public()
+@Get('confirm')
+async handleApplicantConfirmation(
+  @Query('token') token: string,
+  // @Res() res: Response,
+) {
+  // await this.applicantsService.confirmApplication(token);  
+  // return res.redirect('/confirmation-success');  
+  return await this.applicantsService.confirmApplication(token);
+}
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
+    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     return await this.applicantsService.findOne(id);
   }
 
@@ -87,14 +99,6 @@ export class ApplicantsController {
     }
   }
 
-@Public()
-@Get('confirm')
-async handleApplicantConfirmation(
-  @Query('token') token: string,
-  @Res() res: Response,
-) {
-  await this.applicantsService.confirmApplication(token);  
-  return res.redirect('/confirmation-success');  
-}
+
 }
 
