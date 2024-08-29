@@ -23,6 +23,9 @@ import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { Public } from 'src/common/decorator/public.decorator';
+import { Express } from 'express'; 
+
 
 @Injectable()
 export class ApplicantsService {
@@ -41,16 +44,16 @@ export class ApplicantsService {
   ): Promise<Applicant> {
     try {
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
-      const confirmationToken = uuidv4();
-  
+      const confirmationToken = uuidv4(); 
+
       const applicant = await this.applicantModel.create({
         ...createApplicantDto,
         cvAttachment: cvUrl,
-        status: ApplicantStatus.PENDING,
-        confirmationToken,
+        status: ApplicantStatus.PENDING, 
+        confirmationToken, 
       });
 
-      const confirmationUrl = `http://localhost:3000/applicant?token=${confirmationToken}`;
+      const confirmationUrl = `http://localhost:5173/recruitment/confirm?token=${confirmationToken}`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
@@ -59,18 +62,18 @@ export class ApplicantsService {
         context: {
           name: createApplicantDto.firstName,
           positionApplied: createApplicantDto.positionApplied,
-          confirmationUrl,
+          confirmationUrl, 
         },
       });
-  
-      await this.notificationService.createNotification(
-        'New applicant',
-        `New applicant ${createApplicantDto.firstName} ${createApplicantDto.lastName} has applied for the position of ${createApplicantDto.positionApplied}`,
-        NotificationType.APPLICANT,
-        new Types.ObjectId(applicant._id as string),
-        new Date(),
-      );
-  
+
+      setTimeout(async () => {
+        const pendingApplicant = await this.applicantModel.findById(applicant._id).exec();
+        if (pendingApplicant && pendingApplicant.status === ApplicantStatus.PENDING) {
+          await this.applicantModel.deleteOne({ _id: applicant._id }).exec();
+          console.log(`Deleted unconfirmed applicant with ID: ${applicant._id}`);
+        }
+      }, 60000); 
+
       return applicant;
     } catch (err) {
       console.error('Error creating applicant or sending email:', err);
@@ -78,7 +81,7 @@ export class ApplicantsService {
     }
   }
 
-  async confirmApplication(token: string): Promise<string> {
+  async confirmApplication(token: string): Promise<void> {
     const applicant = await this.applicantModel.findOne({ confirmationToken: token }).exec();
 
     if (!applicant) {
@@ -86,21 +89,19 @@ export class ApplicantsService {
     }
 
     applicant.status = ApplicantStatus.ACTIVE;
-applicant.confirmationToken = null;
+    applicant.confirmationToken = null; 
 
     await applicant.save();
-
+    
     await this.mailService.sendMail({
       to: applicant.email,
       subject: 'Application Confirmed',
-      template: 'applicationConfirmed',
+      template: 'applicationConfirmed', 
       context: {
         name: applicant.firstName,
         positionApplied: applicant.positionApplied,
       },
     });
-
-    return 'Application confirmed successfully!';
   }
 
 
