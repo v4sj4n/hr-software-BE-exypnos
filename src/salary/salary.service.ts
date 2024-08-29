@@ -10,6 +10,9 @@ import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import { Cron } from '@nestjs/schedule';
+import { paginate } from 'src/common/util/pagination';
+import { populate } from 'dotenv';
+import { resolve } from 'path';
 
 @Injectable()
 export class SalaryService {
@@ -44,8 +47,17 @@ export class SalaryService {
     }
   }
 
-  async findAll(month?: number, year?: number): Promise<Salary[]> {
+  async findAll(
+    page: number,
+    limit: number,
+    month?: number,
+    year?: number,
+  ): Promise<Salary[]> {
     try {
+      console.log('month', month);
+      console.log('year', year);
+      console.log('page', page);
+      console.log('limit', limit);
       const filter: any = {};
       if (month !== null && month !== undefined) {
         filter.month = month;
@@ -53,17 +65,29 @@ export class SalaryService {
       if (year) {
         filter.year = year;
       }
-      const salaries = await this.salaryModel
+      const paginateSalary = await paginate(
+        page,
+        limit,
+        this.salaryModel,
+        filter,
+      );
+      paginateSalary.data = await this.salaryModel
         .find(filter)
-        .sort({ month: -1, year: -1 })
+        .sort({
+          month: -1,
+          year: -1,
+        })
         .populate('userId', 'firstName lastName phone position createdAt');
-      return salaries;
+      return paginateSalary;
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }
 
   async findByUserId(
+    page: number,
+    limit: number,
     userId: string,
     month?: number,
     year?: number,
@@ -86,12 +110,20 @@ export class SalaryService {
         query = query.limit(6);
         return query;
       }
-
-      const salaries = await this.salaryModel
+      const paginateSalary = await paginate(
+        page,
+        limit,
+        this.salaryModel,
+        filter,
+      );
+      paginateSalary.data = await this.salaryModel
         .find(filter)
-        .sort({ month: -1, year: -1 })
+        .sort({
+          month: -1,
+          year: -1,
+        })
         .populate('userId', 'firstName lastName phone position createdAt');
-      return salaries;
+      return paginateSalary;
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -210,6 +242,7 @@ export class SalaryService {
             userId: currentSalary.userId,
             month: nextMonth,
             year: nextYear,
+            extraHours: currentSalary.extraHours,
           };
         }
         await this.create(newSalary);

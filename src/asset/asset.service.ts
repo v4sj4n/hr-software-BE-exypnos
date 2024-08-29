@@ -274,6 +274,7 @@ export class AssetService {
     page: number,
     limit: number,
   ): Promise<any> {
+    console.log('search', users);
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {

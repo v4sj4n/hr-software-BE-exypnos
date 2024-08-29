@@ -5,6 +5,8 @@ export async function paginate(
   limit?: number,
   model?: Model<any>,
   filter?: FilterQuery<any>,
+  sort?: any,
+  populate?: any,
   aggregationPipeline?: PipelineStage[],
 ): Promise<any> {
   return new Promise(async (resolve, reject) => {
@@ -33,6 +35,7 @@ export async function paginate(
       const totalPages = Math.ceil(count / limit);
       resolve({ data, totalPages, all: count });
     } catch (error) {
+      console.error(error);
       reject('Failed to paginate');
     }
   });

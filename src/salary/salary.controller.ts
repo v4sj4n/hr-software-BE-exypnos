@@ -21,16 +21,23 @@ export class SalaryController {
     return this.salaryService.create(createSalaryDto);
   }
   @Get()
-  find(@Query('month') month: number, @Query('year') year: number) {
-    const resolvedMonth = !Number.isNaN(month)
-      ? month
-      : new Date().getMonth() - 1;
-    if (resolvedMonth < 0 || resolvedMonth > 11) {
-      throw new Error('Month must be between 0 and 11');
-    }
+  find(
+    @Query('month') month: number,
+    @Query('year') year: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    // const resolvedMonth = !Number.isNaN(month)
+    //   ? month
+    //   : new Date().getMonth() - 1;
+    // if (resolvedMonth < 0 || resolvedMonth > 11) {
+    //   throw new Error('Month must be between 0 and 11');
+    // }
     return this.salaryService.findAll(
-      resolvedMonth,
-      year ? year : new Date().getFullYear(),
+      page,
+      limit,
+      month,
+      year,
     );
   }
   @Get('user/:id')
@@ -39,8 +46,11 @@ export class SalaryController {
     @Query('month') month: number,
     @Query('year') year: number,
     @Query('graf') graf: boolean,
+    @Query('page') page: number = 0,
+    @Query('limit') limit: number = 5,
+    
   ) {
-    return this.salaryService.findByUserId(id, month, year, graf);
+    return this.salaryService.findByUserId(page,limit,id, month, year, graf);
   }
 
   @Get(':id')
