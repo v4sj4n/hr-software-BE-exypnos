@@ -89,12 +89,7 @@ export class ApplicantsController {
   async handleApplicant(
     @UploadedFile() file: Express.Multer.File,
     @Body() formData: CreateApplicantDto,
-    @Query('token') token?: string,
   ) {
-    if (token) {
-      return await this.applicantsService.confirmApplication(token);
-    } else {
-      return await this.applicantsService.createApplicant(file, formData);
-    }
+    return await this.applicantsService.createApplicant(file, formData);
   }
 }

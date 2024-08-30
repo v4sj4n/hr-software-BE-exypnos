@@ -74,7 +74,7 @@ export class ApplicantsService {
             `Deleted unconfirmed applicant with ID: ${applicant._id}`,
           );
         }
-      }, 120000);
+      }, 30000);
 
       return applicant;
     } catch (err) {
