@@ -45,7 +45,7 @@ export class ApplicantsService {
         confirmationToken,
       });
 
-      const confirmationUrl = `http://localhost:3000/applicant/confirm?token=${confirmationToken}`;
+      const confirmationUrl = `http://localhost:5173/applicant/confirm?token=${confirmationToken}&status=success`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
