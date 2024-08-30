@@ -1,6 +1,35 @@
-import { FilterQuery, Model, PipelineStage } from 'mongoose';
+import { FilterQuery, Model, PipelineStage, PopulateOptions } from 'mongoose';
 
 export async function paginate(
+  page: number,
+  limit: number ,
+  model: Model<any>,
+  filter: FilterQuery<any> = {},
+  sort?: any,
+  populate?: PopulateOptions | (string | PopulateOptions)[],
+): Promise<any> {
+  try {
+    const count = await model.countDocuments(filter);
+
+    let query = model.find(filter);
+
+    if (sort) {
+      query = query.sort(sort);
+    }
+
+    if (populate) {
+      query = query.populate(populate);
+    }
+    const data = await query.skip(page * limit).limit(limit);
+    const totalPages = Math.ceil(count / limit);
+    return { data, totalPages, all: count };
+  } catch (error) {
+    console.error('Pagination error:', error);
+    throw new Error('Failed to paginate');
+  }
+}
+
+export async function aggregatePaginate(
   page?: number,
   limit?: number,
   model?: Model<any>,
@@ -33,6 +62,7 @@ export async function paginate(
       const totalPages = Math.ceil(count / limit);
       resolve({ data, totalPages, all: count });
     } catch (error) {
+      console.error(error);
       reject('Failed to paginate');
     }
   });

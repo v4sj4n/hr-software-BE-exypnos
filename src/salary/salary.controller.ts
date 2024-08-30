@@ -21,16 +21,32 @@ export class SalaryController {
     return this.salaryService.create(createSalaryDto);
   }
   @Get()
-  find(@Query('month') month: number, @Query('year') year: number) {
-    const resolvedMonth = !Number.isNaN(month)
-      ? month
-      : new Date().getMonth() - 1;
-    if (resolvedMonth < 0 || resolvedMonth > 11) {
-      throw new Error('Month must be between 0 and 11');
-    }
+  find(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('month') month?: number,
+    @Query('year') year?: number,
+    @Query('netSalary') netSalary?: number,
+    @Query('workingDays') workingDays?: number,
+    @Query('currency') currency?: string,
+    @Query('bonus') bonus?: number,
+    @Query('bonusDescription') bonusDescription?: string,
+    @Query('socialSecurity') socialSecurity?: number,
+    @Query('healthInsurance') healthInsurance?: number,
+    @Query('grossSalary') grossSalary?: number,
+  ) {
     return this.salaryService.findAll(
-      resolvedMonth,
-      year ? year : new Date().getFullYear(),
+      page,
+      limit,
+      month,
+      year,
+      netSalary,
+      workingDays,
+      currency,
+      bonus,
+      socialSecurity,
+      healthInsurance,
+      grossSalary,
     );
   }
   @Get('user/:id')
@@ -39,8 +55,10 @@ export class SalaryController {
     @Query('month') month: number,
     @Query('year') year: number,
     @Query('graf') graf: boolean,
+    @Query('page') page: number = 0,
+    @Query('limit') limit: number = 5,
   ) {
-    return this.salaryService.findByUserId(id, month, year, graf);
+    return this.salaryService.findByUserId(page, limit, id, month, year, graf);
   }
 
   @Get(':id')

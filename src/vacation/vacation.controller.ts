@@ -24,20 +24,24 @@ export class VacationController {
 
   @Get()
   findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number ,
     @Query('type') type: string = '',
     @Query('status') status: string = '',
     @Query('startDate') startDate: string = '',
     @Query('endDate') endDate: string = '',
   ) {
-    return this.vacationService.findAll(type, status, startDate, endDate);
+    return this.vacationService.findAll(page,limit,type, status, startDate, endDate);
   }
 
   @Get('user')
   findAllWithUsers(
     @Query('search') search: string = '',
     @Query('users') users: string = 'all',
+    @Query('page') page: number,
+    @Query('limit') limit: number ,
   ) {
-    return this.vacationService.getAllUserVacation(search, users);
+    return this.vacationService.getAllUserVacation(page,limit,search, users);
   }
 
   @Get('user/:id')

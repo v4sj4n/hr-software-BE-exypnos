@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model } from 'mongoose';
+import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { User } from 'src/common/schema/user.schema';
 import { Vacation } from 'src/common/schema/vacation.schema';
 import { CreateVacationDto } from './dto/create-vacation.dto';
@@ -17,6 +17,7 @@ import {
   checkDatesforCreate,
 } from './vacation.utils';
 import { VacationStatus } from 'src/common/enum/vacation.enum';
+import { aggregatePaginate, paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class VacationService {
@@ -48,35 +49,30 @@ export class VacationService {
   }
 
   async findAll(
-    type: string,
-    status: string,
-    startDate: string,
-    endDate: string,
-  ) {
+    page: number,
+    limit: number,
+    type?: string,
+    status?: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<any> {
     try {
-      if (type) {
-        return await this.vacationModel
-          .find({ isDeleted: false, type: type })
-          .populate('userId', 'firstName lastName');
-      }
-      if (status) {
-        return await this.vacationModel
-          .find({ isDeleted: false, status: status })
-          .populate('userId', 'firstName lastName');
-      }
+      const filter: any = { isDeleted: false };
+
+      if (type) filter.type = type;
+      if (status) filter.status = status;
       if (startDate && endDate) {
-        return await this.vacationModel
-          .find({
-            isDeleted: false,
-            startDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
-          })
-          .populate('userId', 'firstName lastName');
+        filter.startDate = { 
+          $gte: new Date(startDate), 
+          $lte: new Date(endDate) 
+        };
       }
-      return await this.vacationModel
-        .find({ isDeleted: false })
-        .populate('userId', 'firstName lastName');
+
+      const populate = { path: 'userId', select: 'firstName lastName' };
+      return paginate(page, limit, this.vacationModel, filter, {}, populate);
     } catch (error) {
-      throw new ConflictException(error);
+      console.error('Error in findAll method:', error);
+      throw new ConflictException('An error occurred while fetching vacation data');
     }
   }
 
@@ -151,7 +147,7 @@ export class VacationService {
     }
   }
 
-  async getAllUserVacation(search: string, users: string): Promise<User[]> {
+  async getAllUserVacation(page:number,limit:number,search: string, users: string): Promise<User[]> {
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {
@@ -174,7 +170,7 @@ export class VacationService {
     }
 
     try {
-      const userWithVacation = await this.userModel.aggregate([
+      const aggregationPipeline: PipelineStage[] = [
         {
           $lookup: {
             from: 'vacations',
@@ -220,9 +216,9 @@ export class VacationService {
             email: '$authData.email',
           },
         },
-      ]);
+      ];
 
-      return userWithVacation;
+      return  aggregatePaginate(page, limit, this.userModel, aggregationPipeline);
     } catch (err) {
       throw new ConflictException(err);
     }
