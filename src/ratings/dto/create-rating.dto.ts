@@ -1,30 +1,35 @@
-// src/ratings/dto/create-rating.dto.ts
-import { IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsNotEmpty, IsMongoId, IsNumber, IsOptional, Min, Max } from 'class-validator';
 
 export class CreateRatingDto {
   @IsNotEmpty()
-  readonly userId: Types.ObjectId;
+  @IsMongoId()
+  projectId: string;
 
   @IsNotEmpty()
-  readonly projectId: Types.ObjectId;
-
-  @IsNotEmpty()
-  readonly projectManagerId: Types.ObjectId;  
+  @IsMongoId()
+  teamMemberId: string;  
 
   @IsOptional()
   @IsNumber()
-  readonly productivityScore?: number;
+  @Min(1)
+  @Max(5)
+  productivityScore?: number;
 
   @IsOptional()
   @IsNumber()
-  readonly teamCollaborationScore?: number;
+  @Min(1)
+  @Max(5)
+  teamCollaborationScore?: number;
 
   @IsOptional()
   @IsNumber()
-  readonly technicalSkillLevel?: number;
+  @Min(1)
+  @Max(5)
+  technicalSkillLevel?: number;
 
   @IsOptional()
   @IsNumber()
-  readonly clientFeedbackRating?: number;
+  @Min(1)
+  @Max(5)
+  clientFeedbackRating?: number;
 }

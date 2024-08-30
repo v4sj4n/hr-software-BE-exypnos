@@ -1,27 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { Project } from './project.schema';
-import { User } from './user.schema';
+import { Document, Types } from 'mongoose';
 
 @Schema()
-export class Rating {
-  @Prop({ type: Types.ObjectId, required: true, ref: User.name })
+export class Rating extends Document {
+  @Prop({ type: Types.ObjectId, required: true, ref: 'User' })
   userId: Types.ObjectId;
-  
-  @Prop({ type: Types.ObjectId, required: true, ref: Project.name })
+
+  @Prop({ type: Types.ObjectId, required: true, ref: 'Project' })
   projectId: Types.ObjectId;
-  
+
   @Prop({ required: false, type: Number })
-  productivityScore: number;
-  
+  productivityScore?: number;
+
   @Prop({ required: false, type: Number })
-  teamCollaborationScore: number;
-  
+  teamCollaborationScore?: number;
+
   @Prop({ required: false, type: Number })
-  technicalSkillLevel: number;
-  
+  technicalSkillLevel?: number;
+
   @Prop({ required: false, type: Number })
-  clientFeedbackRating: number;
+  clientFeedbackRating?: number;
 }
 
 export const RatingSchema = SchemaFactory.createForClass(Rating);

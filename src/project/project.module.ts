@@ -13,5 +13,6 @@ import { User, UserSchema } from 'src/common/schema/user.schema';
   controllers: [ProjectController],
   providers: [ProjectService],
   exports: [ProjectService],
+  
 })
 export class ProjectModule {}

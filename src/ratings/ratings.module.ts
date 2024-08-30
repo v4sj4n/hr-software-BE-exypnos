@@ -1,20 +1,12 @@
-// src/ratings/ratings.module.ts
-import { Module, forwardRef } from '@nestjs/common';
-import { RatingsService } from './ratings.service';
-import { RatingsController } from './ratings.controller';
+// project.module.ts
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Rating, RatingSchema } from 'src/common/schema/rating.schema';
-import { ProjectModule } from '../project/project.module';
-import { UserModule } from '../user/user.module';
+import { Project, ProjectSchema } from 'src/common/schema/project.schema';
+import { ProjectService } from './project.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Rating.name, schema: RatingSchema }]),
-    forwardRef(() => UserModule), // Use forwardRef() to break the circular dependency
-    ProjectModule,
-  ],
-  providers: [RatingsService],
-  controllers: [RatingsController],
-  exports: [RatingsService],
+  imports: [MongooseModule.forFeature([{ name: Project.name, schema: ProjectSchema }])],
+  providers: [ProjectService],
+  exports: [ProjectService], // Make sure the service is exported if it's used elsewhere
 })
-export class RatingsModule {}
+export class ProjectModule {}
