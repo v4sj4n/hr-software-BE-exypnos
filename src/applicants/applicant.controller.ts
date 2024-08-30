@@ -40,16 +40,20 @@ export class ApplicantsController {
     );
   }
 
+
+
   @Public()
   @Get('confirm')
-  async handleApplicantConfirmation(
-    @Query('token') token: string,
-    // @Res() res: Response,
-  ) {
-    // await this.applicantsService.confirmApplication(token);
-    // return res.redirect('/confirmation-success');
-    return await this.applicantsService.confirmApplication(token);
+  async confirmApplication(@Query('token') token: string, @Res() res: Response) {
+      await this.applicantsService.confirmApplication(token);
+  
+      const redirectUrl = `http://localhost:5173/recruitment/confirm?token=${token}&status=success`;
+  
+      // Perform the redirect
+      return res.redirect(redirectUrl);
   }
+  
+  
 
   @Get(':id')
   async findOne(@Param('id') id: string) {

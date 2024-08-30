@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -19,9 +15,10 @@ import {
   ApplicantDocument,
 } from 'src/common/schema/applicant.schema';
 import { DateTime } from 'luxon';
-import { NotificationService } from 'src/notification/notification.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { Injectable, NotFoundException, HttpException, HttpStatus, ConflictException } from '@nestjs/common';
+
 
 @Injectable()
 export class ApplicantsService {
@@ -74,7 +71,7 @@ export class ApplicantsService {
             `Deleted unconfirmed applicant with ID: ${applicant._id}`,
           );
         }
-      }, 30000);
+      }, 300000);
 
       return applicant;
     } catch (err) {
@@ -83,23 +80,30 @@ export class ApplicantsService {
     }
   }
 
-  async confirmApplication(token?: string): Promise<string> {
+  async confirmApplication(token?: string): Promise<void> {
     if (!token) {
-      throw new NotFoundException('Confirmation token is required.');
+        throw new NotFoundException('Confirmation token is required.');
     }
+    
+    console.log('Token received for confirmation:', token); // Log the token
+
     const applicant = await this.applicantModel.findOne({
-      confirmationToken: token,
+        confirmationToken: token,
     });
+
     if (!applicant) {
-      throw new NotFoundException('Invalid or expired confirmation token.');
+        console.error('No applicant found with this token');
+        throw new NotFoundException('Invalid or expired confirmation token.');
     }
+
+    // Update the applicant status and remove the token
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null;
-
     await applicant.save();
+}
 
-    return 'Confirmed';
-  }
+
+
 
   async updateApplicant(
     id: string,
