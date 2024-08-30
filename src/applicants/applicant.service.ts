@@ -25,6 +25,7 @@ import { DateTime } from 'luxon';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { create } from 'domain';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class ApplicantsService {
@@ -47,6 +48,8 @@ export class ApplicantsService {
     await applicant.save();
   }
   async findAll(
+    page?: number,
+    limit?: number,
     currentPhase?: string,
     startDate?: Date,
     endDate?: Date,
@@ -81,8 +84,11 @@ export class ApplicantsService {
             break;
         }
       }
+      if (!limit && !page) {
+        return await this.applicantModel.find(filter);
+      }
 
-      return await this.applicantModel.find(filter).exec();
+      return paginate(page, limit, this.applicantModel, filter);
     } catch (error) {
       console.error('Error filtering applicants:', error);
       throw new Error('Failed to filter applicants');

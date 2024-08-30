@@ -4,14 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
+import mongoose, { FilterQuery, Model, PipelineStage, PopulateOptions } from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { DateTime } from 'luxon';
-import { paginate } from 'src/common/util/pagination';
+import { aggregatePaginate, paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class AssetService {
@@ -47,17 +47,15 @@ export class AssetService {
     }
   }
 
-  async findAll(availability: string): Promise<Asset[]> {
-    const filter: FilterQuery<Asset> = {
+  async findAll(page:number,limit:number,availability:string): Promise<Asset[]> {
+    try {  
+      const filter: FilterQuery<Asset> = {
       isDeleted: false,
     };
     if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
       filter.status = availability;
     }
-    try {
-      return await this.assetModel
-        .find(filter)
-        .populate('userId', 'firstName lastName');
+      return  paginate(page,limit,this.assetModel,filter);
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -115,7 +113,6 @@ export class AssetService {
   ) {
     const now = DateTime.now();
 
-    // Ensure the history array is initialized if it doesn't exist
     if (!existingAsset.history) {
       existingAsset.history = [];
     }
@@ -123,15 +120,12 @@ export class AssetService {
     let takenDate;
 
     if (updateAssetDto.takenDate) {
-      // Convert takenDate from ISO string to JS Date
       takenDate = DateTime.fromISO(
         updateAssetDto.takenDate.toString(),
       ).toJSDate();
     } else if (existingAsset.takenDate) {
-      // If takenDate is not provided, use existingAsset's takenDate
       takenDate = DateTime.fromJSDate(existingAsset.takenDate).toJSDate();
     } else {
-      // If takenDate is not available, we can't proceed
       throw new ConflictException(
         'Taken date is required for assigned assets.',
       );
@@ -274,7 +268,6 @@ export class AssetService {
     page: number,
     limit: number,
   ): Promise<any> {
-    console.log('search', users);
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {
@@ -345,7 +338,7 @@ export class AssetService {
         },
       ];
 
-      const paginatedResults = await paginate(
+      const paginatedResults = await aggregatePaginate(
         page,
         limit,
         this.userModel,
@@ -359,63 +352,6 @@ export class AssetService {
     }
   }
 
-  async getUserWithAssets(id: string): Promise<User> {
-    const user = await this.userModel.findById(id).populate('auth');
-    if (!user || user.isDeleted) {
-      throw new ConflictException(`User with id ${id} not found`);
-    }
-
-    try {
-      const userWithAsset = await this.userModel.aggregate([
-        {
-          $match: {
-            _id: new mongoose.Types.ObjectId(id),
-          },
-        },
-        {
-          $lookup: {
-            from: 'assets',
-            localField: '_id',
-            foreignField: 'userId',
-            as: 'assets',
-          },
-        },
-        {
-          $lookup: {
-            from: 'auths',
-            localField: 'auth',
-            foreignField: '_id',
-            as: 'authData',
-          },
-        },
-        {
-          $unwind: {
-            path: '$authData',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            firstName: 1,
-            lastName: 1,
-            role: 1,
-            imageUrl: 1,
-            email: '$authData.email',
-            phone: 1,
-            assets: 1,
-          },
-        },
-      ]);
-      if (userWithAsset.length === 0) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-
-      return userWithAsset[0];
-    } catch (err) {
-      throw new ConflictException(err);
-    }
-  }
 
   async getAssetBySerialNumber(serialNumber: string): Promise<Asset> {
     const asset = await this.assetModel

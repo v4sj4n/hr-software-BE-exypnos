@@ -24,11 +24,15 @@ export class ApplicantsController {
 
   @Get()
   async findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
     @Query('currentPhase') currentPhase: string,
     @Query('startDate') startDate?: Date,
     @Query('endDate') endDate?: Date,
   ) {
     return await this.applicantsService.findAll(
+      page,
+      limit,
       currentPhase,
       startDate,
       endDate,

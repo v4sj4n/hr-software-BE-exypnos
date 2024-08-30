@@ -4,15 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, PopulateOption, PopulateOptions, Types } from 'mongoose';
 import { Salary } from '../common/schema/salary.schema';
 import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import { Cron } from '@nestjs/schedule';
 import { paginate } from 'src/common/util/pagination';
-import { populate } from 'dotenv';
-import { resolve } from 'path';
+
 
 @Injectable()
 export class SalaryService {
@@ -52,36 +51,39 @@ export class SalaryService {
     limit: number,
     month?: number,
     year?: number,
-  ): Promise<Salary[]> {
+    netSalary?: number,
+    workingDays?: number,
+    currency?: string,
+    bonus?: number,
+    socialSecurity?: number,
+    healthInsurance?: number,
+    grossSalary?: number
+  ): Promise<any> {
     try {
-      console.log('month', month);
-      console.log('year', year);
-      console.log('page', page);
-      console.log('limit', limit);
       const filter: any = {};
-      if (month !== null && month !== undefined) {
-        filter.month = month;
-      }
-      if (year) {
-        filter.year = year;
-      }
-      const paginateSalary = await paginate(
-        page,
-        limit,
-        this.salaryModel,
-        filter,
-      );
-      paginateSalary.data = await this.salaryModel
-        .find(filter)
-        .sort({
-          month: -1,
-          year: -1,
-        })
-        .populate('userId', 'firstName lastName phone position createdAt');
-      return paginateSalary;
+
+      if (month) filter.month = month;
+      if (year) filter.year = year;
+      if (netSalary) filter.netSalary = netSalary;
+      if (workingDays) filter.workingDays = workingDays;
+      if (currency) filter.currency = currency;
+      if (bonus) filter.bonus = bonus;
+      if (socialSecurity) filter.socialSecurity = socialSecurity;
+      if (healthInsurance) filter.healthInsurance = healthInsurance;
+      if (grossSalary) filter.grossSalary = grossSalary;
+
+
+      const sort = { month: -1, year: -1 };
+      const populate: PopulateOptions = {
+        path: 'userId',
+        select: 'firstName lastName phone position createdAt'
+      };
+
+      const paginatedSalary = paginate(page, limit, this.salaryModel, filter, sort, populate);
+      return paginatedSalary;
     } catch (error) {
-      console.log(error);
-      throw new ConflictException(error);
+      console.error('Error in findAll method:', error);
+      throw new ConflictException('An error occurred while fetching salary data');
     }
   }
 
@@ -110,20 +112,11 @@ export class SalaryService {
         query = query.limit(6);
         return query;
       }
-      const paginateSalary = await paginate(
-        page,
-        limit,
-        this.salaryModel,
-        filter,
-      );
-      paginateSalary.data = await this.salaryModel
-        .find(filter)
-        .sort({
-          month: -1,
-          year: -1,
-        })
-        .populate('userId', 'firstName lastName phone position createdAt');
-      return paginateSalary;
+
+      const sort = { month: -1, year: -1 };
+      const populate :PopulateOptions = {path: 'userId', select: 'firstName lastName phone position createdAt'};
+      const paginatedSalary = await paginate(page, limit, this.salaryModel, filter, sort, populate);
+      return paginatedSalary;
     } catch (error) {
       throw new ConflictException(error);
     }

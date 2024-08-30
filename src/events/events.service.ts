@@ -124,8 +124,8 @@ export class EventsService {
   async findAll(
     search: string,
     type: string,
-    page: number,
-    limit: number,
+    page?: number,
+    limit?: number,
   ): Promise<Event[]> {
     try {
       const filter: FilterQuery<Event> = {};
@@ -138,7 +138,11 @@ export class EventsService {
       } else {
         filter.type = { $ne: 'career' };
       }
+      if(!page && !limit) {
+        return await this.eventModel.find(filter).sort({ createdAt: -1 });
+      }
       return await paginate(page, limit, this.eventModel, filter);
+
     } catch (error) {
       throw new ConflictException(error);
     }
