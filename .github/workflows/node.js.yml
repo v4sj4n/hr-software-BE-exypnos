@@ -17,8 +17,4 @@ jobs:
       - run: |
           npm i -g yarn
           yarn
-      - run: |
-          touch .env
-          echo "${{ secrets.PROD_ENV_FILE }}" > .env
-           echo "${{ secrets.PROD_ENV_FILE }}"
       - run: yarn build
