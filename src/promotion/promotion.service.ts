@@ -11,7 +11,10 @@ export class PromotionService {
   ) {}
 
   async create(createPromotionDto: CreatePromotionDto): Promise<Promotion> {
-    const createdPromotion = new this.promotionModel(createPromotionDto);
+    const createdPromotion = new this.promotionModel({
+      ...createPromotionDto,
+      userId: new Types.ObjectId(createPromotionDto.userId),  // Convert userId to ObjectId
+    });
     return createdPromotion.save();
   }
 
@@ -20,7 +23,7 @@ export class PromotionService {
   }
 
   async findByUserId(userId: Types.ObjectId): Promise<Promotion[]> {
-    return this.promotionModel.find({ userId }).exec();
+    return this.promotionModel.find({ userId: new Types.ObjectId(userId) }).exec();
   }
 
   async findById(id: Types.ObjectId): Promise<Promotion> {

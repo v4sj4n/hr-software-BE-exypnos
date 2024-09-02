@@ -5,22 +5,27 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion } from 'src/common/schema/promotion.schema';
 import { Types } from 'mongoose';
 
-@Controller('promotions')  // Make sure the path is 'promotions'
+@Controller('promotions')
 export class PromotionController {
   constructor(private readonly promotionService: PromotionService) {}
 
   @Post()
-  create(@Body() createPromotionDto: CreatePromotionDto): Promise<Promotion> {
+  async create(@Body() createPromotionDto: CreatePromotionDto): Promise<Promotion> {
     return this.promotionService.create(createPromotionDto);
   }
 
   @Get()
-  findAll(): Promise<Promotion[]> {
+  async findAll(): Promise<Promotion[]> {
     return this.promotionService.findAll();
   }
 
   @Get(':userId')
-  findByUserId(@Param('userId') userId: string): Promise<Promotion[]> {
+  async findByUserId(@Param('userId') userId: string): Promise<Promotion[]> {
     return this.promotionService.findByUserId(new Types.ObjectId(userId));
+  }
+
+  @Get('promotion/:id')
+  async findById(@Param('id') id: string): Promise<Promotion> {
+    return this.promotionService.findById(new Types.ObjectId(id));
   }
 }

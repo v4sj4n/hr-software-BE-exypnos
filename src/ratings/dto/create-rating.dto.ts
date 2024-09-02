@@ -7,7 +7,7 @@ export class CreateRatingDto {
 
   @IsNotEmpty()
   @IsMongoId()
-  teamMemberId: string;  
+  userId: string;  
 
   @IsOptional()
   @IsNumber()

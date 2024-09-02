@@ -19,8 +19,12 @@ export class ProjectService {
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     try {
+      createProjectDto.projectManager = new Types.ObjectId(createProjectDto.projectManager);
+      createProjectDto.teamMembers = createProjectDto.teamMembers.map(id => new Types.ObjectId(id));
+  
       await this.validateUserIds(createProjectDto.teamMembers);
       await this.validateUserIds([createProjectDto.projectManager]);
+  
       const createdProject = new this.projectModel(createProjectDto);
       return createdProject.save();
     } catch (err) {
@@ -44,6 +48,7 @@ export class ProjectService {
       });
       if (!project) {
         throw new NotFoundException(`Project with ID ${id} not found`);
+
       }
       return project;
     } catch (err) {

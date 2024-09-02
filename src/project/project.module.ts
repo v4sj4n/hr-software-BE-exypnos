@@ -12,7 +12,7 @@ import { User, UserSchema } from 'src/common/schema/user.schema';
   ],
   controllers: [ProjectController],
   providers: [ProjectService],
-  exports: [ProjectService],
+  exports: [MongooseModule, ProjectModule],
   
 })
 export class ProjectModule {}
