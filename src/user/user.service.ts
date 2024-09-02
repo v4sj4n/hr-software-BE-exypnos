@@ -4,6 +4,7 @@ import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class UserService {
@@ -12,12 +13,23 @@ export class UserService {
     private userModel: mongoose.Model<User>,
     private readonly firebaseService: FirebaseService,
   ) {}
-  async findAll(): Promise<User[]> {
+  async findAll(page?: number, limit?: number): Promise<User[]> {
     try {
-      const users = await this.userModel
-        .find({ isDeleted: { $ne: true } })
-        .populate('auth');
-      return users;
+      if (!limit && !page) {
+        return await this.userModel.find({ isDeleted: { $ne: true } });
+      }
+      const filter = { isDeleted: { $ne: true } };
+      const populate = { path: 'auth', select: 'email' };
+      const sort = { createdAt: -1 };
+      const user = paginate(
+        page,
+        limit,
+        this.userModel,
+        filter,
+        sort,
+        populate,
+      );
+      return user;
     } catch (err) {
       throw new ConflictException(err);
     }

@@ -49,6 +49,10 @@ export class CreateSalaryDto {
   @Min(40000)
   grossSalary?: number;
 
+  @IsNumber()
+  @Min(0)
+  extraHours: number;
+
   @IsNotEmpty()
   @IsMongoId()
   userId: Types.ObjectId;

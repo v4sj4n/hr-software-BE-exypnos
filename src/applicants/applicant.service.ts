@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -19,9 +15,12 @@ import {
   ApplicantDocument,
 } from 'src/common/schema/applicant.schema';
 import { DateTime } from 'luxon';
-import { NotificationService } from 'src/notification/notification.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { NotificationService } from 'src/notification/notification.service';
+import { paginate } from 'src/common/util/pagination';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @Injectable()
 export class ApplicantsService {
@@ -31,8 +30,74 @@ export class ApplicantsService {
     private applicantModel: Model<ApplicantDocument>,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
+    private readonly notificationService: NotificationService,
   ) {}
 
+  async deleteApplicant(id: string): Promise<void> {
+    const applicant = await this.findOne(id);
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    applicant.isDeleted = true;
+    await applicant.save();
+  }
+  async findAll(
+    page?: number,
+    limit?: number,
+    currentPhase?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<Applicant[]> {
+    try {
+      const filter: any = {};
+
+      if (currentPhase) {
+        filter.currentPhase = currentPhase;
+      }
+
+      if (startDate && endDate) {
+        switch (currentPhase) {
+          case 'first_interview':
+            filter.firstInterviewDate = {
+              $ne: null,
+              $gte: startDate,
+              $lte: endDate,
+            };
+            break;
+          case 'second_interview':
+            filter.secondInterviewDate = {
+              $ne: null,
+              $gte: startDate,
+              $lte: endDate,
+            };
+            break;
+          case 'createdAt':
+            filter.createdAt = { $gte: startDate, $lte: endDate };
+            filter.firstInterviewDate = null;
+            filter.secondInterviewDate = null;
+            break;
+        }
+      }
+      if (!limit && !page) {
+        return await this.applicantModel.find(filter);
+      }
+
+      return paginate(page, limit, this.applicantModel, filter);
+    } catch (error) {
+      console.error('Error filtering applicants:', error);
+      throw new Error('Failed to filter applicants');
+    }
+  }
+
+  async findOne(id: string): Promise<ApplicantDocument> {
+    const applicant = await this.applicantModel.findById(id).exec();
+    if (!applicant) {
+      throw new NotFoundException(`Applicant with id ${id} not found`);
+    }
+    return applicant;
+  }
+
+  @Public()
   async createApplicant(
     file: Express.Multer.File,
     createApplicantDto: CreateApplicantDto,
@@ -48,7 +113,7 @@ export class ApplicantsService {
         confirmationToken,
       });
 
-      const confirmationUrl = `http://localhost:3000/applicant/confirm?token=${confirmationToken}`;
+      const confirmationUrl = `http://localhost:5173/applicant/confirm?token=${confirmationToken}&status=success`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
@@ -74,7 +139,7 @@ export class ApplicantsService {
             `Deleted unconfirmed applicant with ID: ${applicant._id}`,
           );
         }
-      }, 30000);
+      }, 300000);
 
       return applicant;
     } catch (err) {
@@ -83,23 +148,30 @@ export class ApplicantsService {
     }
   }
 
-  async confirmApplication(token?: string): Promise<string> {
+  async confirmApplication(token?: string): Promise<void> {
     if (!token) {
-      throw new NotFoundException('Confirmation token is required.');
+        throw new NotFoundException('Confirmation token is required.');
     }
+    
+    console.log('Token received for confirmation:', token); // Log the token
+
     const applicant = await this.applicantModel.findOne({
-      confirmationToken: token,
+        confirmationToken: token,
     });
+
     if (!applicant) {
-      throw new NotFoundException('Invalid or expired confirmation token.');
+        console.error('No applicant found with this token');
+        throw new NotFoundException('Invalid or expired confirmation token.');
     }
+
+    // Update the applicant status and remove the token
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null;
-
     await applicant.save();
+}
 
-    return 'Confirmed';
-  }
+
+
 
   async updateApplicant(
     id: string,
@@ -316,67 +388,8 @@ export class ApplicantsService {
     });
   }
 
-  async deleteApplicant(id: string): Promise<void> {
-    const applicant = await this.findOne(id);
-    if (!applicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
-    }
-    applicant.isDeleted = true;
-    await applicant.save();
-  }
 
-  async findAll(
-    currentPhase?: string,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<Applicant[]> {
-    try {
-      console.log('Filtering applicants...', currentPhase, startDate, endDate);
-      const filter: any = {};
-
-      if (currentPhase) {
-        filter.currentPhase = currentPhase;
-      }
-
-      if (startDate && endDate) {
-        switch (currentPhase) {
-          case 'first_interview':
-            filter.firstInterviewDate = {
-              $ne: null,
-              $gte: startDate,
-              $lte: endDate,
-            };
-            break;
-          case 'second_interview':
-            filter.secondInterviewDate = {
-              $ne: null,
-              $gte: startDate,
-              $lte: endDate,
-            };
-            break;
-          case 'createdAt':
-            filter.createdAt = { $gte: startDate, $lte: endDate };
-            filter.firstInterviewDate = null;
-            filter.secondInterviewDate = null;
-            break;
-        }
-      }
-
-      return await this.applicantModel.find(filter).exec();
-    } catch (error) {
-      console.error('Error filtering applicants:', error);
-      throw new Error('Failed to filter applicants');
-    }
-  }
-
-  async findOne(id: string): Promise<ApplicantDocument> {
-    const applicant = await this.applicantModel.findById(id).exec();
-    if (!applicant) {
-      throw new NotFoundException(`Applicant with id ${id} not found`);
-    }
-    return applicant;
-  }
-
+  
   private async checkInterviewConflict(
     date: DateTime,
     applicantId: string,

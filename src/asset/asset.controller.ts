@@ -22,8 +22,9 @@ export class AssetController {
   }
 
   @Get()
-  findAll(@Query('availability') availability: string = '') {
-    return this.assetService.findAll(availability);
+  findAll(@Query('availability') availability: string = '', @Query('page') page: number ,
+  @Query('limit') limit: number) {
+    return this.assetService.findAll(page,limit,availability);
   }
 
   @Get('user')
@@ -34,11 +35,6 @@ export class AssetController {
     @Query('limit') limit: number = 5,
   ) {
     return this.assetService.getAllUserWithAssets(search, users, page, limit);
-  }
-
-  @Get('user/:id')
-  findAllWithUsersById(@Param('id') id: string) {
-    return this.assetService.getUserWithAssets(id);
   }
 
   @Get('sn/:serialNumber')
