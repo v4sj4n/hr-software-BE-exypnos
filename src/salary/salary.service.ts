@@ -57,11 +57,11 @@ export class SalaryService {
     bonus?: number,
     socialSecurity?: number,
     healthInsurance?: number,
-    grossSalary?: number
+    grossSalary?: number,
+    name?: string,
   ): Promise<any> {
     try {
       const filter: any = {};
-
       if (month) filter.month = month;
       if (year) filter.year = year;
       if (netSalary) filter.netSalary = netSalary;
@@ -71,19 +71,44 @@ export class SalaryService {
       if (socialSecurity) filter.socialSecurity = socialSecurity;
       if (healthInsurance) filter.healthInsurance = healthInsurance;
       if (grossSalary) filter.grossSalary = grossSalary;
+     //filter by user name
+      if (name) {
+        const users = await this.userModel.find({
+          $or: [
+            { firstName: { $regex: name, $options: 'i' } },
+            { lastName: { $regex: name, $options: 'i' } },
+          ],
+        });
+        filter.userId = { $in: users.map((user) => user._id) };
+      }
 
-
-      const sort = { month: -1, year: -1 };
       const populate: PopulateOptions = {
         path: 'userId',
-        select: 'firstName lastName phone position createdAt'
+        select: 'firstName lastName phone position createdAt',
       };
+      const sort = { month: -1 };
 
-      const paginatedSalary = paginate(page, limit, this.salaryModel, filter, sort, populate);
+      if (!page && !limit) {
+        return await this.salaryModel
+          .find(filter)
+          .sort({ month: -1})
+          .populate(populate);
+      }
+
+      const paginatedSalary = paginate(
+        page,
+        limit,
+        this.salaryModel,
+        filter,
+        sort,
+        populate,
+      );
       return paginatedSalary;
     } catch (error) {
       console.error('Error in findAll method:', error);
-      throw new ConflictException('An error occurred while fetching salary data');
+      throw new ConflictException(
+        'An error occurred while fetching salary data',
+      );
     }
   }
 
@@ -114,8 +139,24 @@ export class SalaryService {
       }
 
       const sort = { month: -1, year: -1 };
-      const populate :PopulateOptions = {path: 'userId', select: 'firstName lastName phone position createdAt'};
-      const paginatedSalary = await paginate(page, limit, this.salaryModel, filter, sort, populate);
+      const populate: PopulateOptions = {
+        path: 'userId',
+        select: 'firstName lastName phone position createdAt',
+      };
+      if(!page && !limit) {
+        return await this.salaryModel
+          .find(filter)
+          .sort({ month: 1})
+          .populate(populate);
+      }
+      const paginatedSalary = await paginate(
+        page,
+        limit,
+        this.salaryModel,
+        filter,
+        sort,
+        populate,
+      );
       return paginatedSalary;
     } catch (error) {
       throw new ConflictException(error);

@@ -55,7 +55,12 @@ export class AssetService {
     if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
       filter.status = availability;
     }
-      return  paginate(page,limit,this.assetModel,filter);
+    if(!page && !limit){
+      return this.assetModel.find(filter).populate('userId','firstName lastName imageUrl');
+    }
+    const populate = {'path':'userId','select':'firstName lastName imageUrl'};
+    const sort = {createdAt:-1};
+      return  paginate(page,limit,this.assetModel,filter,sort,populate);
     } catch (error) {
       throw new ConflictException(error);
     }

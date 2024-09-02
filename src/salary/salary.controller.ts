@@ -30,10 +30,10 @@ export class SalaryController {
     @Query('workingDays') workingDays?: number,
     @Query('currency') currency?: string,
     @Query('bonus') bonus?: number,
-    @Query('bonusDescription') bonusDescription?: string,
     @Query('socialSecurity') socialSecurity?: number,
     @Query('healthInsurance') healthInsurance?: number,
     @Query('grossSalary') grossSalary?: number,
+    @Query('name') name?: string,
   ) {
     return this.salaryService.findAll(
       page,
@@ -47,6 +47,7 @@ export class SalaryController {
       socialSecurity,
       healthInsurance,
       grossSalary,
+      name,
     );
   }
   @Get('user/:id')
@@ -55,8 +56,8 @@ export class SalaryController {
     @Query('month') month: number,
     @Query('year') year: number,
     @Query('graf') graf: boolean,
-    @Query('page') page: number = 0,
-    @Query('limit') limit: number = 5,
+    @Query('page') page: number,
+    @Query('limit') limit: number ,
   ) {
     return this.salaryService.findByUserId(page, limit, id, month, year, graf);
   }

@@ -38,10 +38,11 @@ export class EventsController {
   findAll(
     @Query('search') search: string = '',
     @Query('type') type: string = '',
+    @Query('month') month: boolean,
     @Query('page') page: number,
     @Query('limit') limit: number,
   ) {
-    return this.eventsService.findAll(search, type, page, limit);
+    return this.eventsService.findAll(search, type,month, page, limit);
   }
 
   @Public()

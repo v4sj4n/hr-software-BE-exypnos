@@ -218,7 +218,7 @@ export class VacationService {
         },
       ];
 
-      return  aggregatePaginate(page, limit, this.userModel, aggregationPipeline);
+      return  aggregatePaginate(page, limit, this.userModel,objectToPassToMatch,aggregationPipeline);
     } catch (err) {
       throw new ConflictException(err);
     }

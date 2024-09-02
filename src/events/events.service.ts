@@ -124,6 +124,7 @@ export class EventsService {
   async findAll(
     search: string,
     type: string,
+    month?: boolean,
     page?: number,
     limit?: number,
   ): Promise<Event[]> {
@@ -132,6 +133,12 @@ export class EventsService {
       filter.isDeleted = false;
       if (search) {
         filter.title = { $regex: search, $options: 'i' };
+      }
+      if (month) {
+        filter.startDate = {
+          $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          $lte: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+        };
       }
       if (type) {
         filter.type = type;
