@@ -148,7 +148,7 @@ export class EventsService {
       if(!page && !limit) {
         return await this.eventModel.find(filter).sort({ createdAt: -1 });
       }
-      return await paginate(page, limit, this.eventModel, filter);
+      return await paginate(page, limit, this.eventModel, filter, { createdAt: -1 });
 
     } catch (error) {
       throw new ConflictException(error);

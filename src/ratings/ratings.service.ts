@@ -56,4 +56,8 @@ export class RatingsService {
 
     return await rating.save();
   }
+ async findByUserId(userId: string) {
+   const userObjectId = new Types.ObjectId(userId);
+    return this.ratingModel.find({ userId: userObjectId }).exec();
+  }
 }

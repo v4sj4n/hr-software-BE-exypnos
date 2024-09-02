@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { RatingsService } from './ratings.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
 
@@ -13,5 +13,9 @@ export class RatingsController {
       message: 'Rating created successfully',
       rating,
     };
+  }
+  @Get('user/:id')
+  findByUserId(@Param('id') id: string) {
+    return this.ratingsService.findByUserId(id);
   }
 }

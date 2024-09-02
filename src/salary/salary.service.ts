@@ -12,7 +12,6 @@ import { UpdateSalaryDto } from './dto/update-salary.dto';
 import { Cron } from '@nestjs/schedule';
 import { paginate } from 'src/common/util/pagination';
 
-
 @Injectable()
 export class SalaryService {
   constructor(
@@ -71,7 +70,6 @@ export class SalaryService {
       if (socialSecurity) filter.socialSecurity = socialSecurity;
       if (healthInsurance) filter.healthInsurance = healthInsurance;
       if (grossSalary) filter.grossSalary = grossSalary;
-     //filter by user name
       if (name) {
         const users = await this.userModel.find({
           $or: [
@@ -91,7 +89,7 @@ export class SalaryService {
       if (!page && !limit) {
         return await this.salaryModel
           .find(filter)
-          .sort({ month: -1})
+          .sort({ month: -1 })
           .populate(populate);
       }
 
@@ -133,8 +131,7 @@ export class SalaryService {
       }
 
       if (graf) {
-        let query = this.salaryModel.find(filter).sort({ month: 1 });
-        query = query.limit(6);
+        let query = this.salaryModel.find(filter).sort({ month: 1 }).limit(6);
         return query;
       }
 
@@ -143,12 +140,14 @@ export class SalaryService {
         path: 'userId',
         select: 'firstName lastName phone position createdAt',
       };
-      if(!page && !limit) {
+      
+      if (!page && !limit) {
         return await this.salaryModel
           .find(filter)
-          .sort({ month: 1})
+          .sort({ year: -1, month: -1 })
           .populate(populate);
       }
+      
       const paginatedSalary = await paginate(
         page,
         limit,

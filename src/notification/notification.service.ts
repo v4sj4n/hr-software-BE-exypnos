@@ -198,7 +198,7 @@ export class NotificationService {
           type: NotificationType.APPLICANT,
           isDeleted: false,
           isRead: isRead ? isRead : false,
-        });
+        }).sort({ date: -1 });
       }
       return notifications;
     } catch (error) {
@@ -222,7 +222,7 @@ export class NotificationService {
           title: 'Vacation Request',
           isDeleted: false,
           isRead: false,
-        });
+        }).sort({ date: -1 });
       } else {
         notifications = await this.notificationModel.aggregate([
           {
