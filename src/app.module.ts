@@ -18,6 +18,8 @@ import { MailModule } from './mail/mail.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
+import { RatingsModule } from './ratings/ratings.module';
+import { PromotionModule } from './promotion/promotion.module';
 
 @Module({
   imports: [
@@ -63,6 +65,9 @@ import { ProjectModule } from './project/project.module';
     FirebaseModule,
     SalaryModule,
     ProjectModule,
+    PromotionModule,
+    RatingsModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
