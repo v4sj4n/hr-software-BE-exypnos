@@ -1,22 +1,39 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Rating } from 'src/common/schema/rating.schema';
 import { Project } from 'src/common/schema/project.schema';
 import { User } from 'src/common/schema/user.schema';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 
 @Injectable()
 export class RatingsService {
+  async update(id: string, updateRatingDto: UpdateRatingDto): Promise<Rating> {
+    try {
+      const updatedRating = await this.ratingModel
+        .findByIdAndUpdate(id, updateRatingDto, { new: true })
+        .exec();
+
+      if (!updatedRating) {
+        throw new NotFoundException(`Rating with ID ${id} not found`);
+      }
+
+      return updatedRating;
+    }
+  }
+
   constructor(
     @InjectModel(Rating.name) private readonly ratingModel: Model<Rating>,
     @InjectModel(Project.name) private readonly projectModel: Model<Project>,
   ) {}
 
-  async createRatingForTeamMember(createRatingDto: CreateRatingDto): Promise<Rating> {
+  async createRatingForTeamMember(
+    createRatingDto: CreateRatingDto,
+  ): Promise<Rating> {
     const { projectId, userId } = createRatingDto;
 
-    console.log('Received userId:', userId);  // Debugging line
+    console.log('Received userId:', userId); // Debugging line
 
     if (!userId) {
       throw new BadRequestException('userId is required');
@@ -36,8 +53,8 @@ export class RatingsService {
     console.log('Project teamMembers:', project.teamMembers);
 
     // Check if the userId exists in the teamMembers array
-    const isTeamMember = project.teamMembers.some(
-      memberId => memberId.equals(userObjectId)
+    const isTeamMember = project.teamMembers.some((memberId) =>
+      memberId.equals(userObjectId),
     );
 
     if (!isTeamMember) {

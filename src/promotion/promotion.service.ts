@@ -3,9 +3,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Promotion, PromotionDocument } from 'src/common/schema/promotion.schema';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
+import { UpdatePromotionDto } from './dto/update-promotion.dto';
 
 @Injectable()
 export class PromotionService {
+  update(arg0: string, updatePromotionDto: UpdatePromotionDto): Promotion | PromiseLike<Promotion> {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectModel(Promotion.name) private promotionModel: Model<PromotionDocument>,
   ) {}
