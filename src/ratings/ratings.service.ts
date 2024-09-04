@@ -16,7 +16,6 @@ export class RatingsService {
   async createRatingForTeamMember(createRatingDto: CreateRatingDto): Promise<Rating> {
     const { projectId, userId } = createRatingDto;
 
-    console.log('Received userId:', userId);  // Debugging line
 
     if (!userId) {
       throw new BadRequestException('userId is required');
@@ -32,8 +31,6 @@ export class RatingsService {
       throw new BadRequestException('Project not found');
     }
 
-    // Log the retrieved teamMembers array and userId
-    console.log('Project teamMembers:', project.teamMembers);
 
     // Check if the userId exists in the teamMembers array
     const isTeamMember = project.teamMembers.some(

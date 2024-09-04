@@ -284,7 +284,6 @@ export class ApplicantsService {
 
     if (updateApplicantDto.status) {
       applicant.status = updateApplicantDto.status;
-      console.log('Updated status:', applicant.status);
 
       if (updateApplicantDto.status === ApplicantStatus.REJECTED) {
         await this.sendEmail(applicant, EmailType.REJECTED_APPLICATION);

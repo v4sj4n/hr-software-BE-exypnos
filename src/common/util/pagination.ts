@@ -9,7 +9,6 @@ export async function paginate(
   populate?: PopulateOptions | (string | PopulateOptions)[],
 ): Promise<any> {
   try {
-    page = page > 0 ? page - 1 : 0;
     const count = await model.countDocuments(filter);
 
     let query = model.find(filter);
@@ -39,7 +38,6 @@ export async function aggregatePaginate(
 ): Promise<any> {
   return new Promise(async (resolve, reject) => {
     try {
-      page = page > 0 ? page - 1 : 0;
       let count: number;
       let data: any[];
 

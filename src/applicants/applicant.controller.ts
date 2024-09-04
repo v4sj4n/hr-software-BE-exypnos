@@ -61,7 +61,6 @@ export class ApplicantsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     return await this.applicantsService.findOne(id);
   }
 
