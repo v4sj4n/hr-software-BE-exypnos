@@ -1,13 +1,18 @@
 import { IsNotEmpty, IsMongoId, IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateRatingDto {
   @IsNotEmpty()
   @IsMongoId()
-  projectId: string;
+  projectId: Types.ObjectId;
 
   @IsNotEmpty()
   @IsMongoId()
-  userId: string;  
+  userId: Types.ObjectId;  
+
+  @IsNotEmpty()
+  @IsMongoId()
+  raterId: Types.ObjectId;
 
   @IsOptional()
   @IsNumber()
