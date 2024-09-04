@@ -1,22 +1,21 @@
-// src/promotion/dto/create-promotion.dto.ts
-import { IsNotEmpty, IsEnum, IsOptional, IsDateString, IsMongoId } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsDateString, IsMongoId } from 'class-validator';
 import { Types } from 'mongoose';
 import { PositionType, GradeType } from '../../common/enum/position.enum';
 
 export class CreatePromotionDto {
   @IsNotEmpty()
   @IsMongoId()
-  readonly userId: Types.ObjectId;
+  userId: Types.ObjectId;
 
-  @IsOptional()
-  @IsEnum(PositionType)
-  readonly position: PositionType;
-
-  @IsOptional()
+  @IsNotEmpty()
   @IsDateString()
-  readonly startDate: Date;
+  startDate: Date;
 
-  @IsOptional()
+  @IsNotEmpty()
+  @IsEnum(PositionType)
+  position: PositionType;
+
+  @IsNotEmpty()
   @IsEnum(GradeType)
-  readonly grade: GradeType;
+  grade: GradeType;
 }

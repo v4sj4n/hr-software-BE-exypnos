@@ -55,6 +55,10 @@ export class ApplicantsService {
   ): Promise<Applicant[]> {
     try {
       const filter: any = {};
+      filter.isDeleted = false;
+      filter.status = {
+        $nin: [ApplicantStatus.PENDING, ApplicantStatus.EMPLOYED],
+      };
 
       if (currentPhase) {
         filter.currentPhase = currentPhase;
@@ -131,20 +135,23 @@ export class ApplicantsService {
         },
       });
 
-      setTimeout(async () => {
-        const pendingApplicant = await this.applicantModel
-          .findById(applicant._id)
-          .exec();
-        if (
-          pendingApplicant &&
-          pendingApplicant.status === ApplicantStatus.PENDING
-        ) {
-          await this.applicantModel.deleteOne({ _id: applicant._id }).exec();
-          console.log(
-            `Deleted unconfirmed applicant with ID: ${applicant._id}`,
-          );
-        }
-      }, 300000);
+      setTimeout(
+        async () => {
+          const pendingApplicant = await this.applicantModel
+            .findById(applicant._id)
+            .exec();
+          if (
+            pendingApplicant &&
+            pendingApplicant.status === ApplicantStatus.PENDING
+          ) {
+            await this.applicantModel.deleteOne({ _id: applicant._id }).exec();
+            console.log(
+              `Deleted unconfirmed applicant with ID: ${applicant._id}`,
+            );
+          }
+        },
+        1000 * 60 * 60,
+      );
 
       await this.notificationService.createNotification(
         'New Application',
@@ -217,14 +224,25 @@ export class ApplicantsService {
       const isReschedule = !!applicant.firstInterviewDate;
       applicant.firstInterviewDate = firstInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.FIRST_INTERVIEW;
-
-      await this.sendEmail(
-        applicant,
-        EmailType.FIRST_INTERVIEW,
-        updateApplicantDto.customSubject,
-        updateApplicantDto.customMessage,
-        isReschedule,
-      );
+      if (
+        updateApplicantDto.customSubject &&
+        updateApplicantDto.customMessage
+      ) {
+        await this.sendEmail(
+          applicant,
+          EmailType.CUSTOM,
+          updateApplicantDto.customSubject,
+          updateApplicantDto.customMessage,
+        );
+      } else {
+        await this.sendEmail(
+          applicant,
+          EmailType.FIRST_INTERVIEW,
+          updateApplicantDto.customSubject,
+          updateApplicantDto.customMessage,
+          isReschedule,
+        );
+      }
     }
 
     if (updateApplicantDto.secondInterviewDate) {
@@ -259,23 +277,25 @@ export class ApplicantsService {
       const isReschedule = !!applicant.secondInterviewDate;
       applicant.secondInterviewDate = secondInterviewDate.toJSDate();
       applicant.currentPhase = ApplicantPhase.SECOND_INTERVIEW;
-
-      await this.sendEmail(
-        applicant,
-        EmailType.SECOND_INTERVIEW,
-        updateApplicantDto.customSubject,
-        updateApplicantDto.customMessage,
-        isReschedule,
-      );
-    }
-
-    if (updateApplicantDto.customSubject && updateApplicantDto.customMessage) {
-      await this.sendEmail(
-        applicant,
-        EmailType.CUSTOM,
-        updateApplicantDto.customSubject,
-        updateApplicantDto.customMessage,
-      );
+      if (
+        updateApplicantDto.customSubject &&
+        updateApplicantDto.customMessage
+      ) {
+        await this.sendEmail(
+          applicant,
+          EmailType.CUSTOM,
+          updateApplicantDto.customSubject,
+          updateApplicantDto.customMessage,
+        );
+      } else {
+        await this.sendEmail(
+          applicant,
+          EmailType.SECOND_INTERVIEW,
+          updateApplicantDto.customSubject,
+          updateApplicantDto.customMessage,
+          isReschedule,
+        );
+      }
     }
 
     if (updateApplicantDto.notes) {
