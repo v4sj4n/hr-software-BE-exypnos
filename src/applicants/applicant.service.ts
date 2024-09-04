@@ -1,4 +1,3 @@
-
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
@@ -19,17 +18,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { paginate } from 'src/common/util/pagination';
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Public } from 'src/common/decorator/public.decorator';
+import { AuthService } from 'src/auth/auth.service';
+import { NotificationType } from 'src/common/enum/notification.enum';
 
 @Injectable()
 export class ApplicantsService {
-  authService: any;
   constructor(
     @InjectModel(Applicant.name)
     private applicantModel: Model<ApplicantDocument>,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
+    private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -141,6 +146,13 @@ export class ApplicantsService {
         }
       }, 300000);
 
+      await this.notificationService.createNotification(
+        'New Application',
+        `${createApplicantDto.firstName} ${createApplicantDto.lastName} has submitted a new application for the position of ${createApplicantDto.positionApplied}`,
+        NotificationType.APPLICANT,
+        applicant._id as Types.ObjectId,
+        new Date(),
+      );
       return applicant;
     } catch (err) {
       console.error('Error creating applicant or sending email:', err);
@@ -150,28 +162,25 @@ export class ApplicantsService {
 
   async confirmApplication(token?: string): Promise<void> {
     if (!token) {
-        throw new NotFoundException('Confirmation token is required.');
+      throw new NotFoundException('Confirmation token is required.');
     }
-    
+
     console.log('Token received for confirmation:', token); // Log the token
 
     const applicant = await this.applicantModel.findOne({
-        confirmationToken: token,
+      confirmationToken: token,
     });
 
     if (!applicant) {
-        console.error('No applicant found with this token');
-        throw new NotFoundException('Invalid or expired confirmation token.');
+      console.error('No applicant found with this token');
+      throw new NotFoundException('Invalid or expired confirmation token.');
     }
 
     // Update the applicant status and remove the token
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null;
     await applicant.save();
-}
-
-
-
+  }
 
   async updateApplicant(
     id: string,
@@ -388,8 +397,6 @@ export class ApplicantsService {
     });
   }
 
-
-  
   private async checkInterviewConflict(
     date: DateTime,
     applicantId: string,
