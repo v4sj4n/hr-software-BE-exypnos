@@ -16,7 +16,7 @@ export class UserService {
   async findAll(page?: number, limit?: number): Promise<User[]> {
     try {
       if (!limit && !page) {
-        return await this.userModel.find({ isDeleted: { $ne: true } });
+        return await this.userModel.find({ isDeleted: { $ne: true } }).populate('auth', 'email');
       }
       const filter = { isDeleted: { $ne: true } };
       const populate = { path: 'auth', select: 'email' };

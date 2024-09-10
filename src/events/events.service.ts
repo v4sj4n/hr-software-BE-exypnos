@@ -99,8 +99,8 @@ export class EventsService {
         'Event Created',
         `Event ${createdEvent.title} has been created`,
         NotificationType.EVENT,
-        createdEvent._id as Types.ObjectId,
         new Date(),
+        createdEvent._id as Types.ObjectId,
       );
 
       await this.mailService.sendMail({
@@ -251,8 +251,8 @@ export class EventsService {
         'Event Updated',
         `Event ${updatedEvent.title} has been updated`,
         NotificationType.EVENT,
-        updatedEvent._id as Types.ObjectId,
         new Date(),
+        updatedEvent._id as Types.ObjectId,
       );
       return updatedEvent;
     } catch (error) {
@@ -275,8 +275,8 @@ export class EventsService {
         'Event Deleted',
         `Event ${result.title} has been deleted`,
         NotificationType.EVENT,
-        result._id as Types.ObjectId,
         new Date(),
+        result._id as Types.ObjectId,
       );
     } catch (error) {
       throw new ConflictException(error);

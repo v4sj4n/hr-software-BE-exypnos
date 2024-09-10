@@ -14,9 +14,16 @@ export function isDateRangeOverlapping(
   return start1 <= end2 && start2 <= end1;
 }
 
-// Vacation Validation Functions
 
-async function checkUserId(userModel: Model<User>, userId: Types.ObjectId) {
+async function checkRequestUser(userModel: Model<User>, req: Request) {
+  const userId = req['user'].sub; 
+  const userExists = await userModel.findById(userId);
+  if (!userExists) {
+    throw new NotFoundException(`User with id ${userId} not found`);
+  }
+  return userId; 
+}
+async function checkUserId(userModel: Model<User>, userId: string) {
   const userExists = await userModel.findById(userId);
   if (!userExists) {
     throw new NotFoundException(`User with id ${userId} not found`);
@@ -122,4 +129,4 @@ async function checkDatesforCreate(
   }
 }
 
-export { checkUserId, checkDatesforUpdate, checkDatesforCreate };
+export { checkRequestUser, checkUserId,checkDatesforUpdate, checkDatesforCreate };

@@ -5,6 +5,7 @@ import { Rating } from 'src/common/schema/rating.schema';
 import { Project } from 'src/common/schema/project.schema';
 import { User } from 'src/common/schema/user.schema';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { first } from 'rxjs';
 
 @Injectable()
 export class RatingsService {
@@ -17,7 +18,7 @@ export class RatingsService {
   async createRatingForTeamMember(
     createRatingDto: CreateRatingDto,
   ): Promise<Rating> {
-    const { projectId, userId ,raterId} = createRatingDto;
+    const { projectId, userId, raterId } = createRatingDto;
     const project = await this.projectModel.findOne({ _id: projectId });
     if (!project) {
       throw new BadRequestException('Project not found');
@@ -26,7 +27,7 @@ export class RatingsService {
     if (!user) {
       throw new BadRequestException('User not found');
     }
-    const rater = await this.userModel.findOne({_id: raterId});
+    const rater = await this.userModel.findOne({ _id: raterId });
     if (!rater) {
       throw new BadRequestException('Rater not found');
     }
@@ -41,7 +42,7 @@ export class RatingsService {
     if (!isProjectManager) {
       throw new BadRequestException('Rater is not the project manager');
     }
-    const rating =  new this.ratingModel(createRatingDto);
+    const rating = new this.ratingModel(createRatingDto);
 
     return await rating.save();
   }
@@ -50,46 +51,75 @@ export class RatingsService {
       new: true,
     });
   }
-  async findByUserId(userId: string, averageRating: boolean) {
-    const userObjectId = new Types.ObjectId(userId);
-    
+  async findByUser(userId?: string, averageRating?: boolean) {
+    if (userId) {
+      const userObjectId = new Types.ObjectId(userId);
+      return this.ratingModel
+        .find({ userId: userObjectId })
+        .populate('projectId', 'name');
+    }
     if (averageRating) {
-      return this.ratingModel.aggregate([
-        { $match: { userId: userObjectId } },
+      return await this.userModel.aggregate([
         {
-          $group: {
-            _id: null,
-            averageProductivity: { $avg: '$productivityScore' },
-            averageTeamCollaboration: { $avg: '$teamCollaborationScore' },
-            averageTechnicalSkill: { $avg: '$technicalSkillLevel' },
-            averageClientFeedback: { $avg: '$clientFeedbackRating' }
+          $lookup: {
+            from: 'ratings',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'ratings',
+          },
+        },
+        {
+          $unwind: {
+            path: '$ratings',
+            preserveNullAndEmptyArrays: true
           }
         },
         {
+          $group: {
+            _id: '$_id',
+            firstName: { $first: '$firstName' },
+            lastName: { $first: '$lastName' },
+            position: { $first: '$position' },
+            grade: { $first: '$grade' },
+            clientFeedbackRating: { $avg: '$ratings.clientFeedbackRating' },
+            productivityScore: { $avg: '$ratings.productivityScore' },
+            teamCollaborationScore: { $avg: '$ratings.teamCollaborationScore' },
+            technicalSkillLevel: { $avg: '$ratings.technicalSkillLevel' },
+          },
+        },
+        {
           $project: {
-            _id: 0,
-            overallAverage: {
-              $round: [{
-                $avg: [
-                  '$averageProductivity',
-                  '$averageTeamCollaboration',
-                  '$averageTechnicalSkill',
-                  '$averageClientFeedback'
-                ]
-              }, 2]
-            }
-          }
-        }
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            position: 1,
+            grade: 1,
+            averageRating: {
+              $round: [
+                {
+                  $avg: [
+                    { $ifNull: ['$clientFeedbackRating', 0] },
+                    { $ifNull: ['$productivityScore', 0] },
+                    { $ifNull: ['$teamCollaborationScore', 0] },
+                    { $ifNull: ['$technicalSkillLevel', 0] },
+                  ],
+                },
+                2,
+              ],
+            },
+          },
+        },
       ]);
     }
-    
-    return this.ratingModel
-      .find({ userId: userObjectId })
-      .populate('projectId', 'name');
   }
 
   async findByProjectId(projectId: string) {
     const projectObjectId = new Types.ObjectId(projectId);
     return this.ratingModel.find({ projectId: projectObjectId });
   }
+
+
+
+
 }
+

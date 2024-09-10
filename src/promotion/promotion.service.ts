@@ -19,9 +19,7 @@ export class PromotionService {
   ) {}
 
   async create(createPromotionDto: CreatePromotionDto): Promise<Promotion> {
-    console.log(createPromotionDto);
     const user = await this.userModel.findById(createPromotionDto.userId);
-    console.log(user);
     if (!user) {
       throw new NotFoundException(
         `User with id ${createPromotionDto.userId} not found`,

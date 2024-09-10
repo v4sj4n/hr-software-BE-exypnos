@@ -19,6 +19,7 @@ export class CreateVacationDto {
   @IsOptional()
   status?: VacationStatus;
 
+  @IsOptional()
   @IsString()
   userId: Types.ObjectId;
 }

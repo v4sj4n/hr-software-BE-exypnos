@@ -11,6 +11,7 @@ import {
 import { SalaryService } from './salary.service';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
+import { max, min } from 'class-validator';
 
 @Controller('salary')
 export class SalaryController {
@@ -26,13 +27,10 @@ export class SalaryController {
     @Query('limit') limit: number,
     @Query('month') month?: number,
     @Query('year') year?: number,
-    @Query('netSalary') netSalary?: number,
+    @Query('maxNetSalary') maxNetSalary?: number,
+    @Query('minNetSalary') minNetSalary?: number,
     @Query('workingDays') workingDays?: number,
-    @Query('currency') currency?: string,
     @Query('bonus') bonus?: number,
-    @Query('socialSecurity') socialSecurity?: number,
-    @Query('healthInsurance') healthInsurance?: number,
-    @Query('grossSalary') grossSalary?: number,
     @Query('name') name?: string,
   ) {
     return this.salaryService.findAll(
@@ -40,13 +38,10 @@ export class SalaryController {
       limit,
       month,
       year,
-      netSalary,
+      maxNetSalary,
+      minNetSalary,
       workingDays,
-      currency,
       bonus,
-      socialSecurity,
-      healthInsurance,
-      grossSalary,
       name,
     );
   }
@@ -57,7 +52,7 @@ export class SalaryController {
     @Query('year') year: number,
     @Query('graf') graf: boolean,
     @Query('page') page: number,
-    @Query('limit') limit: number ,
+    @Query('limit') limit: number,
   ) {
     return this.salaryService.findByUserId(page, limit, id, month, year, graf);
   }

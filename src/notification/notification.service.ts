@@ -22,15 +22,15 @@ export class NotificationService {
     title: string,
     content: string,
     type: NotificationType,
-    typeId: Types.ObjectId,
     date: Date,
+    typeId?: Types.ObjectId,
   ): Promise<Notification> {
     try {
       const createNotificationDto: CreateNotificationDto = {
         title,
         content,
         type,
-        typeId,
+        typeId: typeId ? typeId : new Types.ObjectId(),
         isRead: false,
         date,
       };
@@ -43,6 +43,12 @@ export class NotificationService {
     }
   }
 
+  allVacation = this.createNotification(
+    'You have more than 5 vacation requests',
+    'Please check your notifications',
+    NotificationType.ALLVACATION,
+    new Date(),
+  );
   async findAll(): Promise<Notification[]> {
     try {
       return this.notificationModel.find({ isDeleted: false });
@@ -194,11 +200,13 @@ export class NotificationService {
       }
       let notifications = [];
       if (user.role === 'hr') {
-        notifications = await this.notificationModel.find({
-          type: NotificationType.APPLICANT,
-          isDeleted: false,
-          isRead: isRead ? isRead : false,
-        }).sort({ date: -1 });
+        notifications = await this.notificationModel
+          .find({
+            type: NotificationType.APPLICANT,
+            isDeleted: false,
+            isRead: isRead ? isRead : false,
+          })
+          .sort({ date: -1 });
       }
       return notifications;
     } catch (error) {
@@ -217,12 +225,14 @@ export class NotificationService {
       }
       let notifications = [];
       if (user.role === 'hr') {
-        notifications = await this.notificationModel.find({
-          type: NotificationType.VACATION,
-          title: 'Vacation Request',
-          isDeleted: false,
-          isRead: false,
-        }).sort({ date: -1 });
+        notifications = await this.notificationModel
+          .find({
+            type: NotificationType.VACATION,
+            title: 'Vacation Request',
+            isDeleted: false,
+            isRead: false,
+          })
+          .sort({ date: -1 });
       } else {
         notifications = await this.notificationModel.aggregate([
           {
@@ -248,7 +258,15 @@ export class NotificationService {
           },
         ]);
       }
-      return notifications;
+      if (user.role === 'hr' && notifications.length > 5) {
+        for (let i = 0; i < notifications.length; i++) {
+          notifications[i].isRead = true;
+          await notifications[i].save();
+        }
+        return [await this.allVacation];
+      } else {
+        return notifications;
+      }
     } catch (error) {
       throw new ConflictException(error);
     }

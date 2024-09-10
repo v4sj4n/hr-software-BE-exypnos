@@ -50,26 +50,22 @@ export class SalaryService {
     limit: number,
     month?: number,
     year?: number,
-    netSalary?: number,
+    maxnetSalary?: number,
+    minnetSalary?: number,  
     workingDays?: number,
-    currency?: string,
     bonus?: number,
-    socialSecurity?: number,
-    healthInsurance?: number,
-    grossSalary?: number,
     name?: string,
   ): Promise<any> {
     try {
       const filter: any = {};
       if (month) filter.month = month;
       if (year) filter.year = year;
-      if (netSalary) filter.netSalary = netSalary;
       if (workingDays) filter.workingDays = workingDays;
-      if (currency) filter.currency = currency;
       if (bonus) filter.bonus = bonus;
-      if (socialSecurity) filter.socialSecurity = socialSecurity;
-      if (healthInsurance) filter.healthInsurance = healthInsurance;
-      if (grossSalary) filter.grossSalary = grossSalary;
+      if (maxnetSalary && minnetSalary) {
+        filter.netSalary = { $gte: minnetSalary, $lte: maxnetSalary };
+      }
+      
       if (name) {
         const users = await this.userModel.find({
           $or: [
@@ -109,6 +105,7 @@ export class SalaryService {
       );
     }
   }
+
 
   async findByUserId(
     page: number,

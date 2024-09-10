@@ -12,6 +12,7 @@ import { UpdateVacationDto } from './dto/update-vacation.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import {
+  checkRequestUser,
   checkUserId,
   checkDatesforUpdate,
   checkDatesforCreate,
@@ -27,20 +28,18 @@ export class VacationService {
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  async create(createVacationDto: CreateVacationDto) {
+  async create(createVacationDto: CreateVacationDto, req: Request) {
     try {
-      await checkUserId(this.userModel, createVacationDto.userId);
+      createVacationDto.userId = await checkRequestUser(this.userModel, req);
+
       await checkDatesforCreate(this.vacationModel, createVacationDto);
       const createdVacation = new this.vacationModel(createVacationDto);
-      createdVacation.userId = new mongoose.Types.ObjectId(
-        createVacationDto.userId,
-      );
       await this.notificationService.createNotification(
         'Vacation Request',
         `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
         NotificationType.VACATION,
-        createdVacation._id,
         new Date(),
+        createdVacation._id,
       );
       return await createdVacation.save();
     } catch (error) {
@@ -54,7 +53,7 @@ export class VacationService {
     type?: string,
     status?: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<any> {
     try {
       const filter: any = { isDeleted: false };
@@ -62,9 +61,9 @@ export class VacationService {
       if (type) filter.type = type;
       if (status) filter.status = status;
       if (startDate && endDate) {
-        filter.startDate = { 
-          $gte: new Date(startDate), 
-          $lte: new Date(endDate) 
+        filter.startDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
         };
       }
 
@@ -72,7 +71,9 @@ export class VacationService {
       return paginate(page, limit, this.vacationModel, filter, {}, populate);
     } catch (error) {
       console.error('Error in findAll method:', error);
-      throw new ConflictException('An error occurred while fetching vacation data');
+      throw new ConflictException(
+        'An error occurred while fetching vacation data',
+      );
     }
   }
 
@@ -94,7 +95,10 @@ export class VacationService {
         throw new NotFoundException(`Vacation with id ${id} not found`);
       }
       if (updateVacationDto.userId) {
-        await checkUserId(this.userModel, updateVacationDto.userId);
+        await checkUserId(
+          this.userModel,
+          updateVacationDto.userId as unknown as string,
+        );
       }
       if (updateVacationDto.startDate || updateVacationDto.endDate) {
         await checkDatesforUpdate(this.vacationModel, updateVacationDto, id);
@@ -109,16 +113,8 @@ export class VacationService {
       if (
         updateVacationDto.status === VacationStatus.ACCEPTED ||
         updateVacationDto.status === VacationStatus.REJECTED
-      ) {
-        await this.notificationService.createNotification(
-          `Vacation request is ${updateVacationDto.status}.`,
-          `Vacation request from ${updatedVacation.startDate} to ${updatedVacation.endDate} has been updated`,
-          NotificationType.VACATION,
-          updatedVacation._id,
-          new Date(),
-        );
-      }
-      return updatedVacation;
+      )
+        return updatedVacation;
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -134,20 +130,19 @@ export class VacationService {
       if (!vacation) {
         throw new NotFoundException(`Vacation with id ${id} not found`);
       }
-      await this.notificationService.createNotification(
-        'Vacation Request Deleted',
-        `Vacation request from ${vacation.startDate} to ${vacation.endDate} has been deleted`,
-        NotificationType.VACATION,
-        vacation._id,
-        new Date(),
-      );
+
       return vacation;
     } catch (error) {
       throw new ConflictException(error);
     }
   }
 
-  async getAllUserVacation(page:number,limit:number,search: string, users: string): Promise<User[]> {
+  async getAllUserVacation(
+    page: number,
+    limit: number,
+    search: string,
+    users: string,
+  ): Promise<User[]> {
     let objectToPassToMatch: FilterQuery<any> =
       users === 'with'
         ? {
@@ -218,7 +213,13 @@ export class VacationService {
         },
       ];
 
-      return  aggregatePaginate(page, limit, this.userModel,objectToPassToMatch,aggregationPipeline);
+      return aggregatePaginate(
+        page,
+        limit,
+        this.userModel,
+        objectToPassToMatch,
+        aggregationPipeline,
+      );
     } catch (err) {
       throw new ConflictException(err);
     }

@@ -157,8 +157,8 @@ export class ApplicantsService {
         'New Application',
         `${createApplicantDto.firstName} ${createApplicantDto.lastName} has submitted a new application for the position of ${createApplicantDto.positionApplied}`,
         NotificationType.APPLICANT,
-        applicant._id as Types.ObjectId,
         new Date(),
+        applicant._id as Types.ObjectId,
       );
       return applicant;
     } catch (err) {

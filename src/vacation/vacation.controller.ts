@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
 } from '@nestjs/common';
 
 import { VacationService } from './vacation.service';
@@ -18,20 +19,27 @@ export class VacationController {
   constructor(private readonly vacationService: VacationService) {}
 
   @Post()
-  create(@Body() createVacationDto: CreateVacationDto) {
-    return this.vacationService.create(createVacationDto);
+  create(@Body() createVacationDto: CreateVacationDto, @Req() req: Request) {
+    return this.vacationService.create(createVacationDto, req);
   }
 
   @Get()
   findAll(
     @Query('page') page: number,
-    @Query('limit') limit: number ,
+    @Query('limit') limit: number,
     @Query('type') type: string = '',
     @Query('status') status: string = '',
     @Query('startDate') startDate: string = '',
     @Query('endDate') endDate: string = '',
   ) {
-    return this.vacationService.findAll(page,limit,type, status, startDate, endDate);
+    return this.vacationService.findAll(
+      page,
+      limit,
+      type,
+      status,
+      startDate,
+      endDate,
+    );
   }
 
   @Get('user')
@@ -39,9 +47,9 @@ export class VacationController {
     @Query('search') search: string = '',
     @Query('users') users: string = 'all',
     @Query('page') page: number,
-    @Query('limit') limit: number ,
+    @Query('limit') limit: number,
   ) {
-    return this.vacationService.getAllUserVacation(page,limit,search, users);
+    return this.vacationService.getAllUserVacation(page, limit, search, users);
   }
 
   @Get('user/:id')
