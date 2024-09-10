@@ -128,8 +128,8 @@ export class NoteService {
         'Note: ' + note.title,
         note.description,
         NotificationType.NOTE,
-        note._id as Types.ObjectId,
         note.date,
+        note._id as Types.ObjectId,
       );
     }
   }
