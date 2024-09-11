@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { RatingsService } from './ratings.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 
 @Controller('rating')
 export class RatingsController {
@@ -26,7 +27,7 @@ export class RatingsController {
   @Patch(':id')
   async updateRating(
     @Param('id') id: string,
-    @Body() updateRatingDto: CreateRatingDto,
+    @Body() updateRatingDto: UpdateRatingDto,
   ) {
     return this.ratingsService.updateRating(id, updateRatingDto);
   }

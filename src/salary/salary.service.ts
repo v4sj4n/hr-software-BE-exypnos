@@ -11,6 +11,7 @@ import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import { Cron } from '@nestjs/schedule';
 import { paginate } from 'src/common/util/pagination';
+import { min } from 'class-validator';
 
 @Injectable()
 export class SalaryService {
@@ -51,10 +52,10 @@ export class SalaryService {
     month?: number,
     year?: number,
     maxnetSalary?: number,
-    minnetSalary?: number,  
+    minnetSalary?: number,
     workingDays?: number,
     bonus?: number,
-    name?: string,
+    fullName?: string,
   ): Promise<any> {
     try {
       const filter: any = {};
@@ -62,20 +63,21 @@ export class SalaryService {
       if (year) filter.year = year;
       if (workingDays) filter.workingDays = workingDays;
       if (bonus) filter.bonus = bonus;
+      if (!minnetSalary) minnetSalary = 1;
       if (maxnetSalary && minnetSalary) {
         filter.netSalary = { $gte: minnetSalary, $lte: maxnetSalary };
       }
-      
-      if (name) {
+
+      if (fullName) {
         const users = await this.userModel.find({
           $or: [
-            { firstName: { $regex: name, $options: 'i' } },
-            { lastName: { $regex: name, $options: 'i' } },
+            { firstName: { $regex: fullName, $options: 'i' } },
+            { lastName: { $regex: fullName, $options: 'i' } },
           ],
         });
         filter.userId = { $in: users.map((user) => user._id) };
       }
-
+      console.log('filter', filter);
       const populate: PopulateOptions = {
         path: 'userId',
         select: 'firstName lastName phone position createdAt',
@@ -105,7 +107,6 @@ export class SalaryService {
       );
     }
   }
-
 
   async findByUserId(
     page: number,
@@ -137,14 +138,14 @@ export class SalaryService {
         path: 'userId',
         select: 'firstName lastName phone position createdAt',
       };
-      
+
       if (!page && !limit) {
         return await this.salaryModel
           .find(filter)
           .sort({ year: -1, month: -1 })
           .populate(populate);
       }
-      
+
       const paginatedSalary = await paginate(
         page,
         limit,

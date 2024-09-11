@@ -5,7 +5,7 @@ import { Rating } from 'src/common/schema/rating.schema';
 import { Project } from 'src/common/schema/project.schema';
 import { User } from 'src/common/schema/user.schema';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { first } from 'rxjs';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 
 @Injectable()
 export class RatingsService {
@@ -46,10 +46,14 @@ export class RatingsService {
 
     return await rating.save();
   }
-  async updateRating(id: string, updateRatingDto: CreateRatingDto) {
-    return this.ratingModel.findByIdAndUpdate(id, updateRatingDto, {
-      new: true,
-    });
+  async updateRating(id: string, updateRatingDto: UpdateRatingDto) {
+    const rating = await this.ratingModel.findById(id);
+    if (!rating) {
+      throw new BadRequestException('Rating not found');
+    }
+    return await this.ratingModel.findByIdAndUpdate(
+      id, updateRatingDto, { new: true });
+
   }
   async findByUser(userId?: string, averageRating?: boolean) {
     if (userId) {
