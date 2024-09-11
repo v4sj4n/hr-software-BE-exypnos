@@ -15,6 +15,7 @@ import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { generateRandomPassword } from 'src/common/util/generateRandomPassword';
 import { Auth } from 'src/common/schema/auth.schema';
 import { MailService } from 'src/mail/mail.service';
+import { randomBytes } from 'crypto';
 
 type IUser = User & { email: string };
 
@@ -26,45 +27,93 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly mailService: MailService,
   ) {}
+
+  // Make this method public so it can be reused by other services
+  public generateConfirmationToken(): string {
+    return randomBytes(32).toString('hex');
+  }
+
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     try {
-      const { email, ...userProperties } = createUserDto;
+      const { email, firstName, lastName, phone, imageUrl, gender, dob, pob } =
+        createUserDto;
 
+      // Generate random password and hash it
       const password = generateRandomPassword();
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
+      // Check if user already exists by email
       const existingAuth = await this.authModel.findOne({ email });
       if (existingAuth) {
         throw new ConflictException('Email already exists');
       }
 
+      // Create user authentication entry
       const userAuth = await this.authModel.create({
         email,
         password: hashedPassword,
       });
 
-      console.log(password);
+      // Create user record with new fields included
       const user = await this.userModel.create({
-        ...userProperties,
+        firstName,
+        lastName,
+        phone,
+        imageUrl,
+        gender,
+        dob,
+        pob,
         auth: userAuth._id,
       });
 
+      // Send welcome email
       await this.mailService.sendMail({
-        to: createUserDto.email,
-        subject: 'Mireseerdhe ne Codevider',
+        to: email,
+        subject: 'Welcome to Codevider',
         template: 'welcome',
         context: {
-          name: createUserDto.firstName + ' ' + createUserDto.lastName,
-          email: createUserDto.email,
+          name: firstName + ' ' + lastName,
+          email,
           password,
         },
       });
+
       return user;
     } catch (err) {
       throw new ConflictException(err);
     }
   }
+
+  async sendPasswordResetToken(email: string): Promise<string> {
+    try {
+      const userAuth = await this.authModel.findOne({ email });
+  
+      // Always return a success message, even if the user is not found
+      if (!userAuth) {
+        return 'If this email is registered, you will receive a password reset link.';
+      }
+  
+      const token = this.generateConfirmationToken();
+      userAuth.passwordResetToken = token;
+      userAuth.passwordResetExpires = new Date(Date.now() + 3600000); // 1-hour expiry
+      await userAuth.save();
+  
+      await this.mailService.sendMail({
+        to: email,
+        subject: 'Password Reset Confirmation',
+        template: 'password-reset',
+        context: { token, email },
+      });
+  
+      return 'If this email is registered, you will receive a password reset link.';
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+  
+  
+
   async signIn(signInUserDto: SignInUserDto): Promise<{
     message: string;
     data: { access_token: string; user: IUser };
@@ -95,14 +144,10 @@ export class AuthService {
       };
 
       return {
-        message: 'Authenticated Succesfully',
+        message: 'Authenticated Successfully',
         data: {
           access_token: await this.jwtService.signAsync(payload),
-
-          user: {
-            ...user.toObject(),
-            email: signInUserDto.email,
-          },
+          user: { ...user.toObject(), email: signInUserDto.email },
         },
       };
     } catch (err) {
@@ -129,19 +174,62 @@ export class AuthService {
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto, email: string) {
     try {
-      const user = await this.authModel.findOne({ email });
-
-      const isMatch = await bcrypt.compare(
-        updatePasswordDto.oldPassword,
-        user.password,
-      );
-      if (!isMatch) {
-        throw new UnauthorizedException('Invalid old password');
+      const userAuth = await this.authModel.findOne({ email });
+  
+      if (!userAuth) {
+        throw new NotFoundException('User not found');
       }
+  
+      const isMatch = await bcrypt.compare(updatePasswordDto.oldPassword, userAuth.password);
+      if (isMatch) {
+        const salt = await bcrypt.genSalt(10);
+        userAuth.password = await bcrypt.hash(updatePasswordDto.newPassword, salt);
+        await userAuth.save();
+        return 'Password updated successfully';
+      } else {
+        // Optionally provide a different response here to clarify the reset process
+        const token = this.generateConfirmationToken();
+        userAuth.passwordResetToken = token;
+        userAuth.passwordResetExpires = new Date(Date.now() + 3600000); // 1-hour expiry
+        await userAuth.save();
+  
+        await this.mailService.sendMail({
+          to: email,
+          subject: 'Password Reset Confirmation',
+          template: 'password-reset',
+          context: { token, email },
+        });
+  
+        return 'Old password incorrect. A password reset link has been sent to your email.';
+      }
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
+  
+
+  async confirmPasswordChange(token: string, newPassword: string, confirmPassword: string) {
+    try {
+      const userAuth = await this.authModel.findOne({
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: new Date() },
+      });
+
+      if (!userAuth) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      if (newPassword !== confirmPassword) {
+        throw new ConflictException('Passwords do not match');
+      }
+
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(updatePasswordDto.newPassword, salt);
-      user.save();
-      return 'Password updated succesfully';
+      userAuth.password = await bcrypt.hash(newPassword, salt);
+      userAuth.passwordResetToken = undefined;
+      userAuth.passwordResetExpires = undefined;
+      await userAuth.save();
+
+      return { message: 'Password has been updated successfully' };
     } catch (err) {
       throw new ConflictException(err);
     }
@@ -154,7 +242,7 @@ export class AuthService {
         { isDeleted: true },
         { new: true },
       );
-      return 'User deleted succesfully';
+      return 'User deleted successfully';
     } catch (err) {
       throw new ConflictException(err);
     }

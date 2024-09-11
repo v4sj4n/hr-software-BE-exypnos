@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/common/schema/user.schema';
@@ -38,5 +38,23 @@ export class AuthController {
       updatePasswordDto,
       req.user.email,
     );
+  }
+
+  // New route to request a password reset by generating a reset token and sending a reset email
+  @Public()
+  @Post('request-password-reset')
+  async requestPasswordReset(@Body('email') email: string) {
+    return await this.authService.sendPasswordResetToken(email);  // Updated logic
+  }
+
+  // Route to confirm password change using the token
+  @Public()
+  @Post('confirm-password-change')
+  async confirmPasswordChange(
+    @Query('token') token: string,
+    @Body('newPassword') newPassword: string,
+    @Body('confirmPassword') confirmPassword: string,
+  ) {
+    return await this.authService.confirmPasswordChange(token, newPassword, confirmPassword);
   }
 }
