@@ -172,7 +172,7 @@ export class ApplicantsService {
       throw new NotFoundException('Confirmation token is required.');
     }
 
-    console.log('Token received for confirmation:', token); // Log the token
+    console.log('Token received for confirmation:', token); 
 
     const applicant = await this.applicantModel.findOne({
       confirmationToken: token,
@@ -183,7 +183,6 @@ export class ApplicantsService {
       throw new NotFoundException('Invalid or expired confirmation token.');
     }
 
-    // Update the applicant status and remove the token
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null;
     await applicant.save();
