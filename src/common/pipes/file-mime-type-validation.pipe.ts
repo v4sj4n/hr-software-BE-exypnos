@@ -19,7 +19,6 @@ export class FileMimeTypeValidationPipe implements PipeTransform {
 
   transform(value: any): any {
     if (value?.photo) {
-      // Safely check if 'photo' exists
       const files = Array.isArray(value.photo) ? value.photo : [value.photo];
       for (const file of files) {
         if (!file || !this.allowedImageMimeTypes.includes(file.mimetype)) {
@@ -31,7 +30,6 @@ export class FileMimeTypeValidationPipe implements PipeTransform {
     }
 
     if (value?.file) {
-      // Safely check if 'file' exists
       const file = value.file;
       if (!file || !this.allowedCvMimeTypes.includes(file.mimetype)) {
         throw new BadRequestException(
