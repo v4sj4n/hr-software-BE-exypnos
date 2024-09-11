@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { VacationStatus, VacationType } from '../enum/vacation.enum';
 import { User } from './user.schema';
 
@@ -33,4 +34,6 @@ export class Vacation {
   isDeleted: boolean;
 }
 
-export const VacationSchema = SchemaFactory.createForClass(Vacation);
+ const VacationSchema = SchemaFactory.createForClass(Vacation);
+  VacationSchema.plugin(muv);
+  export { VacationSchema };

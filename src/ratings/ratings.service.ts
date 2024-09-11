@@ -51,9 +51,9 @@ export class RatingsService {
     if (!rating) {
       throw new BadRequestException('Rating not found');
     }
-    return await this.ratingModel.findByIdAndUpdate(
-      id, updateRatingDto, { new: true });
-
+    return await this.ratingModel.findByIdAndUpdate(id, updateRatingDto, {
+      new: true,
+    });
   }
   async findByUser(userId?: string, averageRating?: boolean) {
     if (userId) {
@@ -75,8 +75,8 @@ export class RatingsService {
         {
           $unwind: {
             path: '$ratings',
-            preserveNullAndEmptyArrays: true
-          }
+            preserveNullAndEmptyArrays: true,
+          },
         },
         {
           $group: {
@@ -116,14 +116,4 @@ export class RatingsService {
       ]);
     }
   }
-
-  async findByProjectId(projectId: string) {
-    const projectObjectId = new Types.ObjectId(projectId);
-    return this.ratingModel.find({ projectId: projectObjectId });
-  }
-
-
-
-
 }
-

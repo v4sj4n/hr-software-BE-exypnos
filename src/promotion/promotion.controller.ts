@@ -1,5 +1,5 @@
 
-import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete } from '@nestjs/common';
 import { PromotionService } from './promotion.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion } from 'src/common/schema/promotion.schema';
@@ -23,13 +23,17 @@ export class PromotionController {
     return await this.promotionService.findAll();
   }
 
-  @Get(':userId')
-  async findByUserId(@Param('userId') userId: string): Promise<Promotion[]> {
-    return await this.promotionService.findByUserId(userId);
+  @Get('user/:id')
+  async findByUserId(@Param('id') id: string): Promise<Promotion[]> {
+    return await this.promotionService.findByUserId(id);
   }
 
-  @Get('promotion/:id')
+  @Get(':id')
   async findById(@Param('id') id: string): Promise<Promotion> {
     return await this.promotionService.findById(id);
+  }
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<Promotion> {
+    return await this.promotionService.delete(id);
   }
 }

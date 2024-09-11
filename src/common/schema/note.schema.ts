@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { User } from './user.schema';
 
 @Schema({ timestamps: true })
@@ -27,4 +28,6 @@ export class Note extends Document {
   isDeleted: boolean;
 }
 
-export const NoteSchema = SchemaFactory.createForClass(Note);
+ const NoteSchema = SchemaFactory.createForClass(Note);
+  NoteSchema.plugin(muv);
+export { NoteSchema };

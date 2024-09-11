@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { EventType } from '../enum/event.enum';
 
 export class PollOption {
@@ -62,4 +63,6 @@ export class Event {
   isDeleted: boolean;
 }
 
-export const EventSchema = SchemaFactory.createForClass(Event);
+ const EventSchema = SchemaFactory.createForClass(Event);
+EventSchema.plugin(muv);
+export { EventSchema };

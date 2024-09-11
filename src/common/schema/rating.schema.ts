@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 
 @Schema()
 export class Rating extends Document {
@@ -26,8 +27,9 @@ export class Rating extends Document {
 
   @Prop({ required: false, type: Boolean, default: false })
   isDeleted: boolean;
-  
 }
 
-export const RatingSchema = SchemaFactory.createForClass(Rating);
+const RatingSchema = SchemaFactory.createForClass(Rating);
 RatingSchema.index({ userId: 1, projectId: 1 }, { unique: true });
+RatingSchema.plugin(muv);
+export { RatingSchema };

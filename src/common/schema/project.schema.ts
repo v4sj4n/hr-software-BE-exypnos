@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { User } from './user.schema';
 import { ProjectStatus } from '../enum/project.enum';
 
@@ -27,4 +28,6 @@ export class Project {
   isDeleted: boolean;
 }
 
-export const ProjectSchema = SchemaFactory.createForClass(Project);
+ const ProjectSchema = SchemaFactory.createForClass(Project);
+  ProjectSchema.plugin(muv);
+  export { ProjectSchema };

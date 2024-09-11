@@ -4,7 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model, PipelineStage, PopulateOptions } from 'mongoose';
+import mongoose, {
+  FilterQuery,
+  Model,
+  PipelineStage,
+  PopulateOptions,
+} from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
@@ -47,20 +52,29 @@ export class AssetService {
     }
   }
 
-  async findAll(page:number,limit:number,availability:string): Promise<Asset[]> {
-    try {  
+  async findAll(
+    page: number,
+    limit: number,
+    availability: string,
+  ): Promise<Asset[]> {
+    try {
       const filter: FilterQuery<Asset> = {
-      isDeleted: false,
-    };
-    if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
-      filter.status = availability;
-    }
-    if(!page && !limit){
-      return this.assetModel.find(filter).populate('userId','firstName lastName imageUrl');
-    }
-    const populate = {'path':'userId','select':'firstName lastName imageUrl'};
-    const sort = {createdAt:-1};
-      return  paginate(page,limit,this.assetModel,filter,sort,populate);
+        isDeleted: false,
+      };
+      if (Object.values(AssetStatus).includes(availability as AssetStatus)) {
+        filter.status = availability;
+      }
+      if (!page && !limit) {
+        return this.assetModel
+          .find(filter)
+          .populate('userId', 'firstName lastName imageUrl');
+      }
+      const populate = {
+        path: 'userId',
+        select: 'firstName lastName imageUrl',
+      };
+      const sort = { createdAt: -1 };
+      return paginate(page, limit, this.assetModel, filter, sort, populate);
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -94,15 +108,6 @@ export class AssetService {
         id,
         {
           ...updateAssetDto,
-          takenDate: updateAssetDto.takenDate
-            ? new Date(updateAssetDto.takenDate)
-            : null,
-          return: updateAssetDto.returnDate
-            ? new Date(updateAssetDto.returnDate)
-            : null,
-          userId: updateAssetDto.userId
-            ? new mongoose.Types.ObjectId(updateAssetDto.userId)
-            : null,
         },
         { new: true },
       );
@@ -170,9 +175,7 @@ export class AssetService {
       const newHistoryEntry: AssetHistory = {
         updatedAt: now.toJSDate(),
         takenDate: lastHistoryEntry.takenDate,
-        returnDate: updateAssetDto.returnDate
-          ? DateTime.fromISO(updateAssetDto.returnDate.toString()).toJSDate()
-          : null,
+        returnDate: updateAssetDto.returnDate,
         user: lastHistoryEntry.user,
         status: updateAssetDto.status,
       };
@@ -356,7 +359,6 @@ export class AssetService {
       throw new ConflictException(err);
     }
   }
-
 
   async getAssetBySerialNumber(serialNumber: string): Promise<Asset> {
     const asset = await this.assetModel

@@ -77,7 +77,6 @@ export class SalaryService {
         });
         filter.userId = { $in: users.map((user) => user._id) };
       }
-      console.log('filter', filter);
       const populate: PopulateOptions = {
         path: 'userId',
         select: 'firstName lastName phone position createdAt',
@@ -209,6 +208,7 @@ export class SalaryService {
     const grossSalary = (salaryData.grossSalary / 22) * salaryData.workingDays;
     const healthInsurance = 0.017 * grossSalary;
     const socialInsurance = 0.095 * grossSalary;
+    let extraHours = salaryData.grossSalary/(22 * 8) * salaryData.extraHours;
     let tax = 0;
     if (grossSalary <= 50000) {
       tax = 0;
@@ -226,7 +226,8 @@ export class SalaryService {
         tax -
         healthInsurance -
         socialInsurance +
-        salaryData.bonus;
+        salaryData.bonus +
+        extraHours;
     } else {
       salaryData.bonus = 0;
     }
@@ -253,7 +254,7 @@ export class SalaryService {
       );
 
       for (const currentSalary of currentSalaries) {
-        const nextMonth = (currentSalary.month + 1) % 12 || 12;
+        const nextMonth = (currentSalary.month + 1) % 11 || 11;
         const nextYear =
           currentSalary.month + 1 > 11
             ? currentSalary.year + 1

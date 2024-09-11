@@ -82,7 +82,7 @@ export class NoteService {
       }
       if (note.willBeReminded) {
         await this.notificationService.updateNotification(
-          'Note: ' + note.title,
+          'Note: ' + note.title + ' deleted!',
           note.description,
           NotificationType.NOTE,
           note._id as Types.ObjectId,
@@ -112,6 +112,7 @@ export class NoteService {
 
     return date;
   }
+
   private async validateNoteData(note: Note) {
     if (note.willBeReminded) {
       if (!note.date) {

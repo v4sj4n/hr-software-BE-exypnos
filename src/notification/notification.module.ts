@@ -17,6 +17,6 @@ import { User, UserSchema } from 'src/common/schema/user.schema';
   ],
   controllers: [NotificationController],
   providers: [NotificationService],
-  exports: [NotificationService], // need to import notification module in other module
+  exports: [NotificationService],
 })
 export class NotificationModule {}

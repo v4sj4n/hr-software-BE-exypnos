@@ -39,9 +39,4 @@ export class RatingsController {
   ) {
     return this.ratingsService.findByUser(id, avarageRating);
   }
-
-  @Get('project/:id')
-  findByProjectId(@Param('id') id: string) {
-    return this.ratingsService.findByProjectId(id);
-  }
 }

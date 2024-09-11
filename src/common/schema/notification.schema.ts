@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { NotificationType } from '../enum/notification.enum';
 
 @Schema({ timestamps: true })
@@ -26,4 +27,6 @@ export class Notification {
   isDeleted: boolean;
 }
 
-export const NotificationSchema = SchemaFactory.createForClass(Notification);
+ const NotificationSchema = SchemaFactory.createForClass(Notification);
+  NotificationSchema.plugin(muv);
+  export { NotificationSchema };

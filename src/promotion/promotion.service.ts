@@ -9,7 +9,6 @@ import { Promotion } from 'src/common/schema/promotion.schema';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { User } from '../common/schema/user.schema';
-import { GradeType, PositionType } from 'src/common/enum/position.enum';
 
 @Injectable()
 export class PromotionService {
@@ -94,6 +93,14 @@ export class PromotionService {
     if (!promotion) {
       throw new NotFoundException('Promotion not found');
     }
+    return promotion;
+  }
+  async delete(id: string): Promise<Promotion> {
+    const promotion = await this.promotionModel.findById(id);
+    if (!promotion) {
+      throw new NotFoundException('Promotion not found');
+    }
+    await this.promotionModel.findByIdAndUpdate(id, { isDeleted: true });
     return promotion;
   }
 }

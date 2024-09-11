@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { PositionType, GradeType } from '../enum/position.enum';
 import { User } from './user.schema';
 
@@ -25,4 +26,6 @@ export class Promotion {
   isDeleted: boolean;
 }
 
-export const PromotionSchema = SchemaFactory.createForClass(Promotion);
+ const PromotionSchema = SchemaFactory.createForClass(Promotion);
+  PromotionSchema.plugin(muv);
+export { PromotionSchema };

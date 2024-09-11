@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import muv from 'mongoose-unique-validator';
 import { User } from './user.schema';
 
 @Schema({ timestamps: true })
@@ -48,5 +49,7 @@ export class Salary {
   userId: Types.ObjectId;
 }
 
-export const SalarySchema = SchemaFactory.createForClass(Salary);
-// SalarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });
+const SalarySchema = SchemaFactory.createForClass(Salary);
+SalarySchema.plugin(muv);
+SalarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });
+export { SalarySchema };
