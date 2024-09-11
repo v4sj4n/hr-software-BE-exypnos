@@ -4,14 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PopulateOption, PopulateOptions, Types } from 'mongoose';
+import { Model, PopulateOptions, Types } from 'mongoose';
 import { Salary } from '../common/schema/salary.schema';
 import { User } from '../common/schema/user.schema';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
 import { Cron } from '@nestjs/schedule';
 import { paginate } from 'src/common/util/pagination';
-import { min } from 'class-validator';
 
 @Injectable()
 export class SalaryService {
@@ -128,10 +127,12 @@ export class SalaryService {
       }
 
       if (graf) {
-        let query = this.salaryModel.find(filter).sort({ month: 1 }).limit(6);
+        const query = this.salaryModel
+          .find(filter)
+          .sort({ month: -1, year: -1 })
+          .limit(12);
         return query;
       }
-
       const sort = { month: -1, year: -1 };
       const populate: PopulateOptions = {
         path: 'userId',
@@ -175,7 +176,10 @@ export class SalaryService {
 
   async update(id: string, updateSalaryDto: UpdateSalaryDto): Promise<Salary> {
     try {
-      const salary = await this.salaryModel.findById(id);
+      const exsistingSalary = await this.salaryModel.findById(id);
+      if (!exsistingSalary) {
+        throw new NotFoundException(`Salary with id ${id} not found`);
+      }
       const updatedSalary = await this.salaryModel.findByIdAndUpdate(
         id,
         {
@@ -208,7 +212,8 @@ export class SalaryService {
     const grossSalary = (salaryData.grossSalary / 22) * salaryData.workingDays;
     const healthInsurance = 0.017 * grossSalary;
     const socialInsurance = 0.095 * grossSalary;
-    let extraHours = salaryData.grossSalary/(22 * 8) * salaryData.extraHours;
+    const extraHours =
+      (salaryData.grossSalary / (22 * 8)) * salaryData.extraHours;
     let tax = 0;
     if (grossSalary <= 50000) {
       tax = 0;

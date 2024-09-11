@@ -32,7 +32,7 @@ export class Salary {
   @Prop({ default: 0, type: 'number' })
   grossSalary: number;
 
-  @Prop({ required: true, type: 'number' ,default: 0}) 
+  @Prop({ required: true, type: 'number', default: 0 })
   extraHours: number;
 
   @Prop({ required: true, type: 'number' })

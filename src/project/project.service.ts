@@ -9,25 +9,51 @@ import { Project } from 'src/common/schema/project.schema';
 import { User } from 'src/common/schema/user.schema';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { RatingsService } from 'src/ratings/ratings.service';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @InjectModel(Project.name) private projectModel: Model<Project>,
     @InjectModel(User.name) private userModel: Model<User>,
+    private ratingService: RatingsService,
   ) {}
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     try {
-      createProjectDto.projectManager = new Types.ObjectId(createProjectDto.projectManager);
-      createProjectDto.teamMembers = createProjectDto.teamMembers.map(id => new Types.ObjectId(id));
-  
+      createProjectDto.projectManager = new Types.ObjectId(
+        createProjectDto.projectManager,
+      );
+      createProjectDto.teamMembers = createProjectDto.teamMembers.map(
+        (id) => new Types.ObjectId(id),
+      );
       await this.validateUserIds(createProjectDto.teamMembers);
       await this.validateUserIds([createProjectDto.projectManager]);
-  
       const createdProject = new this.projectModel(createProjectDto);
-      return createdProject.save();
+      await createdProject.save();
+      await this.ratingService.createRatingForTeamMember({
+        projectId: createdProject._id,
+        userId: createdProject.projectManager,
+        raterId: createdProject.projectManager,
+        productivityScore: 1,
+        teamCollaborationScore: 1,
+        technicalSkillLevel: 1,
+        clientFeedbackRating: 1,
+      });
+      for (let i = 0; i < createProjectDto.teamMembers.length; i++) {
+        await this.ratingService.createRatingForTeamMember({
+          projectId: createdProject._id,
+          userId: createProjectDto.teamMembers[i],
+          raterId: createdProject.projectManager,
+          productivityScore: 1,
+          teamCollaborationScore: 1,
+          technicalSkillLevel: 1,
+          clientFeedbackRating: 1,
+        });
+      }
+      return createdProject;
     } catch (err) {
+      console.log(err);
       throw new BadRequestException(err);
     }
   }
@@ -48,7 +74,6 @@ export class ProjectService {
       });
       if (!project) {
         throw new NotFoundException(`Project with ID ${id} not found`);
-
       }
       return project;
     } catch (err) {

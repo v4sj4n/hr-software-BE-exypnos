@@ -34,6 +34,6 @@ export class Vacation {
   isDeleted: boolean;
 }
 
- const VacationSchema = SchemaFactory.createForClass(Vacation);
-  VacationSchema.plugin(muv);
-  export { VacationSchema };
+const VacationSchema = SchemaFactory.createForClass(Vacation);
+VacationSchema.plugin(muv);
+export { VacationSchema };

@@ -17,12 +17,7 @@ export class RatingsController {
 
   @Post()
   async createRating(@Body() createRatingDto: CreateRatingDto) {
-    const rating =
-      await this.ratingsService.createRatingForTeamMember(createRatingDto);
-    return {
-      message: 'Rating created successfully',
-      rating,
-    };
+    await this.ratingsService.createRatingForTeamMember(createRatingDto);
   }
   @Patch(':id')
   async updateRating(

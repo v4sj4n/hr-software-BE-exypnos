@@ -42,7 +42,7 @@ export class EventsController {
     @Query('page') page: number,
     @Query('limit') limit: number,
   ) {
-    return this.eventsService.findAll(search, type,month, page, limit);
+    return this.eventsService.findAll(search, type, month, page, limit);
   }
 
   @Public()

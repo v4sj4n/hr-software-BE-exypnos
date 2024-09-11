@@ -27,6 +27,6 @@ export class Notification {
   isDeleted: boolean;
 }
 
- const NotificationSchema = SchemaFactory.createForClass(Notification);
-  NotificationSchema.plugin(muv);
-  export { NotificationSchema };
+const NotificationSchema = SchemaFactory.createForClass(Notification);
+NotificationSchema.plugin(muv);
+export { NotificationSchema };

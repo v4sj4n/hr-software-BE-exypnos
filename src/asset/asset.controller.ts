@@ -22,9 +22,12 @@ export class AssetController {
   }
 
   @Get()
-  findAll(@Query('availability') availability: string = '', @Query('page') page: number ,
-  @Query('limit') limit: number) {
-    return this.assetService.findAll(page,limit,availability);
+  findAll(
+    @Query('availability') availability: string = '',
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.assetService.findAll(page, limit, availability);
   }
 
   @Get('user')

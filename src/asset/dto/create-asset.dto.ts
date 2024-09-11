@@ -5,6 +5,7 @@ import {
   MinLength,
   MaxLength,
   IsAlphanumeric,
+  IsMongoId,
 } from 'class-validator';
 import { AssetStatus } from '../../common/enum/asset.enum';
 import { Types } from 'mongoose';
@@ -29,7 +30,7 @@ export class CreateAssetDto {
   @IsOptional()
   returnDate?: Date;
 
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   userId?: Types.ObjectId;
 }

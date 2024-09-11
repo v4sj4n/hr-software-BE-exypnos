@@ -2,7 +2,7 @@ import { FilterQuery, Model, PipelineStage, PopulateOptions } from 'mongoose';
 
 export async function paginate(
   page: number,
-  limit: number ,
+  limit: number,
   model: Model<any>,
   filter: FilterQuery<any> = {},
   sort?: any,

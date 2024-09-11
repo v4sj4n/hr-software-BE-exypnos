@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsMongoId, IsNumber, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  Min,
+  Max,
+} from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateRatingDto {
@@ -8,7 +15,7 @@ export class CreateRatingDto {
 
   @IsNotEmpty()
   @IsMongoId()
-  userId: Types.ObjectId;  
+  userId: Types.ObjectId;
 
   @IsNotEmpty()
   @IsMongoId()

@@ -49,6 +49,13 @@ export class NotificationService {
     NotificationType.ALLVACATION,
     new Date(),
   );
+  allApplication = this.createNotification(
+    'You have more than 5 application requests',
+    'Please check your notifications',
+    NotificationType.ALLVACATION,
+    new Date(),
+  );
+
   async findAll(): Promise<Notification[]> {
     try {
       return this.notificationModel.find({ isDeleted: false });
@@ -208,7 +215,15 @@ export class NotificationService {
           })
           .sort({ date: -1 });
       }
-      return notifications;
+      if (user.role === 'hr' && notifications.length > 5) {
+        for (let i = 0; i < notifications.length; i++) {
+          notifications[i].isRead = true;
+          await notifications[i].save();
+        }
+        return [await this.allApplication];
+      } else {
+        return notifications;
+      }
     } catch (error) {
       throw new ConflictException(error);
     }

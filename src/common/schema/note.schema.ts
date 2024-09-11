@@ -28,6 +28,6 @@ export class Note extends Document {
   isDeleted: boolean;
 }
 
- const NoteSchema = SchemaFactory.createForClass(Note);
-  NoteSchema.plugin(muv);
+const NoteSchema = SchemaFactory.createForClass(Note);
+NoteSchema.plugin(muv);
 export { NoteSchema };

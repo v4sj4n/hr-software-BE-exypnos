@@ -63,6 +63,6 @@ export class Event {
   isDeleted: boolean;
 }
 
- const EventSchema = SchemaFactory.createForClass(Event);
+const EventSchema = SchemaFactory.createForClass(Event);
 EventSchema.plugin(muv);
 export { EventSchema };

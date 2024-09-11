@@ -24,10 +24,9 @@ export class UserController {
 
   @Get()
   async findAll(
-    @Query('page') page: number ,
-    @Query('limit') limit: number ,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
   ): Promise<User[]> {
-
     return await this.userService.findAll(page, limit);
   }
   @Get('search/:name')

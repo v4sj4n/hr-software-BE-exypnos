@@ -11,7 +11,6 @@ import {
   UploadedFile,
   ConflictException,
   UsePipes,
-  BadRequestException,
   Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -44,19 +43,18 @@ export class ApplicantsController {
     );
   }
 
-
-
   @Public()
   @Get('confirm')
-  async confirmApplication(@Query('token') token: string, @Res() res: Response) {
-      await this.applicantsService.confirmApplication(token);
-  
-      const redirectUrl = `http://localhost:5173/recruitment/confirm?token=${token}&status=success`;
-  
-      return res.redirect(redirectUrl);
+  async confirmApplication(
+    @Query('token') token: string,
+    @Res() res: Response,
+  ) {
+    await this.applicantsService.confirmApplication(token);
+
+    const redirectUrl = `http://localhost:5173/recruitment/confirm?token=${token}&status=success`;
+
+    return res.redirect(redirectUrl);
   }
-  
-  
 
   @Get(':id')
   async findOne(@Param('id') id: string) {

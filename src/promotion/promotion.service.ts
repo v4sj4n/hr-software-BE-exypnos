@@ -25,15 +25,15 @@ export class PromotionService {
       );
     }
     if (
-      user.position === createPromotionDto.position 
-      && user.grade === createPromotionDto.grade
+      user.position === createPromotionDto.position &&
+      user.grade === createPromotionDto.grade
     ) {
       throw new ConflictException('User already has this position and grade');
-    } else{
-    await this.userModel.findByIdAndUpdate(createPromotionDto.userId, {
-      position: createPromotionDto.position,
-      grade: createPromotionDto.grade,
-    });
+    } else {
+      await this.userModel.findByIdAndUpdate(createPromotionDto.userId, {
+        position: createPromotionDto.position,
+        grade: createPromotionDto.grade,
+      });
     }
 
     const createdPromotion = new this.promotionModel({
@@ -58,7 +58,10 @@ export class PromotionService {
       throw new NotFoundException('User not found');
     }
 
-    if(updatePromotionDto.position === user.position && updatePromotionDto.grade === user.grade){
+    if (
+      updatePromotionDto.position === user.position &&
+      updatePromotionDto.grade === user.grade
+    ) {
       throw new ConflictException('User already has this position and grade');
     }
     if (
@@ -73,7 +76,7 @@ export class PromotionService {
       await this.userModel.findByIdAndUpdate(promotion.userId, {
         grade: updatePromotionDto.grade,
       });
-      }
+    }
 
     return this.promotionModel.findByIdAndUpdate(id, updatePromotionDto, {
       new: true,

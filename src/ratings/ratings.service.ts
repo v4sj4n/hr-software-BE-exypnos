@@ -18,32 +18,17 @@ export class RatingsService {
   async createRatingForTeamMember(
     createRatingDto: CreateRatingDto,
   ): Promise<Rating> {
-    const { projectId, userId, raterId } = createRatingDto;
-    const project = await this.projectModel.findOne({ _id: projectId });
+    const project = await this.projectModel.findOne({
+      _id: createRatingDto.projectId,
+    });
     if (!project) {
       throw new BadRequestException('Project not found');
     }
-    const user = await this.userModel.findOne({ _id: userId });
+    const user = await this.userModel.findOne({ _id: createRatingDto.userId });
     if (!user) {
       throw new BadRequestException('User not found');
     }
-    const rater = await this.userModel.findOne({ _id: raterId });
-    if (!rater) {
-      throw new BadRequestException('Rater not found');
-    }
-
-    const isTeamMember = project.teamMembers.some((memberId) =>
-      memberId.equals(user._id),
-    );
-    const isProjectManager = project.projectManager.equals(rater._id);
-    if (!isTeamMember) {
-      throw new BadRequestException('Team member is not part of the project');
-    }
-    if (!isProjectManager) {
-      throw new BadRequestException('Rater is not the project manager');
-    }
     const rating = new this.ratingModel(createRatingDto);
-
     return await rating.save();
   }
   async updateRating(id: string, updateRatingDto: UpdateRatingDto) {

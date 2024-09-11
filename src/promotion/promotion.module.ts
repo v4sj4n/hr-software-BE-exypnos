@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PromotionService } from './promotion.service';
@@ -8,7 +7,9 @@ import { User, UserSchema } from 'src/common/schema/user.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Promotion.name, schema: PromotionSchema }]),
+    MongooseModule.forFeature([
+      { name: Promotion.name, schema: PromotionSchema },
+    ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [PromotionController],

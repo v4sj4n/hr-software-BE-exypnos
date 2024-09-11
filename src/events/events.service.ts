@@ -137,7 +137,11 @@ export class EventsService {
       if (month) {
         filter.startDate = {
           $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          $lte: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+          $lte: new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() + 1,
+            0,
+          ),
         };
       }
       if (type) {
@@ -145,11 +149,12 @@ export class EventsService {
       } else {
         filter.type = { $ne: 'career' };
       }
-      if(!page && !limit) {
+      if (!page && !limit) {
         return await this.eventModel.find(filter).sort({ createdAt: -1 });
       }
-      return await paginate(page, limit, this.eventModel, filter, { createdAt: -1 });
-
+      return await paginate(page, limit, this.eventModel, filter, {
+        createdAt: -1,
+      });
     } catch (error) {
       throw new ConflictException(error);
     }

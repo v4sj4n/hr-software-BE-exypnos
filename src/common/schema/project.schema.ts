@@ -28,6 +28,6 @@ export class Project {
   isDeleted: boolean;
 }
 
- const ProjectSchema = SchemaFactory.createForClass(Project);
-  ProjectSchema.plugin(muv);
-  export { ProjectSchema };
+const ProjectSchema = SchemaFactory.createForClass(Project);
+ProjectSchema.plugin(muv);
+export { ProjectSchema };

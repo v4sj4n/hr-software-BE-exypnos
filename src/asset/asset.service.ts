@@ -4,12 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, {
-  FilterQuery,
-  Model,
-  PipelineStage,
-  PopulateOptions,
-} from 'mongoose';
+import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { Asset, AssetHistory } from '../common/schema/asset.schema';
 import { AssetStatus } from '../common/enum/asset.enum';
 import { User } from '../common/schema/user.schema';
@@ -30,16 +25,6 @@ export class AssetService {
       await this.checkType(createAssetDto.type);
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
-      createdAsset.takenDate = createAssetDto.takenDate
-        ? new Date(createAssetDto.takenDate)
-        : null;
-      createdAsset.returnDate = createAssetDto.returnDate
-        ? new Date(createAssetDto.returnDate)
-        : null;
-      createdAsset.userId = createAssetDto.userId
-        ? new mongoose.Types.ObjectId(createAssetDto.userId)
-        : null;
-
       createdAsset.history = [];
       return await createdAsset.save();
     } catch (error) {
@@ -225,6 +210,7 @@ export class AssetService {
           `User with id ${assetData.userId} not found`,
         );
       }
+      assetData.userId = new mongoose.Types.ObjectId(assetData.userId);
     }
     if (!assetData.userId && assetData.status === AssetStatus.ASSIGNED) {
       throw new ConflictException(

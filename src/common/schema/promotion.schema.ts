@@ -26,6 +26,6 @@ export class Promotion {
   isDeleted: boolean;
 }
 
- const PromotionSchema = SchemaFactory.createForClass(Promotion);
-  PromotionSchema.plugin(muv);
+const PromotionSchema = SchemaFactory.createForClass(Promotion);
+PromotionSchema.plugin(muv);
 export { PromotionSchema };

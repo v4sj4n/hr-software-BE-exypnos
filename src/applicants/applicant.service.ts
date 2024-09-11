@@ -172,7 +172,7 @@ export class ApplicantsService {
       throw new NotFoundException('Confirmation token is required.');
     }
 
-    console.log('Token received for confirmation:', token); 
+    console.log('Token received for confirmation:', token);
 
     const applicant = await this.applicantModel.findOne({
       confirmationToken: token,

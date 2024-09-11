@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import mongoose, { Model, Types } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
 import { User } from 'src/common/schema/user.schema';
@@ -14,14 +14,13 @@ export function isDateRangeOverlapping(
   return start1 <= end2 && start2 <= end1;
 }
 
-
 async function checkRequestUser(userModel: Model<User>, req: Request) {
-  const userId = req['user'].sub; 
+  const userId = req['user'].sub;
   const userExists = await userModel.findById(userId);
   if (!userExists) {
     throw new NotFoundException(`User with id ${userId} not found`);
   }
-  return userId; 
+  return userId;
 }
 async function checkUserId(userModel: Model<User>, userId: string) {
   const userExists = await userModel.findById(userId);
@@ -129,4 +128,9 @@ async function checkDatesforCreate(
   }
 }
 
-export { checkRequestUser, checkUserId,checkDatesforUpdate, checkDatesforCreate };
+export {
+  checkRequestUser,
+  checkUserId,
+  checkDatesforUpdate,
+  checkDatesforCreate,
+};

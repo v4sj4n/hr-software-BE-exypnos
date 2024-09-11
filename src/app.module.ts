@@ -67,7 +67,6 @@ import { PromotionModule } from './promotion/promotion.module';
     ProjectModule,
     PromotionModule,
     RatingsModule,
-    
   ],
   controllers: [AppController],
   providers: [AppService],
