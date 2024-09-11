@@ -53,7 +53,6 @@ export class ApplicantsController {
   
       const redirectUrl = `http://localhost:5173/recruitment/confirm?token=${token}&status=success`;
   
-      // Perform the redirect
       return res.redirect(redirectUrl);
   }
   
