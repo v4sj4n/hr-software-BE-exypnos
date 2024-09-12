@@ -9,6 +9,7 @@ import { Notification } from '../common/schema/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { User } from 'src/common/schema/user.schema';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class NotificationService {
@@ -46,7 +47,7 @@ export class NotificationService {
   allVacation = this.createNotification(
     'You have more than 5 vacation requests',
     'Please check your notifications',
-    NotificationType.ALLVACATION,
+    NotificationType.ALLAPPLICATION,
     new Date(),
   );
   allApplication = this.createNotification(
@@ -56,9 +57,21 @@ export class NotificationService {
     new Date(),
   );
 
-  async findAll(): Promise<Notification[]> {
+  async findAll(page: number, limit: number): Promise<Notification[]> {
     try {
-      return this.notificationModel.find({ isDeleted: false });
+      if (!limit && !page) {
+        return await this.notificationModel
+          .find({ isDeleted: { $ne: true } })
+          .sort({ date: -1 });
+      } else {
+        return await paginate(
+          page,
+          limit,
+          this.notificationModel,
+          {},
+          { date: -1 },
+        );
+      }
     } catch (error) {
       throw new ConflictException(error);
     }

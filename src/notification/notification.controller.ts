@@ -7,8 +7,11 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  findAll(): Promise<Notification[]> {
-    return this.notificationService.findAll();
+  findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ): Promise<Notification[]> {
+    return this.notificationService.findAll(page, limit);
   }
   @Get('user/:id')
   findByUserId(
