@@ -1,12 +1,10 @@
 import {
   IsEmail,
-  IsEnum,
+  IsOptional,
   IsString,
-  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from '../../schemas/user.schema';
 
 export class CreateUserDto {
   @IsString()
@@ -24,19 +22,23 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message:
-      'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, and one special character.',
-  })
-  password: string;
-
-  @IsString()
   @MinLength(10)
   @MaxLength(15)
   phone: string;
 
+  @IsOptional()
   @IsString()
-  @IsEnum(Role)
-  role: Role;
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  dob?: string;
+
+  @IsOptional()
+  @IsString()
+  pob?: string;
 }

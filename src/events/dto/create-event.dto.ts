@@ -1,7 +1,12 @@
-import { IsString, IsDateString, IsOptional, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreatePollDto } from '../../poll.events/dto/create-poll.dto';
-
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
+import { Poll } from '../../common/schema/event.schema';
+import { EventType } from 'src/common/enum/event.enum';
 export class CreateEventDto {
   @IsString()
   title: string;
@@ -9,11 +14,27 @@ export class CreateEventDto {
   @IsString()
   description: string;
 
-  @IsDateString()
-  date: string;
+  @IsOptional()
+  @IsString()
+  @IsEnum(EventType)
+  type: string;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => CreatePollDto)
-  poll?: CreatePollDto;
+  @IsDateString()
+  startDate: Date;
+
+  @IsOptional()
+  @IsDateString()
+  endDate: Date;
+
+  @IsOptional()
+  poll: Poll;
+
+  @IsOptional()
+  @IsArray()
+  participants: string[];
+
+  @IsOptional()
+  @IsString()
+  location: string;
 }

@@ -1,41 +1,99 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+  UseInterceptors,
+  UploadedFiles,
+  Query,
+  UsePipes,
+} from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { VoteDto } from '../poll.events/dto/vote.dto';
-import { Event } from '../schemas/event.schema';
+import { VoteDto } from './dto/vote.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Public } from 'src/common/decorator/public.decorator';
+import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
 
-@Controller('events')
+@Controller('event')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  create(@Body() createEventDto: CreateEventDto): Promise<Event> {
-    return this.eventsService.create(createEventDto);
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
+  @UsePipes(new FileMimeTypeValidationPipe())
+  async create(
+    @UploadedFiles() files: { photo?: Express.Multer.File[] },
+    @Body() createEventDto: CreateEventDto,
+  ) {
+    const photo = files?.photo || [];
+    return await this.eventsService.create(photo, createEventDto);
   }
 
   @Get()
-  findAll(): Promise<Event[]> {
-    return this.eventsService.findAll();
+  findAll(
+    @Query('search') search: string = '',
+    @Query('type') type: string = '',
+    @Query('month') month: boolean,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.eventsService.findAll(search, type, month, page, limit);
+  }
+
+  @Public()
+  @Get('career')
+  findAllPublic() {
+    return this.eventsService.findCareerEvents();
+  }
+
+  @Get('user/:id')
+  getEventsByUserId(@Param('id') id: string) {
+    return this.eventsService.getEventsByUserId(id);
+  }
+
+  @Get('poll/:id')
+  getEventPollResults(@Param('id') id: string) {
+    return this.eventsService.getEventPollResults(id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Event> {
+  findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
   }
 
+  @Get(':id/user/:userId')
+  getEventsByUser(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.eventsService.getOptionThatUserVotedFor(id, userId);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto): Promise<Event> {
-    return this.eventsService.update(id, updateEventDto);
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
+  async partialUpdate(
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @UploadedFiles() files: { photo?: Express.Multer.File[] },
+  ) {
+    const photo = files?.photo || [];
+    return this.eventsService.update(id, updateEventDto, photo);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
+  remove(@Param('id') id: string) {
     return this.eventsService.remove(id);
   }
 
   @Post(':id/vote')
-  vote(@Param('id') id: string, @Body() voteDto: VoteDto): Promise<Event> {
-    return this.eventsService.vote(id, voteDto);
+  addVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
+    return this.eventsService.addVote(id, voteDto);
+  }
+
+  @Delete(':id/vote')
+  removeVote(@Param('id') id: string, @Body() voteDto: VoteDto) {
+    return this.eventsService.removeVote(id, voteDto);
   }
 }

@@ -1,9 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { AssetService } from './asset.service';
-import { CreateAssetDto } from './dto/create-asset.dto'; 
-import { UpdateAssetDto } from './dto/update-asset.dto'; 
+import { CreateAssetDto } from './dto/create-asset.dto';
+import { UpdateAssetDto } from './dto/update-asset.dto';
 
-@Controller('assets')
+@Controller('asset')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 
@@ -13,8 +22,32 @@ export class AssetController {
   }
 
   @Get()
-  findAll() {
-    return this.assetService.findAll();
+  findAll(
+    @Query('availability') availability: string = '',
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.assetService.findAll(page, limit, availability);
+  }
+
+  @Get('user')
+  findAllWithUsers(
+    @Query('search') search: string = '',
+    @Query('users') users: string = 'all',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    return this.assetService.getAllUserWithAssets(search, users, page, limit);
+  }
+
+  @Get('sn/:serialNumber')
+  findBySerialNumber(@Param('serialNumber') serialNumber: string) {
+    return this.assetService.getAssetBySerialNumber(serialNumber);
+  }
+
+  @Get('type')
+  findAllWithType() {
+    return AssetType;
   }
 
   @Get(':id')
@@ -30,5 +63,10 @@ export class AssetController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.assetService.remove(id);
+  }
+
+  @Get(':id/history')
+  getHistory(@Param('id') id: string) {
+    return this.assetService.getAssetHistory(id);
   }
 }
