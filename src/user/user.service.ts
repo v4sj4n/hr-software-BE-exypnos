@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
@@ -13,6 +13,8 @@ export class UserService {
     private userModel: mongoose.Model<User>,
     private readonly firebaseService: FirebaseService,
   ) {}
+
+  // Fetch all users with pagination
   async findAll(page?: number, limit?: number): Promise<User[]> {
     try {
       if (!limit && !page) {
@@ -23,28 +25,22 @@ export class UserService {
       const filter = { isDeleted: { $ne: true } };
       const populate = { path: 'auth', select: 'email' };
       const sort = { createdAt: -1 };
-      const user = paginate(
-        page,
-        limit,
-        this.userModel,
-        filter,
-        sort,
-        populate,
-      );
-      return user;
+      return paginate(page, limit, this.userModel, filter, sort, populate);
     } catch (err) {
       throw new ConflictException(err);
     }
   }
 
+  // Find a single user by ID
   async findOne(id: string): Promise<User | null> {
     const user = await this.userModel.findById(id).populate('auth');
     if (!user || user.isDeleted) {
-      throw new ConflictException(`User with id ${id} not found`);
+      throw new NotFoundException(`User with id ${id} not found`);
     }
     return user;
   }
 
+  // Update user by ID
   async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
     try {
       const updatedUser = await this.userModel.findByIdAndUpdate(
@@ -52,36 +48,38 @@ export class UserService {
         updateUserDto,
         { new: true },
       );
+      if (!updatedUser) {
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
       return updatedUser;
     } catch (err) {
       throw new ConflictException(err);
     }
   }
 
+  // Soft-delete a user by setting isDeleted to true
   async deleteUser(id: string): Promise<void> {
-    try {
-      await this.userModel.findById(id);
-    } catch (err) {
-      throw new ConflictException(err);
+    const user = await this.userModel.findById(id);
+    if (!user || user.isDeleted) {
+      throw new NotFoundException(`User with id ${id} not found`);
     }
-    await this.userModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
+
+    await this.userModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
   }
 
-  async uploadImage(file: Express.Multer.File, req: Request): Promise<string> {
+  // Upload a profile image and update the user with the image URL
+  async uploadImage(file: Express.Multer.File, req: any): Promise<string> {
     try {
       const profileImageUrl = await this.firebaseService.uploadFile(
         file,
-        'cv',
+        'profileImages',
         'square',
       );
 
       await this.userModel.findByIdAndUpdate(req['user'].sub, {
         imageUrl: profileImageUrl,
       });
+
       return profileImageUrl;
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -89,6 +87,7 @@ export class UserService {
     }
   }
 
+  // Filter users by first name
   async filterUsers(name: string): Promise<User[]> {
     try {
       const users = await this.userModel.find({
@@ -101,6 +100,7 @@ export class UserService {
     }
   }
 
+  // Get users by position
   async getUserByPosition(position: string): Promise<User[]> {
     try {
       const users = await this.userModel
