@@ -36,11 +36,10 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @Request() req,
   ) {
-    return await this.authService.updatePassword(
-      updatePasswordDto,
-      req.user.email,
-    );
+    console.log('Decoded User Email:', req.user.email);  // Log the email from the JWT
+    return await this.authService.updatePassword(updatePasswordDto, req.user.email);
   }
+  
 
   @Public()
   @Post('/forgot-password')
