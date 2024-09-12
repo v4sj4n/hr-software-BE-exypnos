@@ -28,7 +28,6 @@ export class UpdateUserDto {
   phone: string;
 
   @IsOptional()
-  @IsString()
   @IsEnum(Role)
   role: Role;
 
@@ -45,12 +44,10 @@ export class UpdateUserDto {
   pob?: string;
 
   @IsOptional()
-  @IsString()
   @IsEnum(PositionType)
   position: PositionType;
 
   @IsOptional()
-  @IsString()
   @IsEnum(GradeType)
   grade: GradeType;
 }
