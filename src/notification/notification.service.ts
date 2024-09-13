@@ -293,9 +293,9 @@ export class NotificationService {
           NotificationType.ALLAPPLICANT,
         ),
       ];
+    } else {
+      return notifications;
     }
-
-    return notifications;
   }
 
   private async getNotificationOfVacation(
@@ -315,6 +315,7 @@ export class NotificationService {
         })
         .sort({ date: -1 });
 
+        console.log('notifications', notifications);
       if (notifications.length > 5) {
         await this.notificationModel.updateMany(
           { type: NotificationType.VACATION },
@@ -325,9 +326,17 @@ export class NotificationService {
             NotificationType.ALLVACATION,
           ),
         ];
+      } else {
+        const notifications = await this.notificationModel
+        .find({
+          type: NotificationType.VACATION,
+          title: 'On Leave Request',
+          isDeleted: false,
+          date: { $gte: startDate, $lte: endDate },
+        })
+        .sort({ date: -1 });
+        return notifications;
       }
-
-      return notifications;
     } else {
       return this.notificationModel.aggregate([
         {
