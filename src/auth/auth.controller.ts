@@ -5,9 +5,8 @@ import { User } from 'src/common/schema/user.schema';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
-import { RequestResetPasswordDto } from './dto/request-reset-password.dto';  // For forgot password
-import { ResetPasswordDto } from './dto/reset-password.dto';  // For resetting password
-
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';  
+import { ResetPasswordDto } from './dto/reset-password.dto';  
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -36,7 +35,7 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @Request() req,
   ) {
-    console.log('Decoded User Email:', req.user.email);  // Log the email from the JWT
+    console.log('Decoded User Email:', req.user.email);  
     return await this.authService.updatePassword(updatePasswordDto, req.user.email);
   }
   
