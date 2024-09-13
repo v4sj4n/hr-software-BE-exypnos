@@ -153,13 +153,6 @@ export class ApplicantsService {
         1000 * 60 * 60,
       );
 
-      await this.notificationService.createNotification(
-        'New Application',
-        `${createApplicantDto.firstName} ${createApplicantDto.lastName} has submitted a new application for the position of ${createApplicantDto.positionApplied}`,
-        NotificationType.APPLICANT,
-        new Date(),
-        applicant._id as Types.ObjectId,
-      );
       return applicant;
     } catch (err) {
       console.error('Error creating applicant or sending email:', err);
@@ -185,6 +178,13 @@ export class ApplicantsService {
 
     applicant.status = ApplicantStatus.ACTIVE;
     applicant.confirmationToken = null;
+    await this.notificationService.createNotification(
+      'New Application',
+      `${applicant.firstName} ${applicant.lastName} has submitted a new application for the position of ${applicant.positionApplied}`,
+      NotificationType.APPLICANT,
+      new Date(),
+      applicant._id as Types.ObjectId,
+    );
     await applicant.save();
   }
 

@@ -46,37 +46,6 @@ export class NotificationService {
     }
   }
 
-  async createOrUpdateBulkNotification(
-    type: NotificationType,
-  ): Promise<Notification> {
-    const title =
-      type === NotificationType.ALLVACATION
-        ? 'You have more than 5 leave requests'
-        : 'You have more than 5 application requests';
-    const content = 'Please check your notifications';
-
-    try {
-      const notification = await this.notificationModel.findOneAndUpdate(
-        { type },
-        {
-          $set: {
-            title,
-            content,
-            isRead: false,
-            date: new Date(),
-          },
-        },
-        { upsert: true, new: true },
-      );
-      return notification;
-    } catch (error) {
-      throw new ConflictException(
-        'Failed to create or update bulk notification',
-        error.message,
-      );
-    }
-  }
-
   async findAll(): Promise<Notification[]> {
     try {
       return this.notificationModel.find({ isDeleted: false });
@@ -192,11 +161,13 @@ export class NotificationService {
         endDate,
       );
 
-      return [
+      const allNotifications = [
         ...notifications,
         ...applicantNotifications,
         ...vacationNotifications,
       ];
+      allNotifications.sort((a, b) => b.date.getTime() - a.date.getTime());
+      return allNotifications;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -282,20 +253,7 @@ export class NotificationService {
         date: { $gte: startDate, $lt: endDate },
       })
       .sort({ date: -1 });
-
-    if (notifications.length > 5) {
-      await this.notificationModel.updateMany(
-        { type: NotificationType.APPLICANT },
-        { $set: { isRead: true } },
-      );
-      return [
-        await this.createOrUpdateBulkNotification(
-          NotificationType.ALLAPPLICANT,
-        ),
-      ];
-    } else {
-      return notifications;
-    }
+    return notifications;
   }
 
   private async getNotificationOfVacation(
@@ -310,33 +268,11 @@ export class NotificationService {
           type: NotificationType.VACATION,
           title: 'On Leave Request',
           isDeleted: false,
-          isRead: false,
           date: { $gte: startDate, $lte: endDate },
         })
         .sort({ date: -1 });
 
-        console.log('notifications', notifications);
-      if (notifications.length > 5) {
-        await this.notificationModel.updateMany(
-          { type: NotificationType.VACATION },
-          { $set: { isRead: true } },
-        );
-        return [
-          await this.createOrUpdateBulkNotification(
-            NotificationType.ALLVACATION,
-          ),
-        ];
-      } else {
-        const notifications = await this.notificationModel
-        .find({
-          type: NotificationType.VACATION,
-          title: 'On Leave Request',
-          isDeleted: false,
-          date: { $gte: startDate, $lte: endDate },
-        })
-        .sort({ date: -1 });
-        return notifications;
-      }
+      return notifications;
     } else {
       return this.notificationModel.aggregate([
         {

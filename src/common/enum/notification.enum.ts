@@ -3,6 +3,4 @@ export enum NotificationType {
   NOTE = 'notes',
   VACATION = 'vacation',
   APPLICANT = 'candidates',
-  ALLVACATION = 'allVacation',
-  ALLAPPLICANT = 'allCandidates',
 }
