@@ -35,7 +35,7 @@ export class VacationService {
       await checkDatesforCreate(this.vacationModel, createVacationDto);
       const createdVacation = new this.vacationModel(createVacationDto);
       await this.notificationService.createNotification(
-        'Vacation Request',
+        'On Leave Request',
         `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
         NotificationType.VACATION,
         new Date(),

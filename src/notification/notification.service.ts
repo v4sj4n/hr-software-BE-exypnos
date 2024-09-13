@@ -30,7 +30,7 @@ export class NotificationService {
         title,
         content,
         type,
-        typeId: typeId ? typeId : new Types.ObjectId(),
+        typeId: typeId || new Types.ObjectId(),
         isRead: false,
         date,
       };
@@ -39,28 +39,52 @@ export class NotificationService {
       );
       return createdNotification.save();
     } catch (error) {
-      throw new ConflictException(error);
+      throw new ConflictException(
+        'Failed to create notification',
+        error.message,
+      );
     }
   }
 
-  allVacation = this.createNotification(
-    'You have more than 5 vacation requests',
-    'Please check your notifications',
-    NotificationType.ALLVACATION,
-    new Date(),
-  );
-  allApplication = this.createNotification(
-    'You have more than 5 application requests',
-    'Please check your notifications',
-    NotificationType.ALLVACATION,
-    new Date(),
-  );
+  async createOrUpdateBulkNotification(
+    type: NotificationType,
+  ): Promise<Notification> {
+    const title =
+      type === NotificationType.ALLVACATION
+        ? 'You have more than 5 leave requests'
+        : 'You have more than 5 application requests';
+    const content = 'Please check your notifications';
+
+    try {
+      const notification = await this.notificationModel.findOneAndUpdate(
+        { type },
+        {
+          $set: {
+            title,
+            content,
+            isRead: false,
+            date: new Date(),
+          },
+        },
+        { upsert: true, new: true },
+      );
+      return notification;
+    } catch (error) {
+      throw new ConflictException(
+        'Failed to create or update bulk notification',
+        error.message,
+      );
+    }
+  }
 
   async findAll(): Promise<Notification[]> {
     try {
       return this.notificationModel.find({ isDeleted: false });
     } catch (error) {
-      throw new ConflictException(error);
+      throw new ConflictException(
+        'Failed to fetch notifications',
+        error.message,
+      );
     }
   }
 
@@ -72,7 +96,13 @@ export class NotificationService {
       }
       return notification;
     } catch (error) {
-      throw new ConflictException(error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new ConflictException(
+        'Failed to fetch notification',
+        error.message,
+      );
     }
   }
 
@@ -90,7 +120,13 @@ export class NotificationService {
 
       return updatedNotification;
     } catch (error) {
-      throw new ConflictException(error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new ConflictException(
+        'Failed to update notification',
+        error.message,
+      );
     }
   }
 
@@ -117,13 +153,19 @@ export class NotificationService {
 
       return updatedNotification;
     } catch (error) {
-      throw new ConflictException(error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new ConflictException(
+        'Failed to update notification',
+        error.message,
+      );
     }
   }
 
   async getNotificationsByUserId(
     id: string,
-    isRead?: boolean,
+    period: string = 'today',
   ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(id);
@@ -131,159 +173,185 @@ export class NotificationService {
         throw new NotFoundException('User not found');
       }
 
+      const { startDate, endDate } = this.getDateRange(period);
       const userObjectId = new Types.ObjectId(id);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
 
-      const notifications = await this.notificationModel.aggregate([
-        {
-          $lookup: {
-            from: 'events',
-            localField: 'typeId',
-            foreignField: '_id',
-            as: 'eventInfo',
-          },
+      const notifications = await this.getBaseNotifications(
+        userObjectId,
+        startDate,
+        endDate,
+      );
+      const applicantNotifications = await this.getNotificationsOfApplicants(
+        user,
+        startDate,
+        endDate,
+      );
+      const vacationNotifications = await this.getNotificationOfVacation(
+        user._id,
+        startDate,
+        endDate,
+      );
+
+      return [
+        ...notifications,
+        ...applicantNotifications,
+        ...vacationNotifications,
+      ];
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new ConflictException('Failed to get notifications', error.message);
+    }
+  }
+
+  private getDateRange(period: string): { startDate: Date; endDate: Date } {
+    const endDate = new Date();
+    let startDate = new Date(endDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    if (period === 'week') {
+      startDate.setDate(endDate.getDate() - 7);
+    }
+
+    return { startDate, endDate };
+  }
+
+  private async getBaseNotifications(
+    userObjectId: Types.ObjectId,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Notification[]> {
+    return this.notificationModel.aggregate([
+      {
+        $lookup: {
+          from: 'events',
+          localField: 'typeId',
+          foreignField: '_id',
+          as: 'eventInfo',
         },
+      },
+      {
+        $lookup: {
+          from: 'notes',
+          localField: 'typeId',
+          foreignField: '_id',
+          as: 'noteInfo',
+        },
+      },
+      {
+        $match: {
+          $or: [
+            {
+              $or: [
+                { 'eventInfo.participants': { $size: 0 } },
+                { 'eventInfo.participants': userObjectId },
+              ],
+            },
+            { 'noteInfo.userId': userObjectId },
+          ],
+          isDeleted: false,
+          date: { $gte: startDate, $lt: endDate },
+        },
+      },
+      {
+        $sort: { date: -1 },
+      },
+      {
+        $project: {
+          eventInfo: 0,
+          noteInfo: 0,
+        },
+      },
+    ]);
+  }
+
+  private async getNotificationsOfApplicants(
+    user: User,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Notification[]> {
+    if (user.role !== 'hr') {
+      return [];
+    }
+
+    const notifications = await this.notificationModel
+      .find({
+        type: NotificationType.APPLICANT,
+        isDeleted: false,
+        date: { $gte: startDate, $lt: endDate },
+      })
+      .sort({ date: -1 });
+
+    if (notifications.length > 5) {
+      await this.notificationModel.updateMany(
+        { type: NotificationType.APPLICANT },
+        { $set: { isRead: true } },
+      );
+      return [
+        await this.createOrUpdateBulkNotification(
+          NotificationType.ALLAPPLICANT,
+        ),
+      ];
+    }
+
+    return notifications;
+  }
+
+  private async getNotificationOfVacation(
+    userId: Types.ObjectId,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Notification[]> {
+    const user = await this.userModel.findById(userId);
+    if (user.role === 'hr') {
+      const notifications = await this.notificationModel
+        .find({
+          type: NotificationType.VACATION,
+          title: 'On Leave Request',
+          isDeleted: false,
+          isRead: false,
+          date: { $gte: startDate, $lte: endDate },
+        })
+        .sort({ date: -1 });
+
+      if (notifications.length > 5) {
+        await this.notificationModel.updateMany(
+          { type: NotificationType.VACATION },
+          { $set: { isRead: true } },
+        );
+        return [
+          await this.createOrUpdateBulkNotification(
+            NotificationType.ALLVACATION,
+          ),
+        ];
+      }
+
+      return notifications;
+    } else {
+      return this.notificationModel.aggregate([
         {
           $lookup: {
-            from: 'notes',
+            from: 'vacations',
             localField: 'typeId',
             foreignField: '_id',
-            as: 'noteInfo',
+            as: 'vacationInfo',
           },
         },
         {
           $match: {
-            $or: [
-              {
-                $or: [
-                  { 'eventInfo.participants': { $size: 0 } },
-                  {
-                    'eventInfo.participants': {
-                      $elemMatch: { $eq: userObjectId },
-                    },
-                  },
-                ],
-              },
-              { 'noteInfo.userId': userObjectId },
-            ],
+            'vacationInfo.userId': userId,
+            title: { $ne: 'On Leave Request' },
             isDeleted: false,
-            date: { $gte: today },
-            isRead: isRead ? isRead : false,
+            date: { $gte: startDate, $lt: endDate },
           },
         },
         {
           $project: {
-            eventInfo: 0,
-            noteInfo: 0,
+            vacationInfo: 0,
           },
         },
       ]);
-      const applicantsNotifications = await this.getNotificationsOfApplicants(
-        id,
-        isRead,
-      );
-      const vacationNotifications = await this.getNotificationOfVacation(
-        id,
-        isRead,
-      );
-
-      return notifications
-        .concat(applicantsNotifications)
-        .concat(vacationNotifications);
-    } catch (error) {
-      throw new ConflictException(error);
-    }
-  }
-
-  private async getNotificationsOfApplicants(
-    userId: string,
-    isRead?: boolean,
-  ): Promise<Notification[]> {
-    try {
-      const user = await this.userModel.findById(userId);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      let notifications = [];
-      if (user.role === 'hr') {
-        notifications = await this.notificationModel
-          .find({
-            type: NotificationType.APPLICANT,
-            isDeleted: false,
-            isRead: isRead ? isRead : false,
-          })
-          .sort({ date: -1 });
-      }
-      if (user.role === 'hr' && notifications.length > 5) {
-        for (let i = 0; i < notifications.length; i++) {
-          notifications[i].isRead = true;
-          await notifications[i].save();
-        }
-        return [await this.allApplication];
-      } else {
-        return notifications;
-      }
-    } catch (error) {
-      throw new ConflictException(error);
-    }
-  }
-
-  private async getNotificationOfVacation(
-    userId: string,
-    isRead?: boolean,
-  ): Promise<Notification[]> {
-    try {
-      const user = await this.userModel.findById(userId);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      let notifications = [];
-      if (user.role === 'hr') {
-        notifications = await this.notificationModel
-          .find({
-            type: NotificationType.VACATION,
-            title: 'Vacation Request',
-            isDeleted: false,
-            isRead: false,
-          })
-          .sort({ date: -1 });
-      } else {
-        notifications = await this.notificationModel.aggregate([
-          {
-            $lookup: {
-              from: 'vacations',
-              localField: 'typeId',
-              foreignField: '_id',
-              as: 'vacationInfo',
-            },
-          },
-          {
-            $match: {
-              'vacationInfo.userId': new Types.ObjectId(userId),
-              title: { $ne: 'Vacation Request' },
-              isDeleted: false,
-              isRead: isRead ? isRead : false,
-            },
-          },
-          {
-            $project: {
-              vacationInfo: 0,
-            },
-          },
-        ]);
-      }
-      if (user.role === 'hr' && notifications.length > 5) {
-        for (let i = 0; i < notifications.length; i++) {
-          notifications[i].isRead = true;
-          await notifications[i].save();
-        }
-        return [await this.allVacation];
-      } else {
-        return notifications;
-      }
-    } catch (error) {
-      throw new ConflictException(error);
     }
   }
 }
