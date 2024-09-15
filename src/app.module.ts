@@ -20,6 +20,9 @@ import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
+import { ChatModule } from './chat/chat.module';  
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+
 
 @Module({
   imports: [
@@ -67,6 +70,7 @@ import { PromotionModule } from './promotion/promotion.module';
     ProjectModule,
     PromotionModule,
     RatingsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

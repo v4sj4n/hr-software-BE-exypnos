@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 import muv from 'mongoose-unique-validator';
 import { Role } from 'src/common/enum/role.enum';
 import { GradeType, PositionType } from '../enum/position.enum';
+import * as uniqueValidator from 'mongoose-unique-validator';
+
 
 @Schema({
   timestamps: true, // Automatically adds createdAt and updatedAt fields
@@ -53,5 +55,7 @@ const UserSchema = SchemaFactory.createForClass(User);
 
 // Ensure unique validation on specific fields (like email in the Auth schema)
 UserSchema.plugin(muv);
+UserSchema.plugin(uniqueValidator);
+
 
 export { UserSchema };

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package chat;
+
+// The Chat service definition
+service ChatService {
+  // Bi-directional streaming RPC for chat
+  rpc ChatStream(stream ChatMessage) returns (stream ChatMessage);
+}
+
+// The message being sent
+message ChatMessage {
+  string user = 1;   // The user sending the message
+  string message = 2; // The actual chat message
+  int64 timestamp = 3; // Timestamp of the message
+}

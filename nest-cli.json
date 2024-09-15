@@ -2,14 +2,12 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "builder": "swc",
-    "typeCheck": true,
-    "deleteOutDir": true,
     "assets": [
       {
-        "include": "common/template/*.hbs",
-        "outDir": "dist/common/template"
+        "include": "src/proto/*.proto",
+        "outDir": "dist/proto"
       }
-    ]
+    ],
+    "watchAssets": true
   }
 }

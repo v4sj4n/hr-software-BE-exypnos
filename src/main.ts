@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -36,6 +38,16 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  const microservice = app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'chat',
+      protoPath: join(__dirname, '../proto/chat.proto'), // Points to the root directory
+      url: 'localhost:5000', // Change the gRPC port if necessary
+    },
+  });
+
+  await app.listen(5000);
+  await app.startAllMicroservices();
 }
 bootstrap();
