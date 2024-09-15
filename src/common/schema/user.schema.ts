@@ -1,11 +1,13 @@
+// src/common/schema/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import muv from 'mongoose-unique-validator';
 import { Role } from 'src/common/enum/role.enum';
 import { GradeType, PositionType } from '../enum/position.enum';
+import { Public } from '../decorator/public.decorator';
 
 @Schema({
-  timestamps: true, // Automatically adds createdAt and updatedAt fields
+  timestamps: true,  // Automatically adds createdAt and updatedAt fields
 })
 export class User {
   @Prop({ required: true, type: String })
@@ -21,8 +23,7 @@ export class User {
   phone: string;
 
   @Prop({
-    default:
-      'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpg?alt=media',
+    default: 'https://firebasestorage.googleapis.com/v0/b/exypnos-63ca1.appspot.com/o/userImages%2Fdefault.jpg?alt=media',
     type: String,
   })
   imageUrl: string | null;
@@ -47,6 +48,9 @@ export class User {
 
   @Prop({ default: false, type: Boolean })
   isDeleted: boolean;
+
+  // Ensure _id is accessible
+  _id: Types.ObjectId;  // No need for private, it should be public by default
 }
 
 const UserSchema = SchemaFactory.createForClass(User);
