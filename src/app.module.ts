@@ -20,6 +20,7 @@ import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
+import { MessagesModule } from './messages/message.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { PromotionModule } from './promotion/promotion.module';
     ProjectModule,
     PromotionModule,
     RatingsModule,
+    MessagesModule, 
   ],
   controllers: [AppController],
   providers: [AppService],
