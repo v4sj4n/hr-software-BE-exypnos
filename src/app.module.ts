@@ -21,7 +21,7 @@ import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
 import { ChatGateway } from './chat.gateway';
-import { MessageModule } from './message/message.module'; // Import the MessageModule
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
