@@ -135,7 +135,7 @@ export class NotificationService {
   async getNotificationsByUserId(
     id: string,
     period: string = 'today',
-  ): Promise<Notification[]> {
+  ): Promise<[Notification[],number]> {
     try {
       const user = await this.userModel.findById(id);
       if (!user) {
@@ -167,7 +167,11 @@ export class NotificationService {
         ...vacationNotifications,
       ];
       allNotifications.sort((a, b) => b.date.getTime() - a.date.getTime());
-      return allNotifications;
+      //find length of allNotifications that have is Read false
+      const unreadNotifications = allNotifications.filter(
+        (notification) => !notification.isRead,
+      );
+      return [allNotifications, unreadNotifications.length];
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -253,7 +257,21 @@ export class NotificationService {
         date: { $gte: startDate, $lt: endDate },
       })
       .sort({ date: -1 });
-    return notifications;
+      if(notifications.length>5){
+        for(let i=0 ; i<notifications.length ; i++){
+            notifications[i].isDeleted = true;
+            await notifications[i].save();
+      }
+    const allCandidates = await this.createNotification(
+        'More than 5 candidates applied',
+        'Check the candidates list',
+        NotificationType.ALLAPPLICANT,
+        new Date(),
+      );
+      return [allCandidates];
+    }else{
+      return notifications;
+    }
   }
 
   private async getNotificationOfVacation(

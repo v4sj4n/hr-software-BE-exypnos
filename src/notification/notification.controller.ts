@@ -14,8 +14,7 @@ export class NotificationController {
   findByUserId(
     @Param('id') id: string,
     @Query('period') period: string,
-  ): Promise<Notification[]> {
-    console.log('id', period);
+  ): Promise<[Notification[],number]> {
     return this.notificationService.getNotificationsByUserId(id, period);
   }
 
