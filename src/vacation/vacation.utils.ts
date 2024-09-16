@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { CreateVacationDto } from './dto/create-vacation.dto';
 import { UpdateVacationDto } from './dto/update-vacation.dto';
 import { User } from 'src/common/schema/user.schema';
@@ -20,7 +20,7 @@ async function checkRequestUser(userModel: Model<User>, req: Request) {
   if (!userExists) {
     throw new NotFoundException(`User with id ${userId} not found`);
   }
-  return userId;
+  return  new Types.ObjectId(userId);
 }
 async function checkUserId(userModel: Model<User>, userId: string) {
   const userExists = await userModel.findById(userId);
