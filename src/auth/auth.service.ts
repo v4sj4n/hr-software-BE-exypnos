@@ -16,7 +16,6 @@ import { generateRandomPassword } from 'src/common/util/generateRandomPassword';
 import { Auth } from 'src/common/schema/auth.schema';
 import { MailService } from 'src/mail/mail.service';
 import { randomBytes } from 'crypto';
-import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
@@ -201,34 +200,41 @@ export class AuthService {
   }
 
   // Update password logic
-  async updatePassword(updatePasswordDto: UpdatePasswordDto, email: string): Promise<string> {
+  async updatePassword(
+    updatePasswordDto: UpdatePasswordDto,
+    email: string,
+  ): Promise<string> {
     try {
       // Check if the user exists in the authModel
       const userAuth = await this.authModel.findOne({ email });
-      
+
       if (!userAuth) {
         throw new NotFoundException('User not found');
       }
-  
+
       // Compare old password
-      const isMatch = await bcrypt.compare(updatePasswordDto.oldPassword, userAuth.password);
+      const isMatch = await bcrypt.compare(
+        updatePasswordDto.oldPassword,
+        userAuth.password,
+      );
       if (!isMatch) {
         throw new UnauthorizedException('Invalid old password');
       }
-  
+
       // Hash and update the new password
       const salt = await bcrypt.genSalt(10);
-      userAuth.password = await bcrypt.hash(updatePasswordDto.newPassword, salt);
+      userAuth.password = await bcrypt.hash(
+        updatePasswordDto.newPassword,
+        salt,
+      );
       await userAuth.save();
-  
+
       return 'Password updated successfully';
     } catch (err) {
       console.error('Error updating password:', err);
       throw new ConflictException('Error updating password');
     }
   }
-  
-  
 
   // Soft delete user logic
   async removeUser(email: string): Promise<string> {

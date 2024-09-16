@@ -1,12 +1,20 @@
-import { Body, Controller, Get, Post, Request, Param, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  Param,
+  Put,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/common/schema/user.schema';
 import { SignInUserDto } from './dto/signin-user.dto';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
-import { RequestResetPasswordDto } from './dto/request-reset-password.dto';  
-import { ResetPasswordDto } from './dto/reset-password.dto';  
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -35,20 +43,26 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @Request() req,
   ) {
-    console.log('Decoded User Email:', req.user.email);  
-    return await this.authService.updatePassword(updatePasswordDto, req.user.email);
+    console.log('Decoded User Email:', req.user.email);
+    return await this.authService.updatePassword(
+      updatePasswordDto,
+      req.user.email,
+    );
   }
-  
 
   @Public()
   @Post('/forgot-password')
-  async forgotPassword(@Body() requestResetPasswordDto: RequestResetPasswordDto): Promise<string> {
+  async forgotPassword(
+    @Body() requestResetPasswordDto: RequestResetPasswordDto,
+  ): Promise<string> {
     return await this.authService.forgotPassword(requestResetPasswordDto.email);
   }
 
   @Public()
   @Post('/reset-password')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<string> {
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<string> {
     return await this.authService.resetPassword(resetPasswordDto);
   }
 

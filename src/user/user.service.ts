@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../common/schema/user.schema';
 import mongoose from 'mongoose';
@@ -64,7 +68,11 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    await this.userModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    await this.userModel.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true },
+    );
   }
 
   // Upload a profile image and update the user with the image URL

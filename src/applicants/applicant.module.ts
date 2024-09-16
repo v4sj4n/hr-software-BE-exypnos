@@ -7,11 +7,13 @@ import { MailModule } from 'src/mail/mail.module';
 import { FirebaseModule } from 'src/firebase/firebase.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { Auth, AuthSchema } from 'src/common/schema/auth.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Applicant.name, schema: ApplicantSchema },
+      { name: Auth.name, schema: AuthSchema },
     ]),
     MailModule,
     FirebaseModule,

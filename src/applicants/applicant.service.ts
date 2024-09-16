@@ -26,12 +26,15 @@ import {
 import { Public } from 'src/common/decorator/public.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
+import { Auth } from 'src/common/schema/auth.schema';
 
 @Injectable()
 export class ApplicantsService {
   constructor(
     @InjectModel(Applicant.name)
     private applicantModel: Model<ApplicantDocument>,
+    @InjectModel(Auth.name)
+    private authModel: Model<Auth>,
     private readonly mailService: MailService,
     private readonly firebaseService: FirebaseService,
     private readonly authService: AuthService,
@@ -112,6 +115,13 @@ export class ApplicantsService {
     createApplicantDto: CreateApplicantDto,
   ): Promise<Applicant> {
     try {
+      const isEmployeeWithThisEmail = await this.authModel.findOne({
+        email: createApplicantDto.email,
+      });
+      if (isEmployeeWithThisEmail) {
+        throw new ConflictException('Email already exists');
+      }
+
       const cvUrl = await this.firebaseService.uploadFile(file, 'cv');
       const confirmationToken = uuidv4();
 

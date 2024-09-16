@@ -15,7 +15,9 @@ export class FirebaseService {
       const fileUpload = bucket.file(`${directoryToSave}/${fileName}`);
 
       let fileBuffer = file.buffer;
-      let contentType = file.mimetype.startsWith('image/')? 'image/webp' : file.mimetype;
+      const contentType = file.mimetype.startsWith('image/')
+        ? 'image/webp'
+        : file.mimetype;
 
       if (file.mimetype.startsWith('image/')) {
         if (aspect === 'square') {
@@ -40,7 +42,7 @@ export class FirebaseService {
 
       const stream = fileUpload.createWriteStream({
         metadata: {
-          contentType:contentType,
+          contentType: contentType,
         },
       });
 

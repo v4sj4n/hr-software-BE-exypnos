@@ -178,7 +178,7 @@ export class NotificationService {
 
   private getDateRange(period: string): { startDate: Date; endDate: Date } {
     const endDate = new Date();
-    let startDate = new Date(endDate);
+    const startDate = new Date(endDate);
     startDate.setHours(0, 0, 0, 0);
 
     if (period === 'week') {
