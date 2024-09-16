@@ -22,3 +22,6 @@ export class MessageController {
     return this.messageService.getMessages(senderId, recipientId);
   }
 }
+
+
+

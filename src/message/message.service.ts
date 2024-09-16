@@ -13,28 +13,35 @@ export class MessageService {
       senderId,
       recipientId,
       message,
-      timestamp: new Date(),  // Add a timestamp for when the message is saved
+      timestamp: new Date(), // Add a timestamp for when the message is saved
     });
 
     try {
-      return await newMessage.save();  // Save the message and return it
+      return await newMessage.save(); // Save the message and return it
     } catch (error) {
       throw new InternalServerErrorException(`Error saving message: ${error.message}`);
     }
   }
 
-  // Get messages between two users
+  // Get messages between two users where either can be the sender or the recipient
   async getMessages(senderId: string, recipientId: string) {
     try {
-      return await this.messageModel
+      const messages = await this.messageModel
         .find({
           $or: [
-            { senderId, recipientId },
-            { senderId: recipientId, recipientId: senderId },
+            { senderId, recipientId }, // Case where the logged-in user is the sender
+            { senderId: recipientId, recipientId: senderId }, // Case where the logged-in user is the recipient
           ],
         })
-        .sort({ timestamp: 1 })  // Sort by timestamp in ascending order
+        .sort({ timestamp: 1 }) // Sort by timestamp in ascending order
         .exec();
+
+      // If no messages are found, return an empty array
+      if (!messages || messages.length === 0) {
+        return { message: 'No messages found between these users.' };
+      }
+
+      return messages;
     } catch (error) {
       throw new InternalServerErrorException(`Error retrieving messages: ${error.message}`);
     }
