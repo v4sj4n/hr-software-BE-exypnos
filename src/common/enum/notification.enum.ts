@@ -5,4 +5,5 @@ export enum NotificationType {
   APPLICANT = 'candidates',
   ALLVACATION = 'allVacation',
   ALLAPPLICANT = 'allCandidates',
+  PROMOTION = 'promotion',
 }

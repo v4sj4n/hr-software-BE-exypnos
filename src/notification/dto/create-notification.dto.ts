@@ -6,6 +6,7 @@ import {
   IsMongoId,
   IsOptional,
   IsBoolean,
+  IsArray,
 } from 'class-validator';
 import { NotificationType } from '../../common/enum/notification.enum';
 import { Types } from 'mongoose';
@@ -34,4 +35,9 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   @IsMongoId()
   typeId: Types.ObjectId;
+
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  readers: Types.ObjectId[];
 }

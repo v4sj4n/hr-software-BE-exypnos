@@ -24,6 +24,7 @@ export class NotificationService {
     type: NotificationType,
     date: Date,
     typeId?: Types.ObjectId,
+    readers?: Types.ObjectId[],
   ): Promise<Notification> {
     try {
       const createNotificationDto: CreateNotificationDto = {
@@ -33,6 +34,7 @@ export class NotificationService {
         typeId: typeId || new Types.ObjectId(),
         isRead: false,
         date,
+        readers: readers || [],
       };
       const createdNotification = new this.notificationModel(
         createNotificationDto,
@@ -75,23 +77,21 @@ export class NotificationService {
     }
   }
 
-  async update(id: string): Promise<Notification> {
+  async update(id: string, userId: string): Promise<Notification> {
     try {
-      const updatedNotification = await this.notificationModel.findOneAndUpdate(
-        { _id: id },
-        { isRead: true },
-        { new: true },
-      );
-
+      const updatedNotification = await this.notificationModel.findById(id);
       if (!updatedNotification) {
         throw new NotFoundException('Notification not found');
       }
+      if (updatedNotification.type === NotificationType.EVENT) {
+        updatedNotification.readers = updatedNotification.readers.filter(
+          (reader) => !reader.equals(new Types.ObjectId(userId)),
+        );  }
+        updatedNotification.isRead = true;
+        updatedNotification.save();
 
       return updatedNotification;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
       throw new ConflictException(
         'Failed to update notification',
         error.message,
@@ -135,7 +135,7 @@ export class NotificationService {
   async getNotificationsByUserId(
     id: string,
     period: string = 'today',
-  ): Promise<[Notification[],number]> {
+  ): Promise<Notification[]> {
     try {
       const user = await this.userModel.findById(id);
       if (!user) {
@@ -145,7 +145,7 @@ export class NotificationService {
       const { startDate, endDate } = this.getDateRange(period);
       const userObjectId = new Types.ObjectId(id);
 
-      const notifications = await this.getBaseNotifications(
+      const noteNotifications = await this.getNoteNotifications(
         userObjectId,
         startDate,
         endDate,
@@ -161,17 +161,26 @@ export class NotificationService {
         endDate,
       );
 
+      const promotionNotifications = await this.getNotificationOfPromotion(
+        user._id,
+        startDate,
+        endDate,
+      );
+
+      const eventNotifications = await this.getEventNotifications(
+        userObjectId,
+        startDate,
+        endDate,
+      );
       const allNotifications = [
-        ...notifications,
+        ...noteNotifications,
+        ...eventNotifications,
         ...applicantNotifications,
         ...vacationNotifications,
+        ...promotionNotifications,
       ];
       allNotifications.sort((a, b) => b.date.getTime() - a.date.getTime());
-      //find length of allNotifications that have is Read false
-      const unreadNotifications = allNotifications.filter(
-        (notification) => !notification.isRead,
-      );
-      return [allNotifications, unreadNotifications.length];
+      return allNotifications;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -192,20 +201,12 @@ export class NotificationService {
     return { startDate, endDate };
   }
 
-  private async getBaseNotifications(
+  private async getNoteNotifications(
     userObjectId: Types.ObjectId,
     startDate: Date,
     endDate: Date,
   ): Promise<Notification[]> {
     return this.notificationModel.aggregate([
-      {
-        $lookup: {
-          from: 'events',
-          localField: 'typeId',
-          foreignField: '_id',
-          as: 'eventInfo',
-        },
-      },
       {
         $lookup: {
           from: 'notes',
@@ -216,15 +217,7 @@ export class NotificationService {
       },
       {
         $match: {
-          $or: [
-            {
-              $or: [
-                { 'eventInfo.participants': { $size: 0 } },
-                { 'eventInfo.participants': userObjectId },
-              ],
-            },
-            { 'noteInfo.userId': userObjectId },
-          ],
+          'noteInfo.userId': userObjectId,
           isDeleted: false,
           date: { $gte: startDate, $lt: endDate },
         },
@@ -234,11 +227,31 @@ export class NotificationService {
       },
       {
         $project: {
-          eventInfo: 0,
           noteInfo: 0,
         },
       },
     ]);
+  }
+  private async getEventNotifications(
+    userObjectId: Types.ObjectId,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Notification[]> {
+    const notification = await this.notificationModel
+      .find({
+        type: NotificationType.EVENT,
+        isDeleted: false,
+        date: { $gte: startDate, $lt: endDate },
+      })
+      .sort({ date: -1 });
+
+    for (let i = 0; i < notification.length; i++) {
+      if (notification[i].readers.includes(userObjectId)) {
+        notification[i].isRead = false;
+        await notification[i].save();
+      }
+    }
+    return notification;
   }
 
   private async getNotificationsOfApplicants(
@@ -257,21 +270,51 @@ export class NotificationService {
         date: { $gte: startDate, $lt: endDate },
       })
       .sort({ date: -1 });
-      if(notifications.length>5){
-        for(let i=0 ; i<notifications.length ; i++){
-            notifications[i].isDeleted = true;
-            await notifications[i].save();
+    if (notifications.length > 5) {
+      for (let i = 0; i < notifications.length; i++) {
+        notifications[i].isDeleted = true;
+        notifications[i].isRead = true;
+        await notifications[i].save();
       }
-    const allCandidates = await this.createNotification(
+      const allCandidates = await this.createNotification(
         'More than 5 candidates applied',
         'Check the candidates list',
         NotificationType.ALLAPPLICANT,
         new Date(),
       );
       return [allCandidates];
-    }else{
+    } else {
       return notifications;
     }
+  }
+  private async getNotificationOfPromotion(
+    userId: Types.ObjectId,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Notification[]> {
+    const user = await this.userModel.findById(userId);
+    return this.notificationModel.aggregate([
+      {
+        $lookup: {
+          from: 'promotions',
+          localField: 'typeId',
+          foreignField: '_id',
+          as: 'promotionInfo',
+        },
+      },
+      {
+        $match: {
+          'promotionInfo.userId': userId,
+          isDeleted: false,
+          date: { $gte: startDate, $lt: endDate },
+        },
+      },
+      {
+        $project: {
+          promotionInfo: 0,
+        },
+      },
+    ]);
   }
 
   private async getNotificationOfVacation(
@@ -284,13 +327,28 @@ export class NotificationService {
       const notifications = await this.notificationModel
         .find({
           type: NotificationType.VACATION,
-          title: 'On Leave Request',
+          title: { $in: ['On Leave Request', 'More than 5 leave requests'] },
           isDeleted: false,
           date: { $gte: startDate, $lte: endDate },
         })
         .sort({ date: -1 });
 
-      return notifications;
+      if (notifications.length > 5) {
+        for (let i = 0; i < notifications.length; i++) {
+          notifications[i].isDeleted = true;
+          notifications[i].isRead = true;
+          await notifications[i].save();
+        }
+        const allLeaveRequests = await this.createNotification(
+          'More than 5 leave requests',
+          'Check the leave requests list',
+          NotificationType.ALLVACATION,
+          new Date(),
+        );
+        return [allLeaveRequests];
+      } else {
+        return notifications;
+      }
     } else {
       return this.notificationModel.aggregate([
         {

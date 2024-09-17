@@ -36,7 +36,7 @@ export class VacationService {
       const createdVacation = new this.vacationModel(createVacationDto);
       await this.notificationService.createNotification(
         'On Leave Request',
-        `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate}`,
+        `Vacation request from ${createVacationDto.startDate} to ${createVacationDto.endDate} `,
         NotificationType.VACATION,
         new Date(),
         createdVacation._id,
@@ -110,11 +110,27 @@ export class VacationService {
         },
         { new: true },
       );
-      if (
-        updateVacationDto.status === VacationStatus.ACCEPTED ||
-        updateVacationDto.status === VacationStatus.REJECTED
-      )
+      if (updatedVacation.status === VacationStatus.ACCEPTED) {
+        await this.notificationService.createNotification(
+          'On Leave Has Been Approved',
+          `Vacation request from  ${updatedVacation.startDate.toISOString().split('T')[0]} to ${updatedVacation.endDate.toISOString().split('T')[0]}  has been accepted`,
+          NotificationType.VACATION,
+          new Date(),
+          updatedVacation._id,
+        );
         return updatedVacation;
+      }
+      if (updatedVacation.status === VacationStatus.REJECTED) {
+        await this.notificationService.createNotification(
+          'On Leave Has Been Rejected',
+          `Vacation request from ${updatedVacation.startDate.toISOString().split('T')[0]} to ${updatedVacation.endDate.toISOString().split('T')[0]} has been rejected`,
+          NotificationType.VACATION,
+          new Date(),
+          updatedVacation._id,
+        );
+
+        return updatedVacation;
+      }
     } catch (error) {
       throw new ConflictException(error);
     }

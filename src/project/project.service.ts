@@ -53,7 +53,6 @@ export class ProjectService {
       }
       return createdProject;
     } catch (err) {
-      console.log(err);
       throw new BadRequestException(err);
     }
   }
@@ -159,6 +158,26 @@ export class ProjectService {
       if (userIds[i] === userIds[i + 1]) {
         throw new BadRequestException('Users IDs must be unique');
       }
+    }
+  }
+
+  async getTeamMembers(userId: string): Promise<String[]> {
+    try {
+      const project = await this.projectModel.find({
+        projectManager: new Types.ObjectId(userId),
+        isDeleted: false,
+      });
+      let teamMembers = [];
+      for (let i = 0; i < project.length; i++) {
+        for (let j = 0; j < project[i].teamMembers.length; j++) {
+          if (!teamMembers.includes(project[i].teamMembers[j].toString())) {
+            teamMembers.push(project[i].teamMembers[j].toString());
+          }
+        }
+      }
+      return teamMembers;
+    } catch (err) {
+      throw new BadRequestException(err);
     }
   }
 }

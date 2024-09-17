@@ -14,7 +14,7 @@ export class NotificationController {
   findByUserId(
     @Param('id') id: string,
     @Query('period') period: string,
-  ): Promise<[Notification[],number]> {
+  ): Promise<Notification[]> {
     return this.notificationService.getNotificationsByUserId(id, period);
   }
 
@@ -22,8 +22,11 @@ export class NotificationController {
   findOne(@Param('id') id: string): Promise<Notification> {
     return this.notificationService.findOne(id);
   }
-  @Patch(':id')
-  updateNotification(@Param('id') id: string): Promise<Notification> {
-    return this.notificationService.update(id);
+  @Patch(':id/user/:userId')
+  updateNotification(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<Notification> {
+    return this.notificationService.update(id, userId);
   }
 }
