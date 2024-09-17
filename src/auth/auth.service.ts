@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import mongoose from 'mongoose';
@@ -27,7 +28,6 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  // Sign Up logic
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     try {
       const { email, ...userProperties } = createUserDto;
@@ -78,10 +78,9 @@ export class AuthService {
         email: signInUserDto.email,
       });
       if (!userAuth) {
-        throw new NotFoundException('Invalid credentials');
+        throw new NotFoundException('Email not found');
       }
 
-      // Populate the auth field from the User schema to get the email
       const user = await this.userModel
         .findOne({ auth: userAuth._id })
         .populate('auth');
@@ -111,16 +110,22 @@ export class AuthService {
           access_token: await this.jwtService.signAsync(payload),
           user: {
             ...user.toObject(),
-            email: userAuth.email, // Access email property from userAuth object
+            email: userAuth.email,
           },
         },
       };
     } catch (err) {
-      throw new ConflictException('Error signing in');
+      if (
+        err instanceof UnauthorizedException ||
+        err instanceof NotFoundException
+      ) {
+        throw err;
+      } else {
+        throw new InternalServerErrorException('Server error');
+      }
     }
   }
 
-  // Forgot password logic
   async forgotPassword(email: string): Promise<string> {
     try {
       const userAuth = await this.authModel.findOne({ email });
@@ -128,16 +133,13 @@ export class AuthService {
         throw new NotFoundException('User not found');
       }
 
-      // Generate a unique reset token and store it in the auth model
       const resetToken = randomBytes(32).toString('hex');
       userAuth.resetPasswordToken = resetToken;
-      userAuth.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
+      userAuth.resetPasswordExpires = Date.now() + 3600000;
       await userAuth.save();
 
-      // Create the reset URL
       const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
 
-      // Send the reset password email
       await this.mailService.sendMail({
         to: email,
         subject: 'Password Reset Request',
@@ -155,26 +157,23 @@ export class AuthService {
     }
   }
 
-  // Reset password logic
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<string> {
     try {
       const { token, newPassword } = resetPasswordDto;
 
-      // Find the user by reset token and check expiration
       const userAuth = await this.authModel.findOne({
         resetPasswordToken: token,
-        resetPasswordExpires: { $gt: Date.now() }, // Ensure token is still valid
+        resetPasswordExpires: { $gt: Date.now() },
       });
 
       if (!userAuth) {
         throw new NotFoundException('Invalid or expired token');
       }
 
-      // Hash the new password and update the auth model
       const salt = await bcrypt.genSalt(10);
       userAuth.password = await bcrypt.hash(newPassword, salt);
-      userAuth.resetPasswordToken = null; // Clear the reset token
-      userAuth.resetPasswordExpires = null; // Clear the expiration
+      userAuth.resetPasswordToken = null;
+      userAuth.resetPasswordExpires = null;
       await userAuth.save();
 
       return 'Password reset successfully';
@@ -183,7 +182,6 @@ export class AuthService {
     }
   }
 
-  // Get User logic
   async getUser(email: string): Promise<User> {
     try {
       const userAuth = await this.authModel.findOne({ email });
@@ -199,20 +197,17 @@ export class AuthService {
     }
   }
 
-  // Update password logic
   async updatePassword(
     updatePasswordDto: UpdatePasswordDto,
     email: string,
   ): Promise<string> {
     try {
-      // Check if the user exists in the authModel
       const userAuth = await this.authModel.findOne({ email });
 
       if (!userAuth) {
         throw new NotFoundException('User not found');
       }
 
-      // Compare old password
       const isMatch = await bcrypt.compare(
         updatePasswordDto.oldPassword,
         userAuth.password,
@@ -221,7 +216,6 @@ export class AuthService {
         throw new UnauthorizedException('Invalid old password');
       }
 
-      // Hash and update the new password
       const salt = await bcrypt.genSalt(10);
       userAuth.password = await bcrypt.hash(
         updatePasswordDto.newPassword,
@@ -236,7 +230,6 @@ export class AuthService {
     }
   }
 
-  // Soft delete user logic
   async removeUser(email: string): Promise<string> {
     try {
       await this.authModel.findOneAndUpdate(
