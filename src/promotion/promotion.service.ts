@@ -9,12 +9,15 @@ import { Promotion } from 'src/common/schema/promotion.schema';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { User } from '../common/schema/user.schema';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationType } from 'src/common/enum/notification.enum';
 
 @Injectable()
 export class PromotionService {
   constructor(
     @InjectModel(Promotion.name) private promotionModel: Model<Promotion>,
     @InjectModel(User.name) private userModel: Model<User>,
+    private notificationService: NotificationService,
   ) {}
 
   async create(createPromotionDto: CreatePromotionDto): Promise<Promotion> {
@@ -41,6 +44,13 @@ export class PromotionService {
       userId: new Types.ObjectId(createPromotionDto.userId),
     });
 
+    await this.notificationService.createNotification(
+      'New Promotion',
+      `Promotion to ${createPromotionDto.grade} ${createPromotionDto.position} `,
+      NotificationType.PROMOTION,
+      new Date(),
+      createdPromotion._id,
+    );
     return createdPromotion.save();
   }
 
@@ -92,7 +102,7 @@ export class PromotionService {
   }
 
   async findById(id: string): Promise<Promotion> {
-    const promotion = await this.promotionModel.findById(id);
+    const promotion = await this.promotionModel.findById(new Types.ObjectId(id));
     if (!promotion) {
       throw new NotFoundException('Promotion not found');
     }

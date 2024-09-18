@@ -10,6 +10,8 @@ import { User } from 'src/common/schema/user.schema';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { RatingsService } from 'src/ratings/ratings.service';
+import { elementAt } from 'rxjs';
+import { ProjectStatus } from 'src/common/enum/project.enum';
 
 @Injectable()
 export class ProjectService {
@@ -31,6 +33,14 @@ export class ProjectService {
       await this.validateUserIds([createProjectDto.projectManager]);
       const createdProject = new this.projectModel(createProjectDto);
       await createdProject.save();
+      await this.userModel.updateOne(
+        {
+          _id: createProjectDto.projectManager,
+        },
+        {
+          role: 'pm',
+        },
+      );
       await this.ratingService.createRatingForTeamMember({
         projectId: createdProject._id,
         userId: createdProject.projectManager,
@@ -53,7 +63,6 @@ export class ProjectService {
       }
       return createdProject;
     } catch (err) {
-      console.log(err);
       throw new BadRequestException(err);
     }
   }
@@ -134,7 +143,10 @@ export class ProjectService {
   async getStructure(): Promise<Project[]> {
     try {
       return this.projectModel
-        .find({ isDeleted: false }, { projectManager: 1, teamMembers: 1 })
+        .find(
+          { isDeleted: false },
+          { name: 1, projectManager: 1, teamMembers: 1 },
+        )
         .populate('projectManager', 'firstName lastName position grade')
         .populate('teamMembers', 'firstName lastName position grade');
     } catch (err) {
@@ -159,6 +171,63 @@ export class ProjectService {
       if (userIds[i] === userIds[i + 1]) {
         throw new BadRequestException('Users IDs must be unique');
       }
+    }
+  }
+
+  async getTeamMembers(userId: string) {
+    try {
+      let teamMembers = [];
+
+      const user = await this.userModel.findOne({
+        _id: new Types.ObjectId(userId),
+        isDeleted: false,
+      });
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      if (user.role === 'hr') {
+        const users = await this.userModel
+          .find({ isDeleted: false })
+          .select({
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            position: 1,
+            grade: 1,
+          })
+          .sort({ firstName: 1 });
+        return users;
+      }
+      const project = await this.projectModel.find({
+        projectManager: new Types.ObjectId(userId),
+        status: ProjectStatus.INPROGRESS,
+        isDeleted: false,
+      });
+      let teamMembersId = [];
+      for (let i = 0; i < project.length; i++) {
+        for (let j = 0; j < project[i].teamMembers.length; j++) {
+          if (!teamMembersId.includes(project[i].teamMembers[j].toString())) {
+            teamMembersId.push(project[i].teamMembers[j].toString());
+            const memberInfo = await this.userModel
+              .find({
+                _id: project[i].teamMembers[j],
+                isDeleted: false,
+              })
+              .select({
+                _id: 1,
+                firstName: 1,
+                lastName: 1,
+                position: 1,
+                grade: 1,
+              })
+              .sort({ firstName: 1 });
+            teamMembers.push(memberInfo[0]);
+          }
+        }
+      }
+      return teamMembers;
+    } catch (err) {
+      throw new BadRequestException(err);
     }
   }
 }

@@ -40,6 +40,18 @@ export class NoteService {
     }
   }
 
+  async findAllByUser(userId: string): Promise<Note[]> {  
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+      return this.noteModel.find({ userId: new Types.ObjectId(userId), isDeleted: false }).sort({ date: 'asc' });
+    } catch (error) {
+      throw new ConflictException(error);
+    }
+  }
+
   async findOne(id: string): Promise<Note> {
     try {
       const note = await this.noteModel.findById(id);

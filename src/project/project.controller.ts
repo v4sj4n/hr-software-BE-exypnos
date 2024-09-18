@@ -30,6 +30,11 @@ export class ProjectController {
     return this.projectService.getStructure();
   }
 
+  @Get('pm/:id')
+  getTeam(@Param('id') id: string) {
+    return this.projectService.getTeamMembers(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectService.findOne(id);

@@ -63,12 +63,12 @@ export class EventsService {
       if (!createdEvent) {
         throw new InternalServerErrorException('Event could not be created');
       }
-
+      let participants: ObjectId[] = [];
       if (
         createEventDto.participants &&
         createEventDto.participants.length > 0
       ) {
-        const participants = await getParticipantsByUserId(
+        participants = await getParticipantsByUserId(
           this.userModel,
           this.authModel,
           createEventDto.participants,
@@ -95,12 +95,22 @@ export class EventsService {
           opt.voters = [];
         });
       }
+      let readers: ObjectId[] = [];
+      if (participants.length === 0) {
+        readers = (await this.userModel.find().select('_id')).map(
+          (user) => user._id as ObjectId,
+        );
+      } else {
+        readers = participants;
+      }
+
       await this.notificationService.createNotification(
         'Event Created',
         `Event ${createdEvent.title} has been created`,
         NotificationType.EVENT,
         new Date(),
         createdEvent._id as Types.ObjectId,
+        readers,
       );
 
       await this.mailService.sendMail({
@@ -118,6 +128,7 @@ export class EventsService {
 
       return await createdEvent.save();
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }
@@ -238,6 +249,14 @@ export class EventsService {
           throw new NotFoundException('Some participants not found');
         }
       }
+      let readers: ObjectId[] = [];
+      if (participants.length === 0) {
+        readers = (await this.userModel.find().select('_id')).map(
+          (user) => user._id as ObjectId,
+        );
+      } else {
+        readers = participants;
+      }
 
       const updatedEvent = await this.eventModel.findByIdAndUpdate(
         id,
@@ -258,6 +277,7 @@ export class EventsService {
         NotificationType.EVENT,
         new Date(),
         updatedEvent._id as Types.ObjectId,
+        readers,
       );
       return updatedEvent;
     } catch (error) {

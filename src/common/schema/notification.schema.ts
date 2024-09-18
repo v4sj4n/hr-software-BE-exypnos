@@ -25,6 +25,9 @@ export class Notification {
 
   @Prop({ default: false, type: Boolean })
   isDeleted: boolean;
+
+  @Prop({ type: [Types.ObjectId] })
+  readers: Types.ObjectId[];
 }
 
 const NotificationSchema = SchemaFactory.createForClass(Notification);

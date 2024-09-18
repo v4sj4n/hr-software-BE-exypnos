@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsEnum,
+  Matches,
 } from 'class-validator';
 import { DateTime } from 'luxon';
 import { ApplicantStatus } from 'src/common/enum/applicant.enum';
@@ -43,6 +44,9 @@ export class UpdateApplicantDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
+    message: 'Invalid email address',
+  })
   email: string;
 
   @IsOptional()

@@ -20,7 +20,7 @@ async function checkRequestUser(userModel: Model<User>, req: Request) {
   if (!userExists) {
     throw new NotFoundException(`User with id ${userId} not found`);
   }
-  return new Types.ObjectId(userId);
+  return  new Types.ObjectId(userId);
 }
 async function checkUserId(userModel: Model<User>, userId: string) {
   const userExists = await userModel.findById(userId);
