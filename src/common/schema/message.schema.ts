@@ -1,15 +1,13 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-export type MessageDocument = Message & Document;
+import { Document, Types } from 'mongoose';
 
 @Schema()
 export class Message {
-  @Prop({ required: true })
-  senderId: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  senderId: Types.ObjectId;
 
-  @Prop({ required: true })
-  recipientId: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  recipientId: Types.ObjectId;
 
   @Prop({ required: true })
   message: string;
@@ -18,4 +16,5 @@ export class Message {
   timestamp: Date;
 }
 
+export type MessageDocument = Message & Document;
 export const MessageSchema = SchemaFactory.createForClass(Message);

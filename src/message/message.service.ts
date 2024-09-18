@@ -1,23 +1,34 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Message, MessageDocument } from 'src/common/schema/message.schema';
 
 @Injectable()
 export class MessageService {
   constructor(@InjectModel(Message.name) private messageModel: Model<MessageDocument>) {}
 
+  // Validate ObjectId
+  private validateObjectId(id: string): Types.ObjectId {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(`Invalid ObjectId: ${id}`);
+    }
+    return new Types.ObjectId(id);
+  }
+
   // Save a new message to the database
   async saveMessage(senderId: string, recipientId: string, message: string) {
-    const newMessage = new this.messageModel({
-      senderId,
-      recipientId,
-      message,
-      timestamp: new Date(), // Add a timestamp for when the message is saved
-    });
+    const senderObjectId = this.validateObjectId(senderId);
+    const recipientObjectId = this.validateObjectId(recipientId);
 
+    const newMessage = new this.messageModel({
+      senderId: senderObjectId,
+      recipientId: recipientObjectId,
+      message,
+      timestamp: new Date(),
+    });
+  
     try {
-      return await newMessage.save(); // Save the message and return it
+      return await newMessage.save();
     } catch (error) {
       throw new InternalServerErrorException(`Error saving message: ${error.message}`);
     }
@@ -25,25 +36,72 @@ export class MessageService {
 
   // Get messages between two users where either can be the sender or the recipient
   async getMessages(senderId: string, recipientId: string) {
+    console.log('Query senderId:', senderId);
+    console.log('Query recipientId:', recipientId);
+
+    const senderObjectId = this.validateObjectId(senderId);
+    const recipientObjectId = this.validateObjectId(recipientId);
+  
     try {
       const messages = await this.messageModel
         .find({
           $or: [
-            { senderId, recipientId }, // Case where the logged-in user is the sender
-            { senderId: recipientId, recipientId: senderId }, // Case where the logged-in user is the recipient
+            { senderId: senderObjectId, recipientId: recipientObjectId },
+            { senderId: recipientObjectId, recipientId: senderObjectId },
           ],
         })
-        .sort({ timestamp: 1 }) // Sort by timestamp in ascending order
+        .sort({ timestamp: 1 })
         .exec();
-
-      // If no messages are found, return an empty array
+  
+      console.log('Found messages:', messages);
+  
       if (!messages || messages.length === 0) {
         return { message: 'No messages found between these users.' };
       }
-
+  
       return messages;
     } catch (error) {
       throw new InternalServerErrorException(`Error retrieving messages: ${error.message}`);
+    }
+  }
+
+  // Get messages sent by a specific sender
+  async getMessagesBySender(senderId: string) {
+    const senderObjectId = this.validateObjectId(senderId);
+  
+    try {
+      const messages = await this.messageModel
+        .find({ senderId: senderObjectId })
+        .sort({ timestamp: 1 })
+        .exec();
+  
+      if (!messages || messages.length === 0) {
+        return { message: 'No messages found for this sender.' };
+      }
+  
+      return messages;
+    } catch (error) {
+      throw new InternalServerErrorException(`Error retrieving messages for sender: ${error.message}`);
+    }
+  }
+
+  // Get messages received by a specific recipient
+  async getMessagesByRecipient(recipientId: string) {
+    const recipientObjectId = this.validateObjectId(recipientId);
+  
+    try {
+      const messages = await this.messageModel
+        .find({ recipientId: recipientObjectId })
+        .sort({ timestamp: 1 })
+        .exec();
+  
+      if (!messages || messages.length === 0) {
+        return { message: 'No messages found for this recipient.' };
+      }
+  
+      return messages;
+    } catch (error) {
+      throw new InternalServerErrorException(`Error retrieving messages for recipient: ${error.message}`);
     }
   }
 }
