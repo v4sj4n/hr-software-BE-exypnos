@@ -23,6 +23,7 @@ import {
 
   @SubscribeMessage('sendMessage')
   handleMessage(client: Socket, payload: { sender: string; message: string }): void {
+    console.log(payload);
     this.server.emit('receiveMessage', payload); // Broadcast the message to all clients
   }
 
