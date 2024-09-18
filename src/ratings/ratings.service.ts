@@ -40,65 +40,27 @@ export class RatingsService {
       new: true,
     });
   }
-  async findByUser(userId?: string, averageRating?: boolean) {
-    if (userId) {
-      const userObjectId = new Types.ObjectId(userId);
-      return this.ratingModel
-        .find({ userId: userObjectId })
+  async findByUser(userId: string, pmId?: string) {
+    if (pmId) {
+      const projects = await this.projectModel.find({
+        projectManager: new Types.ObjectId(pmId),
+        teamMembers: { $elemMatch: { $eq: new Types.ObjectId(userId) } },
+      });
+      let ratings = [];
+      for (const project of projects) {
+        const rating = await this.ratingModel
+          .find({
+            userId: new Types.ObjectId(userId),
+            projectId: project._id,
+          })
+          .populate('projectId', 'name');
+        ratings.push(...rating);
+      }
+      return ratings;
+    } else {
+      return await this.ratingModel
+        .find({ userId: new Types.ObjectId(userId) })
         .populate('projectId', 'name');
-    }
-    if (averageRating) {
-      return await this.userModel.aggregate([
-        {
-          $lookup: {
-            from: 'ratings',
-            localField: '_id',
-            foreignField: 'userId',
-            as: 'ratings',
-          },
-        },
-        {
-          $unwind: {
-            path: '$ratings',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $group: {
-            _id: '$_id',
-            firstName: { $first: '$firstName' },
-            lastName: { $first: '$lastName' },
-            position: { $first: '$position' },
-            grade: { $first: '$grade' },
-            clientFeedbackRating: { $avg: '$ratings.clientFeedbackRating' },
-            productivityScore: { $avg: '$ratings.productivityScore' },
-            teamCollaborationScore: { $avg: '$ratings.teamCollaborationScore' },
-            technicalSkillLevel: { $avg: '$ratings.technicalSkillLevel' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            firstName: 1,
-            lastName: 1,
-            position: 1,
-            grade: 1,
-            averageRating: {
-              $round: [
-                {
-                  $avg: [
-                    { $ifNull: ['$clientFeedbackRating', 0] },
-                    { $ifNull: ['$productivityScore', 0] },
-                    { $ifNull: ['$teamCollaborationScore', 0] },
-                    { $ifNull: ['$technicalSkillLevel', 0] },
-                  ],
-                },
-                2,
-              ],
-            },
-          },
-        },
-      ]);
     }
   }
 }

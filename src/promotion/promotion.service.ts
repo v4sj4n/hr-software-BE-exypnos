@@ -102,7 +102,7 @@ export class PromotionService {
   }
 
   async findById(id: string): Promise<Promotion> {
-    const promotion = await this.promotionModel.findById(id);
+    const promotion = await this.promotionModel.findById(new Types.ObjectId(id));
     if (!promotion) {
       throw new NotFoundException('Promotion not found');
     }

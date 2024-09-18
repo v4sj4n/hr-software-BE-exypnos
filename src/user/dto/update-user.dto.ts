@@ -2,11 +2,13 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { GradeType, PositionType } from 'src/common/enum/position.enum';
 import { Role } from 'src/common/enum/role.enum';
+
 
 export class UpdateUserDto {
   @IsOptional()
@@ -23,8 +25,9 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(10)
-  @MaxLength(15)
+  @Matches(/^6[6-9]\d{7}$/,{
+    message: 'Invalid phone number'
+  })
   phone: string;
 
   @IsOptional()
@@ -34,6 +37,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   gender?: string;
+
+  @IsOptional()
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
+    message: 'Invalid email address',
+  })
+  email: string;
 
   @IsOptional()
   @IsString()

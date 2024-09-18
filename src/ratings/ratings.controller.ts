@@ -27,11 +27,12 @@ export class RatingsController {
     return this.ratingsService.updateRating(id, updateRatingDto);
   }
 
-  @Get('user')
+  @Get('user/:id')
   findByUserId(
-    @Query('id') id: string,
-    @Query('avarageRating') avarageRating: boolean,
+    @Param('id') id: string,
+    @Query('pmId') pmId: string,
+
   ) {
-    return this.ratingsService.findByUser(id, avarageRating);
+    return this.ratingsService.findByUser(id, pmId);
   }
 }

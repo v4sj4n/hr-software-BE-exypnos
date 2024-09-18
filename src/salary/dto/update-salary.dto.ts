@@ -26,7 +26,7 @@ export class UpdateSalaryDto {
 
   @IsOptional()
   @IsString()
-  @Length(1, 100)
+  @Length(0, 100)
   bonusDescription?: string;
 
   @IsOptional()

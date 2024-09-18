@@ -30,7 +30,6 @@ import {
   getOptionThatUserVotedFor,
 } from './events.poll';
 import { paginate } from 'src/common/util/pagination';
-import { ParamsTokenFactory } from '@nestjs/core/pipes';
 
 @Injectable()
 export class EventsService {
@@ -129,6 +128,7 @@ export class EventsService {
 
       return await createdEvent.save();
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }

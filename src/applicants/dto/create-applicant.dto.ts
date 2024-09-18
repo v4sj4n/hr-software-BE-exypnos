@@ -3,6 +3,7 @@ import {
   IsDateString,
   ValidateIf,
   IsOptional,
+  Matches,
 } from 'class-validator';
 import { DateTime } from 'luxon';
 
@@ -31,9 +32,13 @@ export class CreateApplicantDto {
   dob: string;
 
   @IsNotEmpty()
+  @Matches(/^6[6-9]\d{9}$/, {message: 'Invalid phone number'})
   phoneNumber: string;
 
   @IsNotEmpty()
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
+    message: 'Invalid email address',
+  })
   email: string;
 
   @IsNotEmpty()
