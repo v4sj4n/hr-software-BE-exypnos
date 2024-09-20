@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { NoteService } from './note.service';
 import { Note } from '../common/schema/note.schema';
@@ -25,8 +26,15 @@ export class NoteController {
   findAll(): Promise<Note[]> {
     return this.noteService.findAll();
   }
-
   @Get('user/:userId')
+  findAllByUserAndDate(
+    @Param('userId') userId: string,
+    @Query('date') date: string,
+  ): Promise<Note[]> {
+    return this.noteService.getNotesByDate(userId, date);
+  }
+
+  @Get('user/:userId/all')
   findAllByUser(@Param('userId') userId: string): Promise<Note[]> {
     return this.noteService.findAllByUser(userId);
   }

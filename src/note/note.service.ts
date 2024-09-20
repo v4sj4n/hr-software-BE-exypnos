@@ -40,13 +40,15 @@ export class NoteService {
     }
   }
 
-  async findAllByUser(userId: string): Promise<Note[]> {  
+  async findAllByUser(userId: string): Promise<Note[]> {
     try {
       const user = await this.userModel.findById(userId);
       if (!user) {
         throw new BadRequestException('User not found');
       }
-      return this.noteModel.find({ userId: new Types.ObjectId(userId), isDeleted: false }).sort({ date: 'asc' });
+      return this.noteModel
+        .find({ userId: new Types.ObjectId(userId), isDeleted: false })
+        .sort({ date: 'asc' });
     } catch (error) {
       throw new ConflictException(error);
     }
@@ -78,6 +80,36 @@ export class NoteService {
       await this.validateNoteData(updatedNote);
       return updatedNote;
     } catch (error) {
+      throw new ConflictException(error);
+    }
+  }
+
+  async getNotesByDate(userId: string, dateString: string): Promise<Note[]> {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        throw new BadRequestException('Invalid date format');
+      }
+
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+      const notes = await this.noteModel
+        .find({
+          userId: new Types.ObjectId(userId),
+          date: {
+            $gte: startOfDay,
+            $lte: endOfDay,
+          },
+          isDeleted: false,
+        })
+        .sort({ date: 'asc' });
+
+      return notes;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new ConflictException(error);
     }
   }
