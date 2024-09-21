@@ -49,18 +49,26 @@ export class UserService {
   // Update user by ID
   async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
     try {
-      if(updateUserDto.email) {
-        const existingUser = await this.userModel.findOne({_id:new mongoose.Types.ObjectId(id)});
-        const authUser = await this.authModel.findOne({_id:existingUser.auth});
-        if(authUser.email !== updateUserDto.email) {
-          const existingEmail = await this.authModel.findOne({email:updateUserDto.email});
-          if(existingEmail) {
+      if (updateUserDto.email) {
+        const existingUser = await this.userModel.findOne({
+          _id: new mongoose.Types.ObjectId(id),
+        });
+        const authUser = await this.authModel.findOne({
+          _id: existingUser.auth,
+        });
+        if (authUser.email !== updateUserDto.email) {
+          const existingEmail = await this.authModel.findOne({
+            email: updateUserDto.email,
+          });
+          if (existingEmail) {
             throw new ConflictException('Email already exists');
-          }else{
-            await this.authModel.updateOne({_id:existingUser.auth},{email:updateUserDto.email});
+          } else {
+            await this.authModel.updateOne(
+              { _id: existingUser.auth },
+              { email: updateUserDto.email },
+            );
           }
         }
-        
       }
       const updatedUser = await this.userModel.findByIdAndUpdate(
         id,
@@ -72,7 +80,6 @@ export class UserService {
       }
       return updatedUser;
     } catch (err) {
-
       throw new ConflictException(err);
     }
   }

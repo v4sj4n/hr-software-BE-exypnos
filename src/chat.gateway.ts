@@ -1,28 +1,33 @@
 import {
-    WebSocketGateway,
-    SubscribeMessage,
-    MessageBody,
-    WebSocketServer,
-    OnGatewayInit,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-  } from '@nestjs/websockets';
-  import { Server, Socket } from 'socket.io';
-  import { Logger } from '@nestjs/common';
-  
-  @WebSocketGateway({
-    cors: {
-      origin: 'http://localhost:5173',
-    },
-  })
-  export class ChatGateway
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  WebSocketServer,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { Logger } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
+
+@SkipThrottle({ short: true, medium: true, long: true })
+@WebSocketGateway({
+  cors: {
+    origin: 'http://localhost:5173',
+  },
+})
+export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('ChatGateway');
 
   @SubscribeMessage('sendMessage')
-  handleMessage(client: Socket, payload: { sender: string; message: string }): void {
+  handleMessage(
+    client: Socket,
+    payload: { sender: string; message: string },
+  ): void {
     console.log(payload);
     this.server.emit('receiveMessage', payload); // Broadcast the message to all clients
   }

@@ -11,7 +11,7 @@ import { AuthModule } from 'src/auth/auth.module';
   imports: [
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
-      { name: 'Auth', schema: AuthSchema }, 
+      { name: 'Auth', schema: AuthSchema },
     ]),
     FirebaseModule,
     AuthModule,

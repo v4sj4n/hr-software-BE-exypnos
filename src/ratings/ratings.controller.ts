@@ -28,11 +28,7 @@ export class RatingsController {
   }
 
   @Get('user/:id')
-  findByUserId(
-    @Param('id') id: string,
-    @Query('pmId') pmId: string,
-
-  ) {
+  findByUserId(@Param('id') id: string, @Query('pmId') pmId: string) {
     return this.ratingsService.findByUser(id, pmId);
   }
 }

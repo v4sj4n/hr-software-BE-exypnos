@@ -46,7 +46,7 @@ export class RatingsService {
         projectManager: new Types.ObjectId(pmId),
         teamMembers: { $elemMatch: { $eq: new Types.ObjectId(userId) } },
       });
-      let ratings = [];
+      const ratings = [];
       for (const project of projects) {
         const rating = await this.ratingModel
           .find({

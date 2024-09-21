@@ -32,7 +32,7 @@ export class CreateApplicantDto {
   dob: string;
 
   @IsNotEmpty()
-  @Matches(/^6[6-9]\d{9}$/, {message: 'Invalid phone number'})
+  @Matches(/^6[6-9]\d{9}$/, { message: 'Invalid phone number' })
   phoneNumber: string;
 
   @IsNotEmpty()

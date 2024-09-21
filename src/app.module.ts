@@ -22,6 +22,8 @@ import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
 import { ChatGateway } from './chat.gateway';
 import { MessageModule } from './message/message.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -29,6 +31,23 @@ import { MessageModule } from './message/message.module';
       envFilePath: '.env',
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 5,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 25,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 200,
+      },
+    ]),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
@@ -72,6 +91,13 @@ import { MessageModule } from './message/message.module';
     MessageModule, // Ensure MessageModule is imported so MessageService is available
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway], // ChatGateway should be in the providers array
+  providers: [
+    AppService,
+    ChatGateway,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ], // ChatGateway should be in the providers array
 })
 export class AppModule {}

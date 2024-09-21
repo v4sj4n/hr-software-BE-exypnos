@@ -86,9 +86,10 @@ export class NotificationService {
       if (updatedNotification.type === NotificationType.EVENT) {
         updatedNotification.readers = updatedNotification.readers.filter(
           (reader) => !reader.equals(new Types.ObjectId(userId)),
-        );  }
-        updatedNotification.isRead = true;
-        updatedNotification.save();
+        );
+      }
+      updatedNotification.isRead = true;
+      updatedNotification.save();
 
       return updatedNotification;
     } catch (error) {

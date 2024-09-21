@@ -176,7 +176,7 @@ export class ProjectService {
 
   async getTeamMembers(userId: string) {
     try {
-      let teamMembers = [];
+      const teamMembers = [];
 
       const user = await this.userModel.findOne({
         _id: new Types.ObjectId(userId),
@@ -203,7 +203,7 @@ export class ProjectService {
         status: ProjectStatus.INPROGRESS,
         isDeleted: false,
       });
-      let teamMembersId = [];
+      const teamMembersId = [];
       for (let i = 0; i < project.length; i++) {
         for (let j = 0; j < project[i].teamMembers.length; j++) {
           if (!teamMembersId.includes(project[i].teamMembers[j].toString())) {

@@ -9,7 +9,6 @@ import {
 import { GradeType, PositionType } from 'src/common/enum/position.enum';
 import { Role } from 'src/common/enum/role.enum';
 
-
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
@@ -25,8 +24,8 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^6[6-9]\d{7}$/,{
-    message: 'Invalid phone number'
+  @Matches(/^6[6-9]\d{7}$/, {
+    message: 'Invalid phone number',
   })
   phone: string;
 
