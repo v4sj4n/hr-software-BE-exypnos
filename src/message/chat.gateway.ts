@@ -1,7 +1,6 @@
 import {
   WebSocketGateway,
   SubscribeMessage,
-  MessageBody,
   WebSocketServer,
   OnGatewayInit,
   OnGatewayConnection,
@@ -29,7 +28,7 @@ export class ChatGateway
     payload: { sender: string; message: string },
   ): void {
     console.log(payload);
-    this.server.emit('receiveMessage', payload); // Broadcast the message to all clients
+    this.server.emit('receiveMessage', payload);
   }
 
   afterInit(server: Server) {

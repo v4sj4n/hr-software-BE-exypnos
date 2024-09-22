@@ -13,7 +13,6 @@ export class MessageService {
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
   ) {}
 
-  // Validate ObjectId
   private validateObjectId(id: string): Types.ObjectId {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException(`Invalid ObjectId: ${id}`);
@@ -21,7 +20,6 @@ export class MessageService {
     return new Types.ObjectId(id);
   }
 
-  // Save a new message to the database
   async saveMessage(senderId: string, recipientId: string, message: string) {
     const senderObjectId = this.validateObjectId(senderId);
     const recipientObjectId = this.validateObjectId(recipientId);
@@ -42,7 +40,6 @@ export class MessageService {
     }
   }
 
-  // Get messages between two users where either can be the sender or the recipient
   async getMessages(senderId: string, recipientId: string) {
     console.log('Query senderId:', senderId);
     console.log('Query recipientId:', recipientId);
@@ -75,7 +72,6 @@ export class MessageService {
     }
   }
 
-  // Get messages sent by a specific sender
   async getMessagesBySender(senderId: string) {
     const senderObjectId = this.validateObjectId(senderId);
 
@@ -97,7 +93,6 @@ export class MessageService {
     }
   }
 
-  // Get messages received by a specific recipient
   async getMessagesByRecipient(recipientId: string) {
     const recipientObjectId = this.validateObjectId(recipientId);
 

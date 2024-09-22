@@ -5,7 +5,7 @@ import { Role } from 'src/common/enum/role.enum';
 import { GradeType, PositionType } from '../enum/position.enum';
 
 @Schema({
-  timestamps: true, // Automatically adds createdAt and updatedAt fields
+  timestamps: true,
 })
 export class User {
   @Prop({ required: true, type: String })
@@ -51,7 +51,6 @@ export class User {
 
 const UserSchema = SchemaFactory.createForClass(User);
 
-// Ensure unique validation on specific fields (like email in the Auth schema)
 UserSchema.plugin(muv);
 
 export { UserSchema };
