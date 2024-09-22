@@ -20,7 +20,7 @@ import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
-import { ChatGateway } from './chat.gateway';
+import { ChatGateway } from './message/chat.gateway';
 import { MessageModule } from './message/message.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
