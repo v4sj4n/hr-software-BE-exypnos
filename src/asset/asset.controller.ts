@@ -11,10 +11,14 @@ import {
 import { AssetService } from './asset.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
 
+@Roles(Role.ADMIN, Role.HR)
 @Controller('asset')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
+
 
   @Post()
   create(@Body() createAssetDto: CreateAssetDto) {

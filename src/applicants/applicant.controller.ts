@@ -21,11 +21,15 @@ import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-vali
 import { Response } from 'express';
 import { Express } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
+
 
 @Controller('applicant')
 export class ApplicantsController {
   constructor(private readonly applicantsService: ApplicantsService) {}
 
+  @Roles(Role.ADMIN, Role.HR)
   @Get()
   async findAll(
     @Query('page') page: number,
@@ -56,11 +60,13 @@ export class ApplicantsController {
     return res.redirect(redirectUrl);
   }
 
+  @Roles(Role.ADMIN, Role.HR)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.applicantsService.findOne(id);
   }
 
+  @Roles(Role.ADMIN, Role.HR)
   @Patch(':id')
   async updateApplicant(
     @Param('id') id: string,
@@ -80,6 +86,7 @@ export class ApplicantsController {
     }
   }
 
+  @Roles(Role.ADMIN, Role.HR)
   @Delete(':id')
   async deleteApplicant(@Param('id') id: string) {
     await this.applicantsService.deleteApplicant(id);

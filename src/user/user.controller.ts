@@ -29,14 +29,17 @@ export class UserController {
   ): Promise<User[]> {
     return await this.userService.findAll(page, limit);
   }
+
   @Get('search/:name')
   async searchUser(@Param('name') name: string): Promise<User[]> {
     return this.userService.filterUsers(name);
   }
-  @Get('position/:position')
-  async getProfile(@Param('position') position: string): Promise<User[]> {
-    return this.userService.getUserByPosition(position);
+
+  @Get('remote/:remote')
+  async findRemoteUsers(@Param('remote') remote: boolean): Promise<number> {
+    return this.userService.getPresentOrRemoteUser(remote);
   }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User | null> {
     return await this.userService.findOne(id);

@@ -57,6 +57,10 @@ export class VacationController {
     return this.vacationService.getUserVacation(id);
   }
 
+  @Get('onLeave')
+  findAllOnLeave() {
+    return this.vacationService.getNumberOfUsersOnVacation();
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.vacationService.findOne(id);

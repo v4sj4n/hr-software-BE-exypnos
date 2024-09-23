@@ -14,3 +14,12 @@ export enum GradeType {
   MID = 'mid',
   SENIOR = 'senior',
 }
+
+export enum  EngagementType {
+  FULL_TIME_REMOTE = 'full_time_remote',
+  FULL_TIME_ON_SITE = 'full_time_on_site',
+  PART_TIME_REMOTE = 'part_time_remote',
+  PART_TIME_ON_SITE = 'part_time_on_site',
+  INTERNSHIP = 'internship',
+  EXTERNAL = 'external',
+}

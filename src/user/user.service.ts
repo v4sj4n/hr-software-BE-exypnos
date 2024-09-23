@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { paginate } from 'src/common/util/pagination';
+import { EngagementType } from 'src/common/enum/position.enum';
 
 @Injectable()
 export class UserService {
@@ -20,7 +21,6 @@ export class UserService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  // Fetch all users with pagination
   async findAll(page?: number, limit?: number): Promise<User[]> {
     try {
       if (!limit && !page) {
@@ -37,7 +37,6 @@ export class UserService {
     }
   }
 
-  // Find a single user by ID
   async findOne(id: string): Promise<User | null> {
     const user = await this.userModel.findById(id).populate('auth');
     if (!user || user.isDeleted) {
@@ -46,7 +45,6 @@ export class UserService {
     return user;
   }
 
-  // Update user by ID
   async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<User> {
     try {
       if (updateUserDto.email) {
@@ -84,7 +82,6 @@ export class UserService {
     }
   }
 
-  // Soft-delete a user by setting isDeleted to true
   async deleteUser(id: string): Promise<void> {
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
@@ -98,7 +95,6 @@ export class UserService {
     );
   }
 
-  // Upload a profile image and update the user with the image URL
   async uploadImage(file: Express.Multer.File, req: any): Promise<string> {
     try {
       const profileImageUrl = await this.firebaseService.uploadFile(
@@ -118,7 +114,6 @@ export class UserService {
     }
   }
 
-  // Filter users by first name
   async filterUsers(name: string): Promise<User[]> {
     try {
       const users = await this.userModel.find({
@@ -131,16 +126,13 @@ export class UserService {
     }
   }
 
-  // Get users by position
-  async getUserByPosition(position: string): Promise<User[]> {
+ async getPresentOrRemoteUser(isRemote:boolean): Promise<number> {
     try {
-      const users = await this.userModel
-        .find({
-          position,
-          isDeleted: false,
-        })
-        .select('firstName lastName');
-      return users;
+      if(isRemote){
+       return await this.userModel.countDocuments({ contrat: { $in: [EngagementType.PART_TIME_REMOTE, EngagementType.FULL_TIME_REMOTE] } });
+      }else{
+        return await this.userModel.countDocuments({ contrat: { $in: [EngagementType.FULL_TIME_ON_SITE, EngagementType.PART_TIME_ON_SITE] } });
+      }
     } catch (err) {
       throw new ConflictException(err);
     }

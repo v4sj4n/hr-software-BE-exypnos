@@ -30,6 +30,7 @@ import {
   getOptionThatUserVotedFor,
 } from './events.poll';
 import { paginate } from 'src/common/util/pagination';
+import { idText } from 'typescript';
 
 @Injectable()
 export class EventsService {
@@ -328,26 +329,24 @@ export class EventsService {
       userId,
     );
   }
-  async getEventsByUserId(id: string): Promise<Event[]> {
+  async getEventsByUserId(
+    id: string,
+    search: string,
+    page: number,
+    limit: number,
+  ): Promise<Event[]> {
     try {
       const user = await this.userModel.findById(id);
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException(`User with id ${id} not found`);
       }
-      const events = await this.eventModel
-        .find({
-          isDeleted: false,
-          $or: [
-            { participants: { $size: 0 } },
-            {
-              participants: {
-                $elemMatch: { $eq: new ObjectId('669a1c14340e143b8dbd74fd') },
-              },
-            },
-          ],
-        })
-        .sort({ createdAt: -1 });
-      return events;
+      const filter: FilterQuery<Event> = {};
+      filter.participants = {$elemMatch: { $eq: new Types.ObjectId(id) }};
+      if (search) {
+        filter.title = { $regex: search, $options: 'i' };
+      }
+      filter.isDeleted = false;
+      return paginate(page, limit, this.eventModel, filter, { createdAt: -1 });
     } catch (error) {
       throw new ConflictException(error);
     }
