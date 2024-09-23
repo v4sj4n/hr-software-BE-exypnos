@@ -43,6 +43,7 @@ export class RatingsService {
   async findByUser(userId: string, pmId?: string) {
     if (pmId) {
       const projects = await this.projectModel.find({
+        isDeleted: false,
         projectManager: new Types.ObjectId(pmId),
         teamMembers: { $elemMatch: { $eq: new Types.ObjectId(userId) } },
       });
@@ -50,6 +51,7 @@ export class RatingsService {
       for (const project of projects) {
         const rating = await this.ratingModel
           .find({
+            isDeleted: false,
             userId: new Types.ObjectId(userId),
             projectId: project._id,
           })
@@ -63,12 +65,16 @@ export class RatingsService {
         .populate('projectId', 'name');
     }
   }
- 
+
   async deleteRatingByProjectId(id: string) {
-    const rating = await this.ratingModel.find({ projectId: new Types.ObjectId(id) });
+    const rating = await this.ratingModel.find({
+      projectId: new Types.ObjectId(id),
+    });
     for (const rate of rating) {
-      await this.ratingModel.findByIdAndUpdate({ _id: rate._id }, { isDeleted: true });
+      await this.ratingModel.findByIdAndUpdate(
+        { _id: rate._id },
+        { isDeleted: true },
+      );
     }
   }
-
 }
