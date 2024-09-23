@@ -63,4 +63,12 @@ export class RatingsService {
         .populate('projectId', 'name');
     }
   }
+ 
+  async deleteRatingByProjectId(id: string) {
+    const rating = await this.ratingModel.find({ projectId: new Types.ObjectId(id) });
+    for (const rate of rating) {
+      await this.ratingModel.findByIdAndUpdate({ _id: rate._id }, { isDeleted: true });
+    }
+  }
+
 }

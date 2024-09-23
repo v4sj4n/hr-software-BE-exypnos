@@ -132,6 +132,8 @@ export class ProjectService {
 
       if (!deletedProject) {
         throw new NotFoundException(`Project with ID ${id} not found`);
+      }else{
+        await this.ratingService.deleteRatingByProjectId(id);
       }
 
       return deletedProject;
