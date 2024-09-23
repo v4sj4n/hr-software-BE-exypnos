@@ -61,7 +61,7 @@ export class RatingsService {
       return ratings;
     } else {
       return await this.ratingModel
-        .find({ userId: new Types.ObjectId(userId) })
+        .find({ userId: new Types.ObjectId(userId), isDeleted: false })
         .populate('projectId', 'name');
     }
   }
