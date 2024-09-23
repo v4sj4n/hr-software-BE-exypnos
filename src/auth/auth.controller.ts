@@ -15,6 +15,8 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -33,10 +35,10 @@ export class AuthController {
     return await this.authService.signIn(signInUserDto);
   }
 
-  @Get('getuser')
-  async getProfile(@Request() req) {
-    return await this.authService.getUser(req.user.email);
-  }
+  // @Get('getuser')
+  // async getProfile(@Request() req) {
+  //   return await this.authService.getUser(req.user.email);
+  // }
 
   @Post('updatepassword')
   async updatePassword(
@@ -66,6 +68,7 @@ export class AuthController {
     return await this.authService.resetPassword(resetPasswordDto);
   }
 
+  @Roles(Role.ADMIN, Role.HR)
   @Put('delete-user/:email')
   async deleteUser(@Param('email') email: string): Promise<string> {
     return await this.authService.removeUser(email);

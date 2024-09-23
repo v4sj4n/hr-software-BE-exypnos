@@ -299,4 +299,29 @@ export class VacationService {
       throw new ConflictException(err);
     }
   }
+
+  async getNumberOfUsersOnVacation() {
+
+    try {
+      const usersOnVacation = await this.vacationModel.aggregate([
+        {
+          $match: {
+            status: VacationStatus.ACCEPTED,
+            endDate: { $gte: new Date() },
+            startDate: { $lte: new Date() },  
+            isDeleted: false,
+          },
+        },
+        {
+          $group: {
+            _id: '$userId',
+          },
+        },
+      ]);
+
+      return usersOnVacation.length;
+    } catch (err) {
+      throw new ConflictException(err);
+    }
+  }
 }

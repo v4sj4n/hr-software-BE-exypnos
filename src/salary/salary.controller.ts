@@ -10,15 +10,19 @@ import {
 import { SalaryService } from './salary.service';
 import { CreateSalaryDto } from './dto/create-salary.dto';
 import { UpdateSalaryDto } from './dto/update-salary.dto';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
 
 @Controller('salary')
 export class SalaryController {
   constructor(private readonly salaryService: SalaryService) {}
 
+  @Roles(Role.HR)
   @Post()
   create(@Body() createSalaryDto: CreateSalaryDto) {
     return this.salaryService.create(createSalaryDto);
   }
+  
   @Get()
   find(
     @Query('page') page: number,

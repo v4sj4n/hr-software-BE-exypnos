@@ -18,11 +18,14 @@ import { VoteDto } from './dto/vote.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Role } from 'src/common/enum/role.enum';
 
 @Controller('event')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  @Roles(Role.HR)
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
   @UsePipes(new FileMimeTypeValidationPipe())
@@ -52,8 +55,13 @@ export class EventsController {
   }
 
   @Get('user/:id')
-  getEventsByUserId(@Param('id') id: string) {
-    return this.eventsService.getEventsByUserId(id);
+  getEventsByUserId(
+    @Param('id') id: string,
+    @Query('search') search: string = '',
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.eventsService.getEventsByUserId(id, search, page, limit);
   }
 
   @Get('poll/:id')
@@ -71,6 +79,7 @@ export class EventsController {
     return this.eventsService.getOptionThatUserVotedFor(id, userId);
   }
 
+  @Roles(Role.HR)
   @Patch(':id')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photo', maxCount: 10 }]))
   async partialUpdate(
