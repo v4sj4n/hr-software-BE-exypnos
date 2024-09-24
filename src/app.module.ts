@@ -20,11 +20,10 @@ import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
-import { ChatGateway } from './message/chat.gateway';
-import { MessageModule } from './message/message.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ConversationModule } from './conversation/conversation.module';
+import { ChatModule } from './chat/chat.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -89,8 +88,7 @@ import { ConversationModule } from './conversation/conversation.module';
     ProjectModule,
     PromotionModule,
     RatingsModule,
-    MessageModule, 
-    ConversationModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
