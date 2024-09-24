@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -102,9 +103,15 @@ export class PromotionService {
   }
 
   async findById(id: string): Promise<Promotion> {
-    const promotion = await this.promotionModel.findById(
-      new Types.ObjectId(id),
-    );
+    let objectId: Types.ObjectId;
+  
+    try {
+      objectId = new Types.ObjectId(id);
+    } catch (error) {
+      throw new BadRequestException('Invalid promotion id format');
+    }
+  
+    const promotion = await this.promotionModel.findById(objectId);
     if (!promotion) {
       throw new NotFoundException('Promotion not found');
     }

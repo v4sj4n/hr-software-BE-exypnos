@@ -94,7 +94,7 @@ export class ApplicantsService {
         return await this.applicantModel.find(filter);
       }
 
-      return paginate(page, limit, this.applicantModel, filter);
+      return paginate(page, limit, this.applicantModel, filter,{createdAt: 'desc'});
     } catch (error) {
       console.error('Error filtering applicants:', error);
       throw new Error('Failed to filter applicants');
@@ -132,7 +132,7 @@ export class ApplicantsService {
         confirmationToken,
       });
 
-      const confirmationUrl = `http://localhost:5173/applicant/confirm?token=${confirmationToken}&status=success`;
+      const confirmationUrl = `${process.env.FRONT_URL}/applicant/confirm?token=${confirmationToken}&status=success`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
