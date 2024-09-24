@@ -346,7 +346,13 @@ export class EventsService {
         filter.title = { $regex: search, $options: 'i' };
       }
       filter.isDeleted = false;
-      return paginate(page, limit, this.eventModel, filter, { createdAt: -1 });
+      filter.type = { $ne: 'career' };
+      if (!page && !limit) {
+        return await this.eventModel.find(filter).sort({ createdAt: -1 });
+      }
+      return await paginate(page, limit, this.eventModel, filter, {
+        createdAt: -1,
+      });
     } catch (error) {
       throw new ConflictException(error);
     }
