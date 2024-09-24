@@ -18,5 +18,6 @@ import { MessagesController } from './controllers/messages.controller';
   ],
   providers: [ChatGateway, ChatService, ConversationsService, MessagesService],
   controllers: [ConversationsController, MessagesController],
+  exports: [ChatService], 
 })
 export class ChatModule {}
