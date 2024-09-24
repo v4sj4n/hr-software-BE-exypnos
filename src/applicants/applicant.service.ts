@@ -132,7 +132,7 @@ export class ApplicantsService {
         confirmationToken,
       });
 
-      const confirmationUrl = `${process.env.BACK_URL}/applicant/confirm?token=${confirmationToken}&status=success`;
+      const confirmationUrl = `${process.env.FRONT_URL}/applicant/confirm?token=${confirmationToken}&status=success`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,

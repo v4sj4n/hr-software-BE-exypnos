@@ -138,7 +138,7 @@ export class AuthService {
       userAuth.resetPasswordExpires = Date.now() + 3600000;
       await userAuth.save();
 
-      const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+      const resetUrl = `${process.env.FRONT_URL}/reset-password?token=${resetToken}`;
 
       await this.mailService.sendMail({
         to: email,

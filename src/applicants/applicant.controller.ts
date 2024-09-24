@@ -55,7 +55,7 @@ export class ApplicantsController {
   ) {
     await this.applicantsService.confirmApplication(token);
 
-    const redirectUrl = `http://localhost:5173/recruitment/confirm?token=${token}&status=success`;
+    const redirectUrl = `${process.env.FRONT_URL}/recruitment/confirm?token=${token}&status=success`;
 
     return res.redirect(redirectUrl);
   }
