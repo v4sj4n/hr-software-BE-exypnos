@@ -23,9 +23,9 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: '*',
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
-    // credentials: true,
+    origin: 'https://hrrrr-77695.web.app', 
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true,
   });
 
   app.useGlobalPipes(
