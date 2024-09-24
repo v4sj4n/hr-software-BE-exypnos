@@ -24,6 +24,7 @@ import { ChatGateway } from './message/chat.gateway';
 import { MessageModule } from './message/message.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ConversationModule } from './conversation/conversation.module';
 
 @Module({
   imports: [
@@ -88,7 +89,8 @@ import { APP_GUARD } from '@nestjs/core';
     ProjectModule,
     PromotionModule,
     RatingsModule,
-    MessageModule, // Ensure MessageModule is imported so MessageService is available
+    MessageModule, 
+    ConversationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -98,6 +100,6 @@ import { APP_GUARD } from '@nestjs/core';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-  ], // ChatGateway should be in the providers array
+  ], 
 })
 export class AppModule {}

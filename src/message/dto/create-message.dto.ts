@@ -1,15 +1,13 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateMessageDto {
   @IsString()
-  @IsNotEmpty()
-  senderId: string;
+  conversationId: Types.ObjectId; // Conversation ID to associate the message with
 
   @IsString()
-  @IsNotEmpty()
-  recipientId: string;
+  senderId: Types.ObjectId; // ID of the user sending the message
 
   @IsString()
-  @IsNotEmpty()
-  message: string;
+  text: string; // The message content
 }
