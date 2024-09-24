@@ -13,7 +13,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 @SkipThrottle({ short: true, medium: true, long: true })
 @WebSocketGateway({
   cors: {
-    origin: 'https://seashell-app-rvw8f.ondigitalocean.app/',
+    origin: 'http://localhost:5173',
   },
 })
 export class ChatGateway
