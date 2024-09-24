@@ -19,7 +19,6 @@ import { Role } from 'src/common/enum/role.enum';
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 
-
   @Post()
   create(@Body() createAssetDto: CreateAssetDto) {
     return this.assetService.create(createAssetDto);

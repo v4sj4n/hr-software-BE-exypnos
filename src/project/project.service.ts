@@ -10,7 +10,6 @@ import { User } from 'src/common/schema/user.schema';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { RatingsService } from 'src/ratings/ratings.service';
-import { elementAt } from 'rxjs';
 import { ProjectStatus } from 'src/common/enum/project.enum';
 
 @Injectable()
@@ -132,7 +131,7 @@ export class ProjectService {
 
       if (!deletedProject) {
         throw new NotFoundException(`Project with ID ${id} not found`);
-      }else{
+      } else {
         await this.ratingService.deleteRatingByProjectId(id);
       }
 

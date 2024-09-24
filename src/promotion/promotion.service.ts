@@ -104,13 +104,13 @@ export class PromotionService {
 
   async findById(id: string): Promise<Promotion> {
     let objectId: Types.ObjectId;
-  
+
     try {
       objectId = new Types.ObjectId(id);
     } catch (error) {
       throw new BadRequestException('Invalid promotion id format');
     }
-  
+
     const promotion = await this.promotionModel.findById(objectId);
     if (!promotion) {
       throw new NotFoundException('Promotion not found');

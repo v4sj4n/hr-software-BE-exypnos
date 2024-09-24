@@ -301,14 +301,13 @@ export class VacationService {
   }
 
   async getNumberOfUsersOnVacation() {
-
     try {
       const usersOnVacation = await this.vacationModel.aggregate([
         {
           $match: {
             status: VacationStatus.ACCEPTED,
             endDate: { $gte: new Date() },
-            startDate: { $lte: new Date() },  
+            startDate: { $lte: new Date() },
             isDeleted: false,
           },
         },

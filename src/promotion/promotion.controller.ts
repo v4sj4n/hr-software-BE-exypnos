@@ -18,7 +18,6 @@ import { Role } from 'src/common/enum/role.enum';
 export class PromotionController {
   constructor(private readonly promotionService: PromotionService) {}
 
-
   @Roles(Role.HR)
   @Post()
   async create(
@@ -49,7 +48,7 @@ export class PromotionController {
   async findById(@Param('id') id: string): Promise<Promotion> {
     return await this.promotionService.findById(id);
   }
-  
+
   @Roles(Role.HR)
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<Promotion> {

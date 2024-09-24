@@ -126,12 +126,26 @@ export class UserService {
     }
   }
 
- async getPresentOrRemoteUser(isRemote:boolean): Promise<number> {
+  async getPresentOrRemoteUser(isRemote: boolean): Promise<number> {
     try {
-      if(isRemote){
-       return await this.userModel.countDocuments({ contrat: { $in: [EngagementType.PART_TIME_REMOTE, EngagementType.FULL_TIME_REMOTE] } });
-      }else{
-        return await this.userModel.countDocuments({ contrat: { $in: [EngagementType.FULL_TIME_ON_SITE, EngagementType.PART_TIME_ON_SITE] } });
+      if (isRemote) {
+        return await this.userModel.countDocuments({
+          contrat: {
+            $in: [
+              EngagementType.PART_TIME_REMOTE,
+              EngagementType.FULL_TIME_REMOTE,
+            ],
+          },
+        });
+      } else {
+        return await this.userModel.countDocuments({
+          contrat: {
+            $in: [
+              EngagementType.FULL_TIME_ON_SITE,
+              EngagementType.PART_TIME_ON_SITE,
+            ],
+          },
+        });
       }
     } catch (err) {
       throw new ConflictException(err);

@@ -30,8 +30,6 @@ import {
   getOptionThatUserVotedFor,
 } from './events.poll';
 import { paginate } from 'src/common/util/pagination';
-import { idText } from 'typescript';
-
 @Injectable()
 export class EventsService {
   constructor(
@@ -341,7 +339,7 @@ export class EventsService {
         throw new NotFoundException(`User with id ${id} not found`);
       }
       const filter: FilterQuery<Event> = {};
-      filter.participants = {$elemMatch: { $eq: new Types.ObjectId(id) }};
+      filter.participants = { $elemMatch: { $eq: new Types.ObjectId(id) } };
       if (search) {
         filter.title = { $regex: search, $options: 'i' };
       }

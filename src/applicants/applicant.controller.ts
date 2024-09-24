@@ -11,19 +11,16 @@ import {
   UploadedFile,
   ConflictException,
   UsePipes,
-  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateApplicantDto } from './dto/create-applicant.dto';
 import { UpdateApplicantDto } from './dto/update-applicant.dto';
 import { ApplicantsService } from './/applicant.service';
 import { FileMimeTypeValidationPipe } from 'src/common/pipes/file-mime-type-validation.pipe';
-import { Response } from 'express';
 import { Express } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Role } from 'src/common/enum/role.enum';
-
 
 @Controller('applicant')
 export class ApplicantsController {
@@ -49,15 +46,8 @@ export class ApplicantsController {
 
   @Public()
   @Get('confirm')
-  async confirmApplication(
-    @Query('token') token: string,
-    @Res() res: Response,
-  ) {
+  async confirmApplication(@Query('token') token: string) {
     await this.applicantsService.confirmApplication(token);
-
-    const redirectUrl = `${process.env.FRONT_URL}/recruitment/confirm?token=${token}&status=success`;
-
-    return res.redirect(redirectUrl);
   }
 
   @Roles(Role.ADMIN, Role.HR)

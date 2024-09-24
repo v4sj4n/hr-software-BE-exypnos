@@ -6,7 +6,11 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { EngagementType, GradeType, PositionType } from 'src/common/enum/position.enum';
+import {
+  EngagementType,
+  GradeType,
+  PositionType,
+} from 'src/common/enum/position.enum';
 import { Role } from 'src/common/enum/role.enum';
 
 export class UpdateUserDto {

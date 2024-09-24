@@ -1,11 +1,11 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Request,
   Param,
   Put,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -35,10 +35,10 @@ export class AuthController {
     return await this.authService.signIn(signInUserDto);
   }
 
-  // @Get('getuser')
-  // async getProfile(@Request() req) {
-  //   return await this.authService.getUser(req.user.email);
-  // }
+  @Get('getuser')
+  async getProfile(@Request() req) {
+    return await this.authService.getUser(req.user.email);
+  }
 
   @Post('updatepassword')
   async updatePassword(

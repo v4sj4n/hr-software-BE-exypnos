@@ -17,7 +17,6 @@ import { Role } from 'src/common/enum/role.enum';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-
   @Roles(Role.HR)
   @Post()
   create(@Body() createProjectDto: CreateProjectDto) {

@@ -293,7 +293,6 @@ export class NotificationService {
     startDate: Date,
     endDate: Date,
   ): Promise<Notification[]> {
-    const user = await this.userModel.findById(userId);
     return this.notificationModel.aggregate([
       {
         $lookup: {

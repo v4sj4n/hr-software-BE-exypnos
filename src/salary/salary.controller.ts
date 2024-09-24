@@ -22,7 +22,7 @@ export class SalaryController {
   create(@Body() createSalaryDto: CreateSalaryDto) {
     return this.salaryService.create(createSalaryDto);
   }
-  
+
   @Get()
   find(
     @Query('page') page: number,

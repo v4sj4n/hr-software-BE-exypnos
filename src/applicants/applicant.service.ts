@@ -21,6 +21,7 @@ import { paginate } from 'src/common/util/pagination';
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -94,7 +95,9 @@ export class ApplicantsService {
         return await this.applicantModel.find(filter);
       }
 
-      return paginate(page, limit, this.applicantModel, filter,{createdAt: 'desc'});
+      return paginate(page, limit, this.applicantModel, filter, {
+        createdAt: 'desc',
+      });
     } catch (error) {
       console.error('Error filtering applicants:', error);
       throw new Error('Failed to filter applicants');
@@ -132,7 +135,7 @@ export class ApplicantsService {
         confirmationToken,
       });
 
-      const confirmationUrl = `${process.env.FRONT_URL}/applicant/confirm?token=${confirmationToken}&status=success`;
+      const confirmationUrl = `${process.env.FRONT_URL}/applicant/confirm?token=${confirmationToken}`;
 
       await this.mailService.sendMail({
         to: createApplicantDto.email,
@@ -171,31 +174,38 @@ export class ApplicantsService {
   }
 
   async confirmApplication(token?: string): Promise<void> {
-    if (!token) {
-      throw new NotFoundException('Confirmation token is required.');
+    try {
+      if (!token) {
+        throw new NotFoundException('Confirmation token is required.');
+      }
+
+      console.log('Token received for confirmation:', token);
+
+      const applicant = await this.applicantModel.findOne({
+        confirmationToken: token,
+      });
+
+      if (!applicant) {
+        console.error('No applicant found with this token');
+        throw new NotFoundException('Invalid or expired confirmation token.');
+      }
+
+      applicant.status = ApplicantStatus.ACTIVE;
+      applicant.confirmationToken = null;
+      await this.notificationService.createNotification(
+        'New Application',
+        `${applicant.firstName} ${applicant.lastName} has submitted a new application for the position of ${applicant.positionApplied}`,
+        NotificationType.APPLICANT,
+        new Date(),
+        applicant._id as Types.ObjectId,
+      );
+      await applicant.save();
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      throw new InternalServerErrorException(err);
     }
-
-    console.log('Token received for confirmation:', token);
-
-    const applicant = await this.applicantModel.findOne({
-      confirmationToken: token,
-    });
-
-    if (!applicant) {
-      console.error('No applicant found with this token');
-      throw new NotFoundException('Invalid or expired confirmation token.');
-    }
-
-    applicant.status = ApplicantStatus.ACTIVE;
-    applicant.confirmationToken = null;
-    await this.notificationService.createNotification(
-      'New Application',
-      `${applicant.firstName} ${applicant.lastName} has submitted a new application for the position of ${applicant.positionApplied}`,
-      NotificationType.APPLICANT,
-      new Date(),
-      applicant._id as Types.ObjectId,
-    );
-    await applicant.save();
   }
 
   async updateApplicant(
@@ -429,15 +439,13 @@ export class ApplicantsService {
     date: DateTime,
     applicantId: string,
   ): Promise<boolean> {
-    const conflict = await this.applicantModel
-      .findOne({
-        _id: { $ne: applicantId },
-        $or: [
-          { firstInterviewDate: date.toJSDate() },
-          { secondInterviewDate: date.toJSDate() },
-        ],
-      })
-      .exec();
+    const conflict = await this.applicantModel.findOne({
+      _id: { $ne: applicantId },
+      $or: [
+        { firstInterviewDate: date.toJSDate() },
+        { secondInterviewDate: date.toJSDate() },
+      ],
+    });
 
     return !!conflict;
   }
