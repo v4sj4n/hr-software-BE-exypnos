@@ -1,25 +1,25 @@
 export enum PositionType {
-  HR = 'hr',
-  CEO = 'ceo',
-  DESIGNER = 'designer',
-  BACKEND_DEVELOPER = 'backend_developer',
-  FRONTEND_DEVELOPER = 'frontend_developer',
-  FULLSTACK_DEVELOPER = 'fullstack_developer',
-  TESTER = 'tester',
-  DEVOPS = 'devops',
+  HR = 'Hr',
+  CEO = 'Ceo',
+  DESIGNER = 'Designer',
+  BACKEND_DEVELOPER = 'Backend Developer',
+  FRONTEND_DEVELOPER = 'Frontend Developer',
+  FULLSTACK_DEVELOPER = 'Fullstack Developer',
+  TESTER = 'Tester',
+  DEVOPS = 'Devops',
 }
 
 export enum GradeType {
-  JUNIOR = 'junior',
-  MID = 'mid',
-  SENIOR = 'senior',
+  JUNIOR = 'Junior',
+  MID = 'Mid',
+  SENIOR = 'Senior',
 }
 
 export enum EngagementType {
-  FULL_TIME_REMOTE = 'full_time_remote',
-  FULL_TIME_ON_SITE = 'full_time_on_site',
-  PART_TIME_REMOTE = 'part_time_remote',
-  PART_TIME_ON_SITE = 'part_time_on_site',
-  INTERNSHIP = 'internship',
-  EXTERNAL = 'external',
+  FULL_TIME_REMOTE = 'Full Time Remote',
+  FULL_TIME_ON_SITE = 'Full Time On Site',
+  PART_TIME_REMOTE = 'Part Time Remote',
+  PART_TIME_ON_SITE = 'Part Time On Site',
+  INTERNSHIP = 'Internship',
+  EXTERNAL = 'External',
 }
