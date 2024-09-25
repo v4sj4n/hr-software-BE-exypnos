@@ -45,7 +45,7 @@ export class User {
   @Prop({ required: false, enum: GradeType, type: String })
   grade: GradeType;
 
-  @Prop({ default: false, enum: EngagementType, type: String })
+  @Prop({ default:EngagementType.FULL_TIME_ON_SITE , enum: EngagementType, type: String })
   engagement: EngagementType;
 
   @Prop({ default: false, type: Boolean })

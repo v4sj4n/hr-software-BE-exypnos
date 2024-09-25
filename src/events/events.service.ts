@@ -127,7 +127,6 @@ export class EventsService {
 
       return await createdEvent.save();
     } catch (error) {
-      console.log(error);
       throw new ConflictException(error);
     }
   }
