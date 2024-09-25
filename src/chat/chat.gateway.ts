@@ -7,10 +7,14 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ConversationsService } from './services/conversations.service';
-import { CreateConversationDto } from './dto/create-conversation.dto';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { MessagesService } from './services/messages.service';
+import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+import { Conversation } from './interfaces/conversation.interface';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { Message } from './interfaces/message.interface';
 
+@Injectable()
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -38,7 +42,6 @@ export class ChatGateway {
     }
   }
 
-
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(
     @MessageBody() roomId: string,
@@ -51,39 +54,6 @@ export class ChatGateway {
       console.error(`Error leaving room ${roomId}:`, error);
     }
   }
-  
-
-  @SubscribeMessage('createConversation')
-  async handleCreateConversation(
-    @MessageBody() createConversationDto: CreateConversationDto,
-    @ConnectedSocket() client: Socket,
-  ) {
-    console.log('Received createConversation event:', createConversationDto);
-    try {
-      const savedConversation =
-        await this.conversationsService.createConversation(
-          createConversationDto,
-        );
-      console.log(`Conversation created: ${savedConversation._id}`);
-
-      // Notify participants of the new conversation using their user ID rooms
-      createConversationDto.participants.forEach((participantId) => {
-        console.log(
-          `Attempting to emit newConversation event to participant: ${participantId}`,
-        );
-
-        // Emit the new conversation event
-        this.server
-          .to(participantId)
-          .emit('newConversation', savedConversation);
-
-        // Have each participant join the new conversation room
-        this.server.to(participantId).emit('joinRoom', savedConversation._id);
-      });
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-    }
-  }
 
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
@@ -92,8 +62,7 @@ export class ChatGateway {
   ) {
     console.log('Received sendMessage event:', createMessageDto);
     try {
-      const savedMessage =
-        await this.messagesService.createMessage(createMessageDto);
+      const savedMessage = await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
       // Broadcast the message to the conversation room
@@ -106,5 +75,20 @@ export class ChatGateway {
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  }
+
+  // Listen for conversation.created event
+  @OnEvent('conversation.created')
+  handleConversationCreated(payload: { conversation: Conversation; message?: Message }) {
+    const { conversation } = payload;
+    const participantIds = conversation.participants;
+
+    participantIds.forEach((participantId) => {
+      // Emit the newConversation event to the participant's personal room
+      this.server.to(participantId).emit('newConversation', conversation);
+
+      // Have each participant join the new conversation room
+      this.server.to(participantId).emit('joinRoom', conversation._id);
+    });
   }
 }

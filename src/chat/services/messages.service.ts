@@ -17,7 +17,7 @@ export class MessagesService {
   constructor(
     @InjectModel('Message') private readonly messageModel: Model<Message>,
     @InjectModel('Conversation')
-    private readonly conversationModel: Model<Conversation>, // Inject Conversation model to check its existence
+    private readonly conversationModel: Model<Conversation>,
   ) {}
 
   // Create a new message
@@ -61,7 +61,7 @@ export class MessagesService {
       // Find messages for the specified conversation ID and sort by creation time
       const messages = await this.messageModel
         .find({ conversationId })
-        .sort({ createdAt: 1 }) // Order by createdAt in ascending order
+        .sort({ createdAt: 1 })
         .exec();
 
       // Log if no messages found
@@ -69,7 +69,7 @@ export class MessagesService {
         this.logger.warn(
           `No messages found for conversation ID: ${conversationId}`,
         );
-        return []; // Return an empty array instead of throwing an exception
+        return [];
       }
 
       this.logger.log(

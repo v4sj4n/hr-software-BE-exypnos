@@ -6,6 +6,7 @@ import { Message } from '../interfaces/message.interface';
 import { CreateConversationDto } from '../dto/create-conversation.dto';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { InjectConnection } from '@nestjs/mongoose'; // Import InjectConnection
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ConversationsService {
@@ -14,7 +15,8 @@ export class ConversationsService {
   constructor(
     @InjectModel('Conversation') private readonly conversationModel: Model<Conversation>,
     @InjectModel('Message') private readonly messageModel: Model<Message>,
-    @InjectConnection() private readonly connection: Connection, // Inject the connection
+    @InjectConnection() private readonly connection: Connection,
+    private eventEmitter: EventEmitter2, // Inject EventEmitter2
   ) {}
 
   // Create a new conversation without a message
@@ -38,6 +40,10 @@ export class ConversationsService {
     try {
       const savedConversation = await conversation.save();
       console.log('New conversation created:', savedConversation._id);
+
+      // Emit event after creating the conversation
+      this.eventEmitter.emit('conversation.created', { conversation: savedConversation });
+
       return savedConversation;
     } catch (error) {
       console.error('Failed to create conversation:', error);
@@ -45,12 +51,12 @@ export class ConversationsService {
     }
   }
 
-  // Create a conversation and the first message (if message data is provided)
+  // Create a conversation and the first message
   async createConversationAndFirstMessage(
     createConversationDto: CreateConversationDto,
     createMessageDto: CreateMessageDto,
   ): Promise<{ conversation: Conversation; message: Message }> {
-    const session = await this.connection.startSession(); // Start a session using the injected connection
+    const session = await this.connection.startSession();
     session.startTransaction();
 
     try {
@@ -64,24 +70,27 @@ export class ConversationsService {
         .session(session)
         .exec();
 
-    if (!conversation) {
+      if (!conversation) {
         // If conversation doesn't exist, create a new one
         conversation = new this.conversationModel(createConversationDto);
         await conversation.save({ session });
         console.log('New conversation created:', conversation._id);
-    } else {
+      } else {
         console.log('Conversation already exists:', conversation._id);
-    }
+      }
 
-    // If message details are provided, save the first message
-    createMessageDto.conversationId = conversation._id as string; // Cast conversation._id to string
-    const message = new this.messageModel(createMessageDto);
-    await message.save({ session });
+      // Save the first message
+      createMessageDto.conversationId = conversation._id as string;
+      const message = new this.messageModel(createMessageDto);
+      await message.save({ session });
       console.log('First message created with ID:', message._id);
 
       // Commit the transaction
       await session.commitTransaction();
       session.endSession();
+
+      // Emit event after creating the conversation and message
+      this.eventEmitter.emit('conversation.created', { conversation, message });
 
       return { conversation, message };
     } catch (error) {

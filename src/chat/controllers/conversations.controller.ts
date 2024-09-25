@@ -9,21 +9,24 @@ export class ConversationsController {
 
   @Post()
   async createConversationAndMessage(
-    @Body() body: { conversation: CreateConversationDto; message?: CreateMessageDto }
+    @Body() body: {
+      conversation: CreateConversationDto;
+      message?: CreateMessageDto;
+    },
   ) {
     const { conversation, message } = body;
-  
+
     // If no message details are provided, just create the conversation
     if (!message) {
       return this.conversationsService.createConversation(conversation);
     }
-  
+
     // If message details are provided, create both conversation and the first message
-    return this.conversationsService.createConversationAndFirstMessage(conversation, message);
+    return this.conversationsService.createConversationAndFirstMessage(
+      conversation,
+      message,
+    );
   }
-  
-  
-  
 
   // Get all conversations
   @Get()
@@ -49,6 +52,8 @@ export class ConversationsController {
     @Param('conversationId') conversationId: string,
   ) {
     console.log(`Fetching messages for conversation ID: ${conversationId}`);
-    return this.conversationsService.findMessagesByConversation(conversationId);
+    return this.conversationsService.findMessagesByConversation(
+      conversationId,
+    );
   }
 }
