@@ -10,14 +10,15 @@ import { ConversationsController } from './controllers/conversations.controller'
 import { MessagesController } from './controllers/messages.controller';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: 'Conversation', schema: ConversationSchema },
-      { name: 'Message', schema: MessageSchema },
-    ]),
-  ],
-  providers: [ChatGateway, ChatService, ConversationsService, MessagesService],
-  controllers: [ConversationsController, MessagesController],
-  exports: [ChatService], 
-})
-export class ChatModule {}
+    imports: [
+      MongooseModule.forFeature([
+        { name: 'Conversation', schema: ConversationSchema },
+        { name: 'Message', schema: MessageSchema },
+      ]),
+    ],
+    providers: [ChatGateway, ChatService, ConversationsService, MessagesService],
+    controllers: [ConversationsController, MessagesController],
+    exports: [ChatService, ConversationsService, MessagesService],
+  })
+  export class ChatModule {}
+  

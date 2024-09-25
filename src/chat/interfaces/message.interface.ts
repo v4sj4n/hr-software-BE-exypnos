@@ -4,5 +4,5 @@ export interface Message extends Document {
   conversationId: string;
   text: string;
   senderId: string;
-  timestamp: Date;
+  createdAt: Date; 
 }

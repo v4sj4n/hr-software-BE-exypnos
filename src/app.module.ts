@@ -93,7 +93,6 @@ import { ChatGateway } from './chat/chat.gateway';
   controllers: [AppController],
   providers: [
     AppService,
-    ChatGateway,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

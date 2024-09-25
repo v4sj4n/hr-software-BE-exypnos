@@ -30,4 +30,13 @@ export class ConversationsController {
   async findByUser(@Param('userId') userId: string) {
     return this.conversationsService.findByUser(userId);
   }
+
+  // Get all messages for a specific conversation
+  @Get(':conversationId/messages')
+  async findMessagesByConversation(
+    @Param('conversationId') conversationId: string,
+  ) {
+    console.log(`Fetching messages for conversation ID: ${conversationId}`);
+    return this.conversationsService.findMessagesByConversation(conversationId);
+  }
 }
