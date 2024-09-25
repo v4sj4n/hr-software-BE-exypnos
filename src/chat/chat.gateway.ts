@@ -62,7 +62,8 @@ export class ChatGateway {
   ) {
     console.log('Received sendMessage event:', createMessageDto);
     try {
-      const savedMessage = await this.messagesService.createMessage(createMessageDto);
+      const savedMessage =
+        await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
       // Broadcast the message to the conversation room
@@ -79,15 +80,22 @@ export class ChatGateway {
 
   // Listen for conversation.created event
   @OnEvent('conversation.created')
-  handleConversationCreated(payload: { conversation: Conversation; message?: Message }) {
+  handleConversationCreated(payload: {
+    conversation: Conversation;
+    message?: Message;
+  }) {
     const { conversation } = payload;
     const participantIds = conversation.participants;
 
-    participantIds.forEach((participantId) => {
-      // Emit the newConversation event to the participant's personal room
-      this.server.to(participantId).emit('newConversation', conversation);
+    console.log(
+      `Handling conversation.created event for conversation: ${conversation._id}`,
+    );
 
-      // Have each participant join the new conversation room
+    participantIds.forEach((participantId) => {
+      console.log(
+        `Emitting newConversation to participant: ${participantId} for conversation: ${conversation._id}`,
+      );
+      this.server.to(participantId).emit('newConversation', conversation);
       this.server.to(participantId).emit('joinRoom', conversation._id);
     });
   }

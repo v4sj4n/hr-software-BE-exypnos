@@ -58,40 +58,45 @@ export class ConversationsService {
   ): Promise<{ conversation: Conversation; message: Message }> {
     const session = await this.connection.startSession();
     session.startTransaction();
-
+  
     try {
       console.log('Creating conversation with participants:', createConversationDto.participants);
-
+  
       // Check if conversation already exists
       let conversation = await this.conversationModel
         .findOne({
-          participants: { $all: createConversationDto.participants, $size: createConversationDto.participants.length },
+          participants: {
+            $all: createConversationDto.participants,
+            $size: createConversationDto.participants.length,
+          },
         })
         .session(session)
         .exec();
-
+  
       if (!conversation) {
         // If conversation doesn't exist, create a new one
         conversation = new this.conversationModel(createConversationDto);
         await conversation.save({ session });
         console.log('New conversation created:', conversation._id);
+  
+        // Emit event after creating the conversation and message
+        this.eventEmitter.emit('conversation.created', { conversation });
       } else {
         console.log('Conversation already exists:', conversation._id);
+  
+        // Do not emit 'conversation.created' event
       }
-
-      // Save the first message
+  
+      // Save the message
       createMessageDto.conversationId = conversation._id as string;
       const message = new this.messageModel(createMessageDto);
       await message.save({ session });
       console.log('First message created with ID:', message._id);
-
+  
       // Commit the transaction
       await session.commitTransaction();
       session.endSession();
-
-      // Emit event after creating the conversation and message
-      this.eventEmitter.emit('conversation.created', { conversation, message });
-
+  
       return { conversation, message };
     } catch (error) {
       await session.abortTransaction();
@@ -100,6 +105,7 @@ export class ConversationsService {
       throw new Error('Failed to create conversation and message: ' + error.message);
     }
   }
+  
 
   // Find all conversations
   async findAll(): Promise<Conversation[]> {
