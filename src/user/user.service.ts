@@ -130,7 +130,7 @@ export class UserService {
     try {
       if (isRemote) {
         return await this.userModel.countDocuments({
-          contrat: {
+          engagement: {
             $in: [
               EngagementType.PART_TIME_REMOTE,
               EngagementType.FULL_TIME_REMOTE,
@@ -139,7 +139,7 @@ export class UserService {
         });
       } else {
         return await this.userModel.countDocuments({
-          contrat: {
+          engagement: {
             $in: [
               EngagementType.FULL_TIME_ON_SITE,
               EngagementType.PART_TIME_ON_SITE,
