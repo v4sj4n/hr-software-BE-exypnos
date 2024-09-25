@@ -11,6 +11,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { RatingsService } from 'src/ratings/ratings.service';
 import { ProjectStatus } from 'src/common/enum/project.enum';
+import { PositionType } from 'src/common/enum/position.enum';
 
 @Injectable()
 export class ProjectService {
@@ -164,7 +165,7 @@ export class ProjectService {
       if (!user) {
         throw new BadRequestException(`User with ID ${userIds[i]} not found`);
       }
-      if (user.position === 'hr') {
+      if (user.position === PositionType.HR) {
         throw new BadRequestException(
           `User with ID ${userIds[i]} cannot be assigned to a project`,
         );
