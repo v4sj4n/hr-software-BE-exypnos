@@ -65,5 +65,5 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsEnum(EngagementType)
-  contract: EngagementType;
+  engagement: EngagementType;
 }

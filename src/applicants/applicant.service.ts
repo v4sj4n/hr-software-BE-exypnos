@@ -28,6 +28,7 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { NotificationType } from 'src/common/enum/notification.enum';
 import { Auth } from 'src/common/schema/auth.schema';
+import { first } from 'rxjs';
 
 @Injectable()
 export class ApplicantsService {
@@ -60,12 +61,16 @@ export class ApplicantsService {
     try {
       const filter: any = {};
       filter.isDeleted = false;
+      let sort;
       filter.status = {
         $nin: [ApplicantStatus.PENDING, ApplicantStatus.EMPLOYED],
       };
 
       if (currentPhase) {
         filter.currentPhase = currentPhase;
+        currentPhase === 'first_interview'
+          ? (sort = { firstInterviewDate: 'asc' })
+          : (sort = { secondInterviewDate: 'asc' });
       }
 
       if (startDate && endDate) {
@@ -92,12 +97,12 @@ export class ApplicantsService {
         }
       }
       if (!limit && !page) {
-        return await this.applicantModel.find(filter);
+        return await this.applicantModel
+          .find(filter)
+          .sort({ firstInterviewDate: 'asc', secondInterviewDate: 'asc' })
       }
 
-      return paginate(page, limit, this.applicantModel, filter, {
-        createdAt: 'desc',
-      });
+      return paginate(page, limit, this.applicantModel, filter, sort);
     } catch (error) {
       console.error('Error filtering applicants:', error);
       throw new Error('Failed to filter applicants');
@@ -105,7 +110,7 @@ export class ApplicantsService {
   }
 
   async findOne(id: string): Promise<ApplicantDocument> {
-    const applicant = await this.applicantModel.findById(id).exec();
+    const applicant = await this.applicantModel.findById(id)
     if (!applicant) {
       throw new NotFoundException(`Applicant with id ${id} not found`);
     }
