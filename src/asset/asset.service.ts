@@ -192,6 +192,7 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
+
   async getAssetHistory(id: string): Promise<AssetHistory[]> {
     const asset = await this.assetModel.findById(id);
     if (!asset) {
@@ -237,6 +238,7 @@ export class AssetService {
       DateTime.fromJSDate(existingAsset.takenDate).toMillis() >
         DateTime.fromJSDate(assetData.returnDate).toMillis()
     ) {
+      console.log("existingAsset.takenDate", existingAsset.takenDate);
       throw new ConflictException(
         'Return date cannot be before the taken date',
       );
