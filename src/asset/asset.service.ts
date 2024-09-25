@@ -175,7 +175,6 @@ export class AssetService {
       );
     }
   }
-
   async remove(id: string): Promise<Asset> {
     try {
       const asset = await this.assetModel.findByIdAndUpdate(
@@ -192,7 +191,6 @@ export class AssetService {
       throw new ConflictException(error);
     }
   }
-
   async getAssetHistory(id: string): Promise<AssetHistory[]> {
     const asset = await this.assetModel.findById(id);
     if (!asset) {
@@ -204,6 +202,8 @@ export class AssetService {
     assetData: CreateAssetDto | UpdateAssetDto,
     existingAsset?: Asset,
   ) {
+    const returnDate = new Date(assetData.returnDate) 
+    const takenDate = new Date(existingAsset.takenDate)
     if (assetData.userId) {
       const userExists = await this.userModel.findById(assetData.userId);
       if (!userExists) {
@@ -235,10 +235,8 @@ export class AssetService {
     if (
       assetData.returnDate &&
       existingAsset.takenDate &&
-      DateTime.fromJSDate(existingAsset.takenDate).toMillis() >
-        DateTime.fromJSDate(assetData.returnDate).toMillis()
+      DateTime.fromJSDate(takenDate) > DateTime.fromJSDate(returnDate)
     ) {
-      console.log("existingAsset.takenDate", existingAsset.takenDate);
       throw new ConflictException(
         'Return date cannot be before the taken date',
       );
@@ -358,12 +356,5 @@ export class AssetService {
       );
     }
     return asset;
-  }
-
-  async getAvaibleAssets(): Promise<Asset[]> {
-    return await this.assetModel.find({
-      status: AssetStatus.AVAILABLE,
-      isDeleted: false,
-    });
   }
 }
