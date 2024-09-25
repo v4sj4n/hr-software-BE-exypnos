@@ -38,6 +38,21 @@ export class ChatGateway {
     }
   }
 
+
+  @SubscribeMessage('leaveRoom')
+  handleLeaveRoom(
+    @MessageBody() roomId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      client.leave(roomId);
+      console.log(`Client ${client.id} left room ${roomId}`);
+    } catch (error) {
+      console.error(`Error leaving room ${roomId}:`, error);
+    }
+  }
+  
+
   @SubscribeMessage('createConversation')
   async handleCreateConversation(
     @MessageBody() createConversationDto: CreateConversationDto,
@@ -62,7 +77,7 @@ export class ChatGateway {
           .to(participantId)
           .emit('newConversation', savedConversation);
 
-        // Emit a joinRoom event for the participant to join the conversation room
+        // Have each participant join the new conversation room
         this.server.to(participantId).emit('joinRoom', savedConversation._id);
       });
     } catch (error) {
@@ -81,11 +96,7 @@ export class ChatGateway {
         await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
-      // Log message details to check for correctness
-      console.log(
-        `Broadcasting message to room ${createMessageDto.conversationId}`,
-      );
-
+      // Broadcast the message to the conversation room
       this.server
         .to(createMessageDto.conversationId)
         .emit('receiveMessage', savedMessage);
