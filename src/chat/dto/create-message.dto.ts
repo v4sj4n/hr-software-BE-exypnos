@@ -1,6 +1,12 @@
+import { IsString } from 'class-validator';
+
 export class CreateMessageDto {
-    readonly conversationId: string;
-    readonly content: string;
-    readonly sender: string;
-  }
-  
+  @IsString()
+  conversationId: string;
+
+  @IsString()
+  text: string;
+
+  @IsString()
+  senderId: string;
+}

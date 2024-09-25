@@ -9,6 +9,7 @@ export class ConversationsController {
   // Create a new conversation
   @Post()
   async create(@Body() createConversationDto: CreateConversationDto) {
+    console.log(createConversationDto); // Log the incoming request body
     return this.conversationsService.createConversation(createConversationDto);
   }
 
