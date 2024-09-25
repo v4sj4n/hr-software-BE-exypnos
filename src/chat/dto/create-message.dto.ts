@@ -1,8 +1,10 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateMessageDto {
+
+    @IsOptional()
   @IsString()
-  conversationId: string;
+  conversationId?: string;
 
   @IsString()
   text: string;

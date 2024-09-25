@@ -1,17 +1,47 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message } from '../interfaces/message.interface';
 import { CreateMessageDto } from '../dto/create-message.dto';
+import { Conversation } from '../interfaces/conversation.interface';
 
 @Injectable()
 export class MessagesService {
   private readonly logger = new Logger(MessagesService.name);
 
-  constructor(@InjectModel('Message') private readonly messageModel: Model<Message>) {}
+  constructor(
+    @InjectModel('Message') private readonly messageModel: Model<Message>,
+    @InjectModel('Conversation')
+    private readonly conversationModel: Model<Conversation>, // Inject Conversation model to check its existence
+  ) {}
 
   // Create a new message
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
+    const { conversationId, senderId, text } = createMessageDto;
+
+    // Validate input
+    if (!conversationId || !senderId || !text) {
+      throw new BadRequestException(
+        'conversationId, senderId, and text are required to create a message.',
+      );
+    }
+
+    // Check if the conversation exists
+    const conversation = await this.conversationModel
+      .findById(conversationId)
+      .exec();
+    if (!conversation) {
+      throw new NotFoundException(
+        `Conversation with ID ${conversationId} not found.`,
+      );
+    }
+
+    // Create and save the message
     const message = new this.messageModel(createMessageDto);
     try {
       const savedMessage = await message.save();
@@ -26,22 +56,31 @@ export class MessagesService {
   // Retrieve all messages in a conversation
   async findMessagesByConversation(conversationId: string): Promise<Message[]> {
     try {
-      // Add sorting by createdAt (ascending)
+      console.log(`Fetching messages for conversation ID: ${conversationId}`);
+
+      // Find messages for the specified conversation ID and sort by creation time
       const messages = await this.messageModel
         .find({ conversationId })
         .sort({ createdAt: 1 }) // Order by createdAt in ascending order
         .exec();
 
-      // Check if the array is empty
+      // Log if no messages found
       if (!messages || messages.length === 0) {
-        this.logger.warn(`No messages found for conversation ID: ${conversationId}`);
-        throw new NotFoundException(`No messages found for conversation with ID: ${conversationId}`);
+        this.logger.warn(
+          `No messages found for conversation ID: ${conversationId}`,
+        );
+        return []; // Return an empty array instead of throwing an exception
       }
 
-      this.logger.log(`Messages retrieved for conversation ID: ${conversationId}`);
+      this.logger.log(
+        `Messages retrieved for conversation ID: ${conversationId}`,
+      );
       return messages;
     } catch (error) {
-      this.logger.error(`Failed to retrieve messages for conversation ID: ${conversationId}`, error.stack);
+      this.logger.error(
+        `Failed to retrieve messages for conversation ID: ${conversationId}`,
+        error.stack,
+      );
       throw new Error('Failed to retrieve messages: ' + error.message);
     }
   }

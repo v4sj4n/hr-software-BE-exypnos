@@ -1,9 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Connection } from 'mongoose'; // Import Connection
 import { Conversation } from '../interfaces/conversation.interface';
 import { Message } from '../interfaces/message.interface';
 import { CreateConversationDto } from '../dto/create-conversation.dto';
+import { CreateMessageDto } from '../dto/create-message.dto';
+import { InjectConnection } from '@nestjs/mongoose'; // Import InjectConnection
 
 @Injectable()
 export class ConversationsService {
@@ -11,62 +13,137 @@ export class ConversationsService {
 
   constructor(
     @InjectModel('Conversation') private readonly conversationModel: Model<Conversation>,
-    @InjectModel('Message') private readonly messageModel: Model<Message>, // Assuming you're using a Message model
+    @InjectModel('Message') private readonly messageModel: Model<Message>,
+    @InjectConnection() private readonly connection: Connection, // Inject the connection
   ) {}
 
-  // Create a new conversation or return an existing one
+  // Create a new conversation without a message
   async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
-    // Check if a conversation with the same participants already exists
-    const existingConversation = await this.conversationModel.findOne({
-      participants: { $all: createConversationDto.participants, $size: createConversationDto.participants.length },
-    }).exec();
+    console.log('Creating a new conversation:', createConversationDto.participants);
+
+    // Check if conversation already exists with the same participants
+    const existingConversation = await this.conversationModel
+      .findOne({
+        participants: { $all: createConversationDto.participants, $size: createConversationDto.participants.length },
+      })
+      .exec();
 
     if (existingConversation) {
-      this.logger.log(`Conversation already exists: ${existingConversation._id}`);
-      return existingConversation; // Return the existing conversation
+      console.log('Conversation already exists:', existingConversation._id);
+      return existingConversation;
     }
 
-    // Create a new conversation if it doesn't exist
+    // Create a new conversation
     const conversation = new this.conversationModel(createConversationDto);
     try {
       const savedConversation = await conversation.save();
-      this.logger.log(`New conversation created: ${savedConversation._id}`);
+      console.log('New conversation created:', savedConversation._id);
       return savedConversation;
     } catch (error) {
-      this.logger.error('Failed to create conversation', error.stack);
+      console.error('Failed to create conversation:', error);
       throw new Error('Failed to create conversation: ' + error.message);
     }
   }
 
-  // Retrieve all conversations
-  async findAll(): Promise<Conversation[]> {
-    return this.conversationModel.find().exec();
-  }
+  // Create a conversation and the first message (if message data is provided)
+  async createConversationAndFirstMessage(
+    createConversationDto: CreateConversationDto,
+    createMessageDto: CreateMessageDto,
+  ): Promise<{ conversation: Conversation; message: Message }> {
+    const session = await this.connection.startSession(); // Start a session using the injected connection
+    session.startTransaction();
 
-  // Retrieve a conversation by its ID
-  async findById(conversationId: string): Promise<Conversation> {
-    const conversation = await this.conversationModel.findById(conversationId).exec();
+    try {
+      console.log('Creating conversation with participants:', createConversationDto.participants);
+
+      // Check if conversation already exists
+      let conversation = await this.conversationModel
+        .findOne({
+          participants: { $all: createConversationDto.participants, $size: createConversationDto.participants.length },
+        })
+        .session(session)
+        .exec();
+
     if (!conversation) {
-      throw new NotFoundException(`Conversation with ID ${conversationId} not found`);
+        // If conversation doesn't exist, create a new one
+        conversation = new this.conversationModel(createConversationDto);
+        await conversation.save({ session });
+        console.log('New conversation created:', conversation._id);
+    } else {
+        console.log('Conversation already exists:', conversation._id);
     }
-    return conversation;
+
+    // If message details are provided, save the first message
+    createMessageDto.conversationId = conversation._id as string; // Cast conversation._id to string
+    const message = new this.messageModel(createMessageDto);
+    await message.save({ session });
+      console.log('First message created with ID:', message._id);
+
+      // Commit the transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      return { conversation, message };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Transaction failed:', error);
+      throw new Error('Failed to create conversation and message: ' + error.message);
+    }
   }
 
-  // Retrieve all conversations by user ID (where the user is a participant)
+  // Find all conversations
+  async findAll(): Promise<Conversation[]> {
+    try {
+      const conversations = await this.conversationModel.find().exec();
+      console.log('Retrieved all conversations');
+      return conversations;
+    } catch (error) {
+      console.error('Failed to retrieve conversations:', error);
+      throw new Error('Failed to retrieve conversations: ' + error.message);
+    }
+  }
+
+  // Find conversation by ID
+  async findById(id: string): Promise<Conversation> {
+    try {
+      const conversation = await this.conversationModel.findById(id).exec();
+      if (!conversation) {
+        throw new NotFoundException(`Conversation with ID ${id} not found`);
+      }
+      console.log(`Conversation retrieved: ${id}`);
+      return conversation;
+    } catch (error) {
+      console.error('Failed to retrieve conversation:', error);
+      throw new Error('Failed to retrieve conversation: ' + error.message);
+    }
+  }
+
+  // Find all conversations for a specific user
   async findByUser(userId: string): Promise<Conversation[]> {
-    const conversations = await this.conversationModel.find({ participants: userId }).exec();
-    if (!conversations || conversations.length === 0) {
-      throw new NotFoundException(`No conversations found for user with ID ${userId}`);
+    try {
+      const conversations = await this.conversationModel.find({ participants: userId }).exec();
+      console.log(`Conversations retrieved for user: ${userId}`);
+      return conversations;
+    } catch (error) {
+      console.error('Failed to retrieve conversations for user:', error);
+      throw new Error('Failed to retrieve conversations for user: ' + error.message);
     }
-    return conversations;
   }
 
-  // Retrieve all messages for a specific conversation by its ID
+  // Find messages by conversation ID
   async findMessagesByConversation(conversationId: string): Promise<Message[]> {
-    const messages = await this.messageModel.find({ conversationId }).exec();
-    if (!messages || messages.length === 0) {
-      throw new NotFoundException(`No messages found for conversation with ID ${conversationId}`);
+    try {
+      const messages = await this.messageModel.find({ conversationId }).sort({ createdAt: 1 }).exec();
+      if (!messages || messages.length === 0) {
+        this.logger.warn(`No messages found for conversation ID: ${conversationId}`);
+        return [];
+      }
+      this.logger.log(`Messages retrieved for conversation ID: ${conversationId}`);
+      return messages;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve messages for conversation ID: ${conversationId}`, error.stack);
+      throw new Error('Failed to retrieve messages: ' + error.message);
     }
-    return messages;
   }
 }

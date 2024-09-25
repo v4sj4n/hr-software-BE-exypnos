@@ -1,9 +1,15 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ConversationsService } from './services/conversations.service';
-import { CreateMessageDto } from './dto/create-message.dto'; // Assuming you have a DTO for messages
-import { MessagesService } from './services/messages.service'; // Assuming you have a service to handle messages
 import { CreateConversationDto } from './dto/create-conversation.dto';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { MessagesService } from './services/messages.service';
 
 @WebSocketGateway({
   cors: {
@@ -16,44 +22,78 @@ export class ChatGateway {
 
   constructor(
     private readonly conversationsService: ConversationsService,
-    private readonly messagesService: MessagesService, // Assuming a service for handling messages
+    private readonly messagesService: MessagesService,
   ) {}
 
-  // Join a room
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
-    @MessageBody() conversationId: string,
+    @MessageBody() roomId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    client.join(conversationId);
-    console.log(`Client ${client.id} joined room ${conversationId}`);
+    try {
+      client.join(roomId);
+      console.log(`Client ${client.id} joined room ${roomId}`);
+    } catch (error) {
+      console.error(`Error joining room ${roomId}:`, error);
+    }
   }
 
-  // Handle creating a conversation (Already exists in your code)
   @SubscribeMessage('createConversation')
   async handleCreateConversation(
     @MessageBody() createConversationDto: CreateConversationDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const savedConversation = await this.conversationsService.createConversation(createConversationDto);
-    console.log(`Conversation created: ${savedConversation._id}`);
+    console.log('Received createConversation event:', createConversationDto);
+    try {
+      const savedConversation =
+        await this.conversationsService.createConversation(
+          createConversationDto,
+        );
+      console.log(`Conversation created: ${savedConversation._id}`);
 
-    // Notify all users about the new conversation
-    this.server.emit('newConversation', savedConversation);
+      // Notify participants of the new conversation using their user ID rooms
+      createConversationDto.participants.forEach((participantId) => {
+        console.log(
+          `Attempting to emit newConversation event to participant: ${participantId}`,
+        );
+
+        // Emit the new conversation event
+        this.server
+          .to(participantId)
+          .emit('newConversation', savedConversation);
+
+        // Emit a joinRoom event for the participant to join the conversation room
+        this.server.to(participantId).emit('joinRoom', savedConversation._id);
+      });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
   }
 
-  // Handle sending a message
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
-    @MessageBody() createMessageDto: CreateMessageDto, // Assuming a DTO for message creation
+    @MessageBody() createMessageDto: CreateMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
-    // Save the message in the database
-    const savedMessage = await this.messagesService.createMessage(createMessageDto);
-    console.log(`Message created: ${savedMessage._id}`);
+    console.log('Received sendMessage event:', createMessageDto);
+    try {
+      const savedMessage =
+        await this.messagesService.createMessage(createMessageDto);
+      console.log(`Message created: ${savedMessage._id}`);
 
-    // Broadcast the message to the users in the conversation room
-    this.server.to(createMessageDto.conversationId).emit('receiveMessage', savedMessage);
-    console.log(`Message broadcasted to room ${createMessageDto.conversationId}`);
+      // Log message details to check for correctness
+      console.log(
+        `Broadcasting message to room ${createMessageDto.conversationId}`,
+      );
+
+      this.server
+        .to(createMessageDto.conversationId)
+        .emit('receiveMessage', savedMessage);
+      console.log(
+        `Message broadcasted to room ${createMessageDto.conversationId}`,
+      );
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   }
 }

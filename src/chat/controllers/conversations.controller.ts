@@ -1,17 +1,29 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ConversationsService } from '../services/conversations.service';
 import { CreateConversationDto } from '../dto/create-conversation.dto';
+import { CreateMessageDto } from '../dto/create-message.dto';
 
 @Controller('conversations')
 export class ConversationsController {
   constructor(private readonly conversationsService: ConversationsService) {}
 
-  // Create a new conversation
   @Post()
-  async create(@Body() createConversationDto: CreateConversationDto) {
-    console.log(createConversationDto); // Log the incoming request body
-    return this.conversationsService.createConversation(createConversationDto);
+  async createConversationAndMessage(
+    @Body() body: { conversation: CreateConversationDto; message?: CreateMessageDto }
+  ) {
+    const { conversation, message } = body;
+  
+    // If no message details are provided, just create the conversation
+    if (!message) {
+      return this.conversationsService.createConversation(conversation);
+    }
+  
+    // If message details are provided, create both conversation and the first message
+    return this.conversationsService.createConversationAndFirstMessage(conversation, message);
   }
+  
+  
+  
 
   // Get all conversations
   @Get()
