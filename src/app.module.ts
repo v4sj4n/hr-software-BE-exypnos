@@ -20,10 +20,10 @@ import { SalaryModule } from './salary/salary.module';
 import { ProjectModule } from './project/project.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { PromotionModule } from './promotion/promotion.module';
-import { ChatGateway } from './message/chat.gateway';
-import { MessageModule } from './message/message.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ChatModule } from './chat/chat.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -88,16 +88,15 @@ import { APP_GUARD } from '@nestjs/core';
     ProjectModule,
     PromotionModule,
     RatingsModule,
-    MessageModule, // Ensure MessageModule is imported so MessageService is available
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    ChatGateway,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-  ], // ChatGateway should be in the providers array
+  ], 
 })
 export class AppModule {}
