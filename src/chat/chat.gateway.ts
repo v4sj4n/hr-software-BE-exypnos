@@ -4,6 +4,8 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ConversationsService } from './services/conversations.service';
@@ -18,11 +20,23 @@ import { Message } from './interfaces/message.interface';
 @WebSocketGateway({
   cors: {
     origin: 'https://hrrrr-77695.web.app',
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
 })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  // Handle new client connections
+  handleConnection(client: Socket) {
+    console.log(`Client connected: ${client.id}`);
+  }
+
+  // Handle client disconnections
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
+  }
 
   constructor(
     private readonly conversationsService: ConversationsService,
