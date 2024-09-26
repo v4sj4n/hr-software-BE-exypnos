@@ -23,7 +23,6 @@ import { PromotionModule } from './promotion/promotion.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ChatModule } from './chat/chat.module';
-import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -97,6 +96,6 @@ import { ChatGateway } from './chat/chat.gateway';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-  ], 
+  ],
 })
 export class AppModule {}

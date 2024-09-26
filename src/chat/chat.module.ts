@@ -15,7 +15,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       { name: 'Conversation', schema: ConversationSchema },
       { name: 'Message', schema: MessageSchema },
     ]),
-    EventEmitterModule.forRoot(), 
+    EventEmitterModule.forRoot(),
   ],
   providers: [ChatGateway, ConversationsService, MessagesService],
   controllers: [ConversationsController, MessagesController],

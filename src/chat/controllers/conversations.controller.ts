@@ -9,7 +9,8 @@ export class ConversationsController {
 
   @Post()
   async createConversationAndMessage(
-    @Body() body: {
+    @Body()
+    body: {
       conversation: CreateConversationDto;
       message?: CreateMessageDto;
     },
@@ -52,8 +53,6 @@ export class ConversationsController {
     @Param('conversationId') conversationId: string,
   ) {
     console.log(`Fetching messages for conversation ID: ${conversationId}`);
-    return this.conversationsService.findMessagesByConversation(
-      conversationId,
-    );
+    return this.conversationsService.findMessagesByConversation(conversationId);
   }
 }

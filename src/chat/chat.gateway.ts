@@ -80,12 +80,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     console.log('Received sendMessage event:', createMessageDto);
     try {
-      const savedMessage = await this.messagesService.createMessage(createMessageDto);
+      const savedMessage =
+        await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
       // Broadcast the message to the conversation room
-      this.server.to(createMessageDto.conversationId).emit('receiveMessage', savedMessage);
-      console.log(`Message broadcasted to room ${createMessageDto.conversationId}`);
+      this.server
+        .to(createMessageDto.conversationId)
+        .emit('receiveMessage', savedMessage);
+      console.log(
+        `Message broadcasted to room ${createMessageDto.conversationId}`,
+      );
 
       // Acknowledge message sent successfully
       client.emit('sendMessageAck', { status: 'ok' });
