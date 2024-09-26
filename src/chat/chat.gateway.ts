@@ -17,7 +17,7 @@ import { Message } from './interfaces/message.interface';
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: 'https://hrrrr-77695.web.app',
   },
 })
 export class ChatGateway {
