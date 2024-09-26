@@ -19,7 +19,7 @@ import { Message } from './interfaces/message.interface';
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: 'https://hrrrr-77695.web.app',
+    origin: '*',
     methods: ['GET', 'POST'],
     secure: true,
   },
