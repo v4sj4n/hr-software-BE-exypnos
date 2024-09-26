@@ -21,7 +21,7 @@ import { Message } from './interfaces/message.interface';
   cors: {
     origin: 'https://hrrrr-77695.web.app',
     methods: ['GET', 'POST'],
-    credentials: true,
+    secure: true,
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -47,12 +47,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleJoinRoom(
     @MessageBody() roomId: string,
     @ConnectedSocket() client: Socket,
-  ) {
+  ): void {
     try {
       client.join(roomId);
       console.log(`Client ${client.id} joined room ${roomId}`);
+      client.emit('joinRoomAck', { status: 'ok' });
     } catch (error) {
       console.error(`Error joining room ${roomId}:`, error);
+      client.emit('joinRoomAck', { status: 'error', error: error.message });
     }
   }
 
@@ -60,12 +62,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleLeaveRoom(
     @MessageBody() roomId: string,
     @ConnectedSocket() client: Socket,
-  ) {
+  ): void {
     try {
       client.leave(roomId);
       console.log(`Client ${client.id} left room ${roomId}`);
+      client.emit('leaveRoomAck', { status: 'ok' });
     } catch (error) {
       console.error(`Error leaving room ${roomId}:`, error);
+      client.emit('leaveRoomAck', { status: 'error', error: error.message });
     }
   }
 
@@ -76,19 +80,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     console.log('Received sendMessage event:', createMessageDto);
     try {
-      const savedMessage =
-        await this.messagesService.createMessage(createMessageDto);
+      const savedMessage = await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
       // Broadcast the message to the conversation room
-      this.server
-        .to(createMessageDto.conversationId)
-        .emit('receiveMessage', savedMessage);
-      console.log(
-        `Message broadcasted to room ${createMessageDto.conversationId}`,
-      );
+      this.server.to(createMessageDto.conversationId).emit('receiveMessage', savedMessage);
+      console.log(`Message broadcasted to room ${createMessageDto.conversationId}`);
+
+      // Acknowledge message sent successfully
+      client.emit('sendMessageAck', { status: 'ok' });
     } catch (error) {
       console.error('Error sending message:', error);
+      client.emit('sendMessageAck', { status: 'error', error: error.message });
     }
   }
 
@@ -110,7 +113,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `Emitting newConversation to participant: ${participantId} for conversation: ${conversation._id}`,
       );
       this.server.to(participantId).emit('newConversation', conversation);
-      this.server.to(participantId).emit('joinRoom', conversation._id);
+      // Removed the following line:
+      // this.server.to(participantId).emit('joinRoom', conversation._id);
     });
   }
 }
