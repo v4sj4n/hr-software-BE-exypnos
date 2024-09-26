@@ -26,8 +26,10 @@ export class AssetService {
       await this.checkSerialNumber(createAssetDto.serialNumber);
       const createdAsset = new this.assetModel(createAssetDto);
       createdAsset.history = [];
+      console.log(createdAsset);
       return await createdAsset.save();
     } catch (error) {
+      console.log(error);
       throw new ConflictException(error);
     }
   }
@@ -202,8 +204,6 @@ export class AssetService {
     assetData: CreateAssetDto | UpdateAssetDto,
     existingAsset?: Asset,
   ) {
-    const returnDate = new Date(assetData.returnDate) 
-    const takenDate = new Date(existingAsset.takenDate)
     if (assetData.userId) {
       const userExists = await this.userModel.findById(assetData.userId);
       if (!userExists) {
@@ -235,7 +235,7 @@ export class AssetService {
     if (
       assetData.returnDate &&
       existingAsset.takenDate &&
-      DateTime.fromJSDate(takenDate) > DateTime.fromJSDate(returnDate)
+      DateTime.fromJSDate(new Date(existingAsset.takenDate)) > DateTime.fromJSDate(new Date(assetData.returnDate))
     ) {
       throw new ConflictException(
         'Return date cannot be before the taken date',

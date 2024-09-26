@@ -21,6 +21,7 @@ export class AssetController {
 
   @Post()
   create(@Body() createAssetDto: CreateAssetDto) {
+    console.log(createAssetDto);
     return this.assetService.create(createAssetDto);
   }
 
