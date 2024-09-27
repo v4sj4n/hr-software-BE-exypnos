@@ -23,7 +23,6 @@ export class MessagesService {
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
     const { conversationId, senderId, text } = createMessageDto;
 
-    // Validate input
     if (!conversationId || !senderId || !text) {
       throw new BadRequestException(
         'conversationId, senderId, and text are required to create a message.',
