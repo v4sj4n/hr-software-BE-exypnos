@@ -29,11 +29,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    // Client connection handling
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    // Client disconnection handling
   }
 
   constructor(
@@ -48,10 +48,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     try {
       client.join(roomId);
-      console.log(`Client ${client.id} joined room ${roomId}`);
       client.emit('joinRoomAck', { status: 'ok' });
     } catch (error) {
-      console.error(`Error joining room ${roomId}:`, error);
       client.emit('joinRoomAck', { status: 'error', error: error.message });
     }
   }
@@ -63,10 +61,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     try {
       client.leave(roomId);
-      console.log(`Client ${client.id} left room ${roomId}`);
       client.emit('leaveRoomAck', { status: 'ok' });
     } catch (error) {
-      console.error(`Error leaving room ${roomId}:`, error);
       client.emit('leaveRoomAck', { status: 'error', error: error.message });
     }
   }
@@ -76,22 +72,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() createMessageDto: CreateMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
-    console.log('Received sendMessage event:', createMessageDto);
     try {
-      const savedMessage =
-        await this.messagesService.createMessage(createMessageDto);
-      console.log(`Message created: ${savedMessage._id}`);
-
-      this.server
-        .to(createMessageDto.conversationId)
-        .emit('receiveMessage', savedMessage);
-      console.log(
-        `Message broadcasted to room ${createMessageDto.conversationId}`,
-      );
-
+      const savedMessage = await this.messagesService.createMessage(createMessageDto);
+      this.server.to(createMessageDto.conversationId).emit('receiveMessage', savedMessage);
       client.emit('sendMessageAck', { status: 'ok' });
     } catch (error) {
-      console.error('Error sending message:', error);
       client.emit('sendMessageAck', { status: 'error', error: error.message });
     }
   }
@@ -104,14 +89,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { conversation } = payload;
     const participantIds = conversation.participants;
 
-    console.log(
-      `Handling conversation.created event for conversation: ${conversation._id}`,
-    );
-
     participantIds.forEach((participantId) => {
-      console.log(
-        `Emitting newConversation to participant: ${participantId} for conversation: ${conversation._id}`,
-      );
       this.server.to(participantId).emit('newConversation', conversation);
     });
   }
