@@ -54,7 +54,6 @@ export class MessagesService {
     try {
       console.log(`Fetching messages for conversation ID: ${conversationId}`);
 
-      // Find messages for the specified conversation ID and sort by creation time
       const messages = await this.messageModel
         .find({ conversationId })
         .sort({ createdAt: 1 })

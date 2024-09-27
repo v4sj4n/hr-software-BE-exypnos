@@ -1,11 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose'; // Import Connection
+import { Model, Connection } from 'mongoose'; 
 import { Conversation } from '../interfaces/conversation.interface';
 import { Message } from '../interfaces/message.interface';
 import { CreateConversationDto } from '../dto/create-conversation.dto';
 import { CreateMessageDto } from '../dto/create-message.dto';
-import { InjectConnection } from '@nestjs/mongoose'; // Import InjectConnection
+import { InjectConnection } from '@nestjs/mongoose'; 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -38,7 +38,6 @@ export class ConversationsService {
       const savedConversation = await conversation.save();
       console.log('New conversation created:', savedConversation._id);
 
-      // Emit event after creating the conversation
       this.eventEmitter.emit('conversation.created', { conversation: savedConversation });
 
       return savedConversation;
