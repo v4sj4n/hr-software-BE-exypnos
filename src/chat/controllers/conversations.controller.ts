@@ -16,37 +16,31 @@ export class ConversationsController {
   ) {
     const { conversation, message } = body;
 
-    // If no message details are provided, just create the conversation
     if (!message) {
       return this.conversationsService.createConversation(conversation);
     }
 
-    // If message details are provided, create both conversation and the first message
     return this.conversationsService.createConversationAndFirstMessage(
       conversation,
       message,
     );
   }
 
-  // Get all conversations
   @Get()
   async findAll() {
     return this.conversationsService.findAll();
   }
 
-  // Get a conversation by ID
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.conversationsService.findById(id);
   }
 
-  // Get all conversations by user ID
   @Get('user/:userId')
   async findByUser(@Param('userId') userId: string) {
     return this.conversationsService.findByUser(userId);
   }
 
-  // Get all messages for a specific conversation
   @Get(':conversationId/messages')
   async findMessagesByConversation(
     @Param('conversationId') conversationId: string,

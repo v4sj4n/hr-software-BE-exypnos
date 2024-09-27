@@ -28,12 +28,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  // Handle new client connections
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
   }
 
-  // Handle client disconnections
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
@@ -83,11 +81,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const savedMessage = await this.messagesService.createMessage(createMessageDto);
       console.log(`Message created: ${savedMessage._id}`);
 
-      // Broadcast the message to the conversation room
       this.server.to(createMessageDto.conversationId).emit('receiveMessage', savedMessage);
       console.log(`Message broadcasted to room ${createMessageDto.conversationId}`);
 
-      // Acknowledge message sent successfully
       client.emit('sendMessageAck', { status: 'ok' });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -95,7 +91,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  // Listen for conversation.created event
   @OnEvent('conversation.created')
   handleConversationCreated(payload: {
     conversation: Conversation;
@@ -113,8 +108,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `Emitting newConversation to participant: ${participantId} for conversation: ${conversation._id}`,
       );
       this.server.to(participantId).emit('newConversation', conversation);
-      // Removed the following line:
-      // this.server.to(participantId).emit('joinRoom', conversation._id);
     });
   }
 }

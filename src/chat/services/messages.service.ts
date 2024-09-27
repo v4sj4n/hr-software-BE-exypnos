@@ -20,7 +20,6 @@ export class MessagesService {
     private readonly conversationModel: Model<Conversation>,
   ) {}
 
-  // Create a new message
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
     const { conversationId, senderId, text } = createMessageDto;
 
@@ -31,7 +30,6 @@ export class MessagesService {
       );
     }
 
-    // Check if the conversation exists
     const conversation = await this.conversationModel
       .findById(conversationId)
       .exec();
@@ -41,7 +39,6 @@ export class MessagesService {
       );
     }
 
-    // Create and save the message
     const message = new this.messageModel(createMessageDto);
     try {
       const savedMessage = await message.save();
@@ -53,7 +50,6 @@ export class MessagesService {
     }
   }
 
-  // Retrieve all messages in a conversation
   async findMessagesByConversation(conversationId: string): Promise<Message[]> {
     try {
       console.log(`Fetching messages for conversation ID: ${conversationId}`);
@@ -64,7 +60,6 @@ export class MessagesService {
         .sort({ createdAt: 1 })
         .exec();
 
-      // Log if no messages found
       if (!messages || messages.length === 0) {
         this.logger.warn(
           `No messages found for conversation ID: ${conversationId}`,

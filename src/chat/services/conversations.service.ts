@@ -16,14 +16,12 @@ export class ConversationsService {
     @InjectModel('Conversation') private readonly conversationModel: Model<Conversation>,
     @InjectModel('Message') private readonly messageModel: Model<Message>,
     @InjectConnection() private readonly connection: Connection,
-    private eventEmitter: EventEmitter2, // Inject EventEmitter2
+    private eventEmitter: EventEmitter2, 
   ) {}
 
-  // Create a new conversation without a message
   async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
     console.log('Creating a new conversation:', createConversationDto.participants);
 
-    // Check if conversation already exists with the same participants
     const existingConversation = await this.conversationModel
       .findOne({
         participants: { $all: createConversationDto.participants, $size: createConversationDto.participants.length },
@@ -35,7 +33,6 @@ export class ConversationsService {
       return existingConversation;
     }
 
-    // Create a new conversation
     const conversation = new this.conversationModel(createConversationDto);
     try {
       const savedConversation = await conversation.save();
@@ -51,7 +48,6 @@ export class ConversationsService {
     }
   }
 
-  // Create a conversation and the first message
   async createConversationAndFirstMessage(
     createConversationDto: CreateConversationDto,
     createMessageDto: CreateMessageDto,
@@ -62,7 +58,6 @@ export class ConversationsService {
     try {
       console.log('Creating conversation with participants:', createConversationDto.participants);
   
-      // Check if conversation already exists
       let conversation = await this.conversationModel
         .findOne({
           participants: {
@@ -74,26 +69,21 @@ export class ConversationsService {
         .exec();
   
       if (!conversation) {
-        // If conversation doesn't exist, create a new one
         conversation = new this.conversationModel(createConversationDto);
         await conversation.save({ session });
         console.log('New conversation created:', conversation._id);
   
-        // Emit event after creating the conversation and message
         this.eventEmitter.emit('conversation.created', { conversation });
       } else {
         console.log('Conversation already exists:', conversation._id);
   
-        // Do not emit 'conversation.created' event
       }
   
-      // Save the message
       createMessageDto.conversationId = conversation._id as string;
       const message = new this.messageModel(createMessageDto);
       await message.save({ session });
       console.log('First message created with ID:', message._id);
   
-      // Commit the transaction
       await session.commitTransaction();
       session.endSession();
   
@@ -107,7 +97,6 @@ export class ConversationsService {
   }
   
 
-  // Find all conversations
   async findAll(): Promise<Conversation[]> {
     try {
       const conversations = await this.conversationModel.find().exec();
@@ -119,7 +108,6 @@ export class ConversationsService {
     }
   }
 
-  // Find conversation by ID
   async findById(id: string): Promise<Conversation> {
     try {
       const conversation = await this.conversationModel.findById(id).exec();
@@ -134,7 +122,6 @@ export class ConversationsService {
     }
   }
 
-  // Find all conversations for a specific user
   async findByUser(userId: string): Promise<Conversation[]> {
     try {
       const conversations = await this.conversationModel.find({ participants: userId }).exec();
@@ -146,7 +133,6 @@ export class ConversationsService {
     }
   }
 
-  // Find messages by conversation ID
   async findMessagesByConversation(conversationId: string): Promise<Message[]> {
     try {
       const messages = await this.messageModel.find({ conversationId }).sort({ createdAt: 1 }).exec();
